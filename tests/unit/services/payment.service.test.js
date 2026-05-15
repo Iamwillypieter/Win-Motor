@@ -37,6 +37,13 @@ vi.mock("@/models/Order", () => {
   return { default: mockOrder };
 });
 
+// Helper to create a chainable findById mock that supports .lean()
+function mockFindByIdWithLean(resolvedValue) {
+  return vi.fn().mockReturnValue({
+    lean: vi.fn().mockResolvedValue(resolvedValue),
+  });
+}
+
 vi.mock("@/models/Product", () => {
   const mockProduct = {
     bulkWrite: vi.fn(),
@@ -182,9 +189,9 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
     mockSession = buildMockSession();
     mongoose.startSession.mockResolvedValue(mockSession);
 
-    // Order found with pending status
+    // Order found with pending status — service calls .lean()
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(mockOrder),
+      lean: vi.fn().mockResolvedValue(mockOrder),
     });
 
     // Order update succeeds
@@ -193,19 +200,15 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
     // All stock decrements succeed (modifiedCount === items.length)
     Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
 
-    // Cashier lookup succeeds
+    // Cashier lookup succeeds — service calls .select().lean()
     User.findById.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        session: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockCashier),
-        }),
+        lean: vi.fn().mockResolvedValue(mockCashier),
       }),
     });
 
     // Invoice creation succeeds
-    Invoice.create.mockResolvedValue([
-      { toObject: () => ({ ...mockInvoiceDoc }) },
-    ]);
+    Invoice.create.mockResolvedValue({ toObject: () => ({ ...mockInvoiceDoc }) });
   });
 
   it("harus mengembalikan invoice yang dibuat", async () => {
@@ -237,8 +240,7 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
           cashReceived: 70000,
           changeAmount: 5000,
         }),
-      }),
-      expect.anything()
+      })
     );
   });
 
@@ -272,8 +274,7 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
 
     expect(Invoice.create).toHaveBeenCalledTimes(1);
 
-    const [invoiceArray] = Invoice.create.mock.calls[0];
-    const invoiceData = invoiceArray[0];
+    const invoiceData = Invoice.create.mock.calls[0][0];
 
     expect(invoiceData.orderId).toBe(mockOrder._id);
     expect(invoiceData.invoiceNumber).toBe(mockOrder.invoiceNumber);
@@ -291,8 +292,8 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
       changeAmount: 5000,
     });
 
-    const [invoiceArray] = Invoice.create.mock.calls[0];
-    const { items } = invoiceArray[0];
+    const invoiceData = Invoice.create.mock.calls[0][0];
+    const { items } = invoiceData;
 
     expect(items).toHaveLength(mockOrderItems.length);
     items.forEach((item, idx) => {
@@ -317,16 +318,6 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
       expect.arrayContaining(["CASHIER", "WAREHOUSE"])
     );
   });
-
-  it("harus mengakhiri session setelah selesai", async () => {
-    await completePayment("order-id-001", {
-      method: "CASH",
-      cashReceived: 70000,
-      changeAmount: 5000,
-    });
-
-    expect(mockSession.endSession).toHaveBeenCalledTimes(1);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -343,9 +334,9 @@ describe("PaymentService — completePayment stok tidak cukup (rollback)", () =>
     mockSession = buildMockSession({ shouldAbort: true });
     mongoose.startSession.mockResolvedValue(mockSession);
 
-    // Order found with pending status
+    // Order found with pending status — service calls .lean()
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(mockOrder),
+      lean: vi.fn().mockResolvedValue(mockOrder),
     });
 
     // Order update succeeds (step 1 of transaction)
@@ -411,7 +402,8 @@ describe("PaymentService — completePayment stok tidak cukup (rollback)", () =>
       // expected
     }
 
-    expect(mockSession.endSession).toHaveBeenCalledTimes(1);
+    // Service performs rollback via Order.updateOne when stock fails
+    expect(Order.updateOne).toHaveBeenCalledTimes(2); // step 1 + rollback
   });
 });
 
@@ -429,9 +421,9 @@ describe("PaymentService — completePayment order sudah paid", () => {
     mockSession = buildMockSession({ shouldAbort: true });
     mongoose.startSession.mockResolvedValue(mockSession);
 
-    // Order already paid
+    // Order already paid — service calls .lean()
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue({
+      lean: vi.fn().mockResolvedValue({
         ...mockOrder,
         paymentStatus: "paid",
         orderStatus: "completed",

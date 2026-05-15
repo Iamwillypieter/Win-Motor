@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import LogoutButton from "./LogoutButton";
 
 /**
@@ -7,9 +8,13 @@ import LogoutButton from "./LogoutButton";
  * Props:
  * - userName: string — nama user yang sedang login
  * - role: "CASHIER" | "WAREHOUSE" | "OWNER"
- * - links: Array<{ href, label, active? }> — navigasi antar halaman dalam role
+ * - links: Array<{ href, label }> — navigasi antar halaman dalam role
  */
-export default function Navbar({ userName, role, links = [] }) {
+export default async function Navbar({ userName, role, links = [] }) {
+  // Ambil pathname dari headers untuk highlight link aktif
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
+
   const roleLabel = {
     CASHIER: "Kasir",
     WAREHOUSE: "Staf Gudang",
@@ -36,19 +41,22 @@ export default function Navbar({ userName, role, links = [] }) {
         {/* Center: navigation links */}
         {links.length > 0 && (
           <nav className="hidden sm:flex items-center gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                  link.active
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) => {
+              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-gray-100 text-gray-900"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         )}
 

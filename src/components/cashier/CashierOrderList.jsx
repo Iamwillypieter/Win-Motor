@@ -125,7 +125,18 @@ export default function CashierOrderList({ cashierId }) {
         )
       );
     }
-  }, []);
+    // Pesanan baru yang dibuat kasir ini di tab/device lain
+    if (event.type === "new_order") {
+      const newOrder = event.data;
+      if (!newOrder?._id) return;
+      // Hanya tambahkan jika cashierId cocok dengan kasir yang sedang login
+      if (cashierId && newOrder.cashierId && newOrder.cashierId !== cashierId) return;
+      setOrders((prev) => {
+        if (prev.some((o) => o._id === newOrder._id)) return prev;
+        return [newOrder, ...prev];
+      });
+    }
+  }, [cashierId]);
 
   useSSE(handleEvent);
 

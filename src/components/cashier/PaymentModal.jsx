@@ -23,24 +23,32 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
   const [isPending, startTransition] = useTransition();
   const [currentOrder, setCurrentOrder] = useState(initialOrder);
 
-  // Poll order status every 3 seconds until it's ready
+  // Subscribe to SSE events for real-time order status updates
+  // Replaces the previous 3-second polling approach
   useEffect(() => {
+    if (typeof window === "undefined" || typeof EventSource === "undefined") return;
     if (currentOrder.orderStatus === "ready" || currentOrder.orderStatus === "completed") return;
 
-    const interval = setInterval(async () => {
+    const es = new EventSource("/api/sse");
+
+    es.onmessage = (event) => {
       try {
-        const res = await fetch(`/api/orders/${currentOrder._id}`);
-        if (!res.ok) return;
-        const body = await res.json();
-        if (body.data) {
-          setCurrentOrder((prev) => ({ ...prev, orderStatus: body.data.orderStatus }));
+        const parsed = JSON.parse(event.data);
+        if (
+          (parsed.type === "order_ready" || parsed.type === "order_status_updated") &&
+          parsed.data?.orderId === currentOrder._id
+        ) {
+          setCurrentOrder((prev) => ({
+            ...prev,
+            orderStatus: parsed.data.orderStatus ?? "ready",
+          }));
         }
       } catch {
-        // ignore polling errors
+        // ignore parse errors
       }
-    }, 3000);
+    };
 
-    return () => clearInterval(interval);
+    return () => es.close();
   }, [currentOrder._id, currentOrder.orderStatus]);
 
   // CASH state

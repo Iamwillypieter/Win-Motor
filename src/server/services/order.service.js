@@ -1,9 +1,12 @@
+import { randomUUID } from "crypto";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
 import { generateInvoiceNumber } from "@/lib/invoice";
 import sseManager from "@/lib/sse";
+import { ALL_PAYMENT_METHODS } from "@/lib/paymentMethods";
+import { isValidWhatsapp } from "@/lib/validators";
 
 /**
  * Custom error class for order operations.
@@ -25,6 +28,9 @@ export const OrderErrorCode = {
   INSUFFICIENT_STOCK: "INSUFFICIENT_STOCK",
   ORDER_NOT_FOUND: "ORDER_NOT_FOUND",
   INVALID_STATUS: "INVALID_STATUS",
+  INVALID_WHATSAPP: "INVALID_WHATSAPP",
+  INVALID_PAYMENT_METHOD: "INVALID_PAYMENT_METHOD",
+  MISSING_REQUIRED_FIELD: "MISSING_REQUIRED_FIELD",
 };
 
 /**
@@ -140,9 +146,10 @@ export async function createOrder(cashierId, items, customerName = null) {
  * @param {Object} [filters]
  * @param {string|string[]} [filters.status] - Filter by orderStatus
  * @param {string} [filters.cashierId] - Filter by cashierId
+ * @param {string} [filters.orderType] - Filter by orderType: "ONLINE" | "OFFLINE"
  * @returns {Promise<Object[]>} Array of serialized order documents
  */
-export async function getOrders({ status, cashierId } = {}) {
+export async function getOrders({ status, cashierId, orderType } = {}) {
   await connectDB();
 
   const query = {};
@@ -161,6 +168,10 @@ export async function getOrders({ status, cashierId } = {}) {
 
   if (cashierId) {
     query.cashierId = cashierId;
+  }
+
+  if (orderType) {
+    query.orderType = orderType;
   }
 
   // Populate cashierName dari User
@@ -204,4 +215,195 @@ export async function getOrderById(orderId) {
   }
 
   return order;
+}
+
+/**
+ * Create a new online order from a public customer.
+ *
+ * Business rules:
+ *  - Stock is NOT decremented at order creation (only on payment completion).
+ *  - cashierId is set to null (no staff session).
+ *  - A one-time sseToken (UUID) is generated and stored on the Order so the
+ *    customer can subscribe to real-time status updates via /api/sse/public.
+ *  - A new_order SSE event is broadcast to all WAREHOUSE clients.
+ *
+ * @param {Object} params
+ * @param {Array<{productId: string, quantity: number}>} params.items
+ * @param {string} params.customerName
+ * @param {string} params.customerWhatsapp - Format: 08xx or +62xx
+ * @param {string} params.shippingAddress
+ * @param {string} params.paymentMethod - One of ALL_PAYMENT_METHODS
+ * @returns {Promise<Object>} Serialized order document including sseToken
+ * @throws {OrderError} EMPTY_CART | MISSING_REQUIRED_FIELD | INVALID_WHATSAPP |
+ *                      INVALID_PAYMENT_METHOD | INSUFFICIENT_STOCK
+ */
+export async function createOnlineOrder({
+  items,
+  customerName,
+  customerWhatsapp,
+  shippingAddress,
+  paymentMethod,
+}) {
+  await connectDB();
+
+  // --- Validate required fields ---
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    throw new OrderError(OrderErrorCode.EMPTY_CART, "Keranjang belanja kosong");
+  }
+
+  if (!customerName || !customerName.trim()) {
+    throw new OrderError(
+      OrderErrorCode.MISSING_REQUIRED_FIELD,
+      "Nama lengkap wajib diisi"
+    );
+  }
+
+  if (!customerWhatsapp || !customerWhatsapp.trim()) {
+    throw new OrderError(
+      OrderErrorCode.MISSING_REQUIRED_FIELD,
+      "Nomor WhatsApp wajib diisi"
+    );
+  }
+
+  if (!isValidWhatsapp(customerWhatsapp)) {
+    throw new OrderError(
+      OrderErrorCode.INVALID_WHATSAPP,
+      "Nomor WhatsApp tidak valid"
+    );
+  }
+
+  if (!shippingAddress || !shippingAddress.trim()) {
+    throw new OrderError(
+      OrderErrorCode.MISSING_REQUIRED_FIELD,
+      "Alamat pengiriman wajib diisi"
+    );
+  }
+
+  if (!paymentMethod) {
+    throw new OrderError(
+      OrderErrorCode.MISSING_REQUIRED_FIELD,
+      "Pilih metode pembayaran"
+    );
+  }
+
+  if (!ALL_PAYMENT_METHODS.includes(paymentMethod)) {
+    throw new OrderError(
+      OrderErrorCode.INVALID_PAYMENT_METHOD,
+      "Metode pembayaran tidak valid"
+    );
+  }
+
+  // --- Validate stock and build order item snapshots ---
+  const orderItems = [];
+  let totalAmount = 0;
+
+  for (const cartItem of items) {
+    if (!cartItem.productId || !cartItem.quantity || cartItem.quantity < 1) {
+      throw new OrderError(
+        OrderErrorCode.MISSING_REQUIRED_FIELD,
+        "Setiap item harus memiliki productId dan quantity yang valid"
+      );
+    }
+
+    const product = await Product.findById(cartItem.productId).lean();
+
+    if (!product || !product.isActive) {
+      throw new OrderError(
+        OrderErrorCode.INSUFFICIENT_STOCK,
+        "Produk tidak ditemukan atau tidak aktif"
+      );
+    }
+
+    if (product.stock < cartItem.quantity) {
+      throw new OrderError(
+        OrderErrorCode.INSUFFICIENT_STOCK,
+        `Stok ${product.name} tidak mencukupi`
+      );
+    }
+
+    orderItems.push({
+      productId: product._id,
+      productName: product.name,
+      sku: product.sku,
+      unitPrice: product.price,
+      quantity: cartItem.quantity,
+    });
+
+    totalAmount += product.price * cartItem.quantity;
+  }
+
+  // --- Generate invoice number and SSE token ---
+  const invoiceNumber = await generateInvoiceNumber();
+  const sseToken = randomUUID();
+
+  // --- Persist the order ---
+  const order = await Order.create({
+    invoiceNumber,
+    cashierId: null,
+    orderType: "ONLINE",
+    customerName: customerName.trim(),
+    customerWhatsapp: customerWhatsapp.trim(),
+    shippingAddress: shippingAddress.trim(),
+    paymentMethod,
+    items: orderItems,
+    totalAmount,
+    orderStatus: "waiting_preparation",
+    paymentStatus: "pending",
+    sseToken,
+  });
+
+  const orderObj = order.toObject();
+
+  // --- Serialize for client consumption ---
+  const serialized = {
+    _id: orderObj._id.toString(),
+    invoiceNumber: orderObj.invoiceNumber,
+    orderType: orderObj.orderType,
+    orderStatus: orderObj.orderStatus,
+    paymentStatus: orderObj.paymentStatus,
+    paymentMethod: orderObj.paymentMethod,
+    totalAmount: orderObj.totalAmount,
+    customerName: orderObj.customerName,
+    customerWhatsapp: orderObj.customerWhatsapp,
+    shippingAddress: orderObj.shippingAddress,
+    sseToken: orderObj.sseToken,
+    cashierId: null,
+    createdAt: orderObj.createdAt?.toISOString() ?? null,
+    updatedAt: orderObj.updatedAt?.toISOString() ?? null,
+    completedAt: null,
+    qrisCode: orderObj.qrisCode ?? null,
+    qrisExpiresAt: orderObj.qrisExpiresAt?.toISOString() ?? null,
+    items: orderObj.items.map((item) => ({
+      ...item,
+      _id: item._id?.toString() ?? null,
+      productId: item.productId?.toString() ?? null,
+    })),
+  };
+
+  // --- Broadcast new_order to WAREHOUSE (strip sensitive customer data) ---
+  try {
+    const warehousePayload = {
+      _id: serialized._id,
+      invoiceNumber: serialized.invoiceNumber,
+      orderType: serialized.orderType,
+      orderStatus: serialized.orderStatus,
+      paymentStatus: serialized.paymentStatus,
+      paymentMethod: serialized.paymentMethod,
+      totalAmount: serialized.totalAmount,
+      customerName: serialized.customerName,
+      shippingAddress: serialized.shippingAddress,
+      createdAt: serialized.createdAt,
+      items: serialized.items,
+    };
+
+    sseManager.broadcastToRole(
+      { type: "new_order", data: warehousePayload },
+      ["WAREHOUSE"]
+    );
+  } catch (err) {
+    // SSE broadcast failure must not break order creation
+    console.error("SSE broadcast error (new_order online):", err);
+  }
+
+  return serialized;
 }

@@ -31,7 +31,7 @@ export default function useOrderQueue(onNewOrder) {
     setError(null);
     try {
       const res = await fetch(
-        "/api/orders?status=waiting_preparation,preparing"
+        "/api/orders?status=waiting_preparation,preparing,ready,shipping"
       );
       const json = await res.json();
       if (!res.ok) {
@@ -69,11 +69,11 @@ export default function useOrderQueue(onNewOrder) {
 
     if (event.type === "order_status_updated") {
       const { orderId, orderStatus } = event.data;
-      // Remove from queue if status is no longer active
-      if (!["waiting_preparation", "preparing"].includes(orderStatus)) {
+      // Remove from queue if status is completed or cancelled
+      if (["completed", "cancelled"].includes(orderStatus)) {
         setOrders((prev) => prev.filter((o) => o._id !== orderId));
       } else {
-        // Update status in place (e.g. waiting_preparation → preparing)
+        // Update status in place (e.g. waiting_preparation → preparing → ready → shipping)
         setOrders((prev) =>
           prev.map((o) =>
             o._id === orderId ? { ...o, orderStatus } : o
@@ -87,13 +87,15 @@ export default function useOrderQueue(onNewOrder) {
 
   /**
    * Mark an order as ready (PATCH /api/orders/:id/status).
-   * Optimistically removes the order from the local queue.
+   * Updates status in place — order tetap di queue sampai selesai/dikirim.
    *
    * @param {string} orderId
    */
   const markReady = useCallback(async (orderId) => {
-    // Optimistic update
-    setOrders((prev) => prev.filter((o) => o._id !== orderId));
+    // Optimistic update — ubah status di tempat
+    setOrders((prev) =>
+      prev.map((o) => (o._id === orderId ? { ...o, orderStatus: "ready" } : o))
+    );
 
     try {
       const res = await fetch(`/api/orders/${orderId}/status`, {

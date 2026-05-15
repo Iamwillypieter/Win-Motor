@@ -14,7 +14,11 @@ import { getMetrics, getChartData } from "@/server/services/analytics.service";
  *
  * Response 200:
  * {
- *   "summary": { totalRevenue, totalOrders, averageOrderValue },
+ *   "summary": {
+ *     totalRevenue, offlineRevenue, onlineRevenue,
+ *     totalOrders, offlineOrders, onlineOrders,
+ *     averageOrderValue
+ *   },
  *   "chart": [{ date, revenue }, ...]
  * }
  */

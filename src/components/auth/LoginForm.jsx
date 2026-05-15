@@ -76,14 +76,10 @@ export default function LoginForm() {
         const role = session?.user?.role;
         const destination = ROLE_REDIRECT[role] || "/";
 
-        // Tampilkan overlay redirect sebelum navigasi
+        // Tampilkan overlay redirect lalu langsung navigasi
         setRedirectingRole(role);
         setIsLoading(false);
-
-        // Sedikit delay agar overlay terlihat, lalu navigasi
-        setTimeout(() => {
-          window.location.href = destination;
-        }, 800);
+        window.location.href = destination;
       }
     } catch {
       setAuthError("Terjadi kesalahan. Silakan coba lagi.");

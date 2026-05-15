@@ -23,7 +23,14 @@ const InvoiceSchema = new Schema({
   totalAmount: { type: Number, required: true, min: 0 }, // integer rupiah
   paymentMethod: {
     type: String,
-    enum: ["CASH", "QRIS"],
+    enum: [
+      "CASH",
+      "QRIS",
+      "EWALLET_DANA",
+      "EWALLET_OVO",
+      "EWALLET_GOPAY",
+      "BANK_TRANSFER",
+    ],
     required: true,
   },
 
@@ -33,6 +40,16 @@ const InvoiceSchema = new Schema({
 
   transactionAt: { type: Date, required: true },
   createdAt: { type: Date, default: Date.now },
+
+  // Online ordering fields
+  customerName: { type: String, default: null },
+  customerWhatsapp: { type: String, default: null },
+  shippingAddress: { type: String, default: null },
+  orderType: {
+    type: String,
+    enum: ["OFFLINE", "ONLINE"],
+    default: "OFFLINE",
+  },
 });
 
 InvoiceSchema.index({ invoiceNumber: 1 });

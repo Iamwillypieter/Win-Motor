@@ -7,6 +7,13 @@ import ToastContainer from "@/components/shared/ToastContainer";
 import { useAudioUnlock } from "@/components/shared/SoundNotification";
 import OrderQueueCard from "./OrderQueueCard";
 
+/** Opsi filter berdasarkan orderType */
+const FILTER_OPTIONS = [
+  { value: "ALL", label: "Semua" },
+  { value: "ONLINE", label: "Hanya Online" },
+  { value: "OFFLINE", label: "Hanya Kasir" },
+];
+
 /**
  * OrderQueueList — real-time order queue for the Warehouse page.
  * Menampilkan notifikasi + suara saat pesanan baru masuk dari kasir.
@@ -14,6 +21,7 @@ import OrderQueueCard from "./OrderQueueCard";
 export default function OrderQueueList() {
   const { toasts, notify, dismiss } = useNotification();
   const [processingId, setProcessingId] = useState(null);
+  const [filterType, setFilterType] = useState("ALL");
 
   // Unlock AudioContext saat user pertama kali berinteraksi dengan halaman
   useAudioUnlock();
@@ -30,6 +38,12 @@ export default function OrderQueueList() {
   }, [notify]);
 
   const { orders, isLoading, error, markReady, refresh } = useOrderQueue(handleNewOrder);
+
+  /** Filter pesanan berdasarkan orderType yang dipilih */
+  const filteredOrders =
+    filterType === "ALL"
+      ? orders
+      : orders.filter((o) => (o.orderType ?? "OFFLINE") === filterType);
 
   async function handleMarkReady(orderId) {
     setProcessingId(orderId);
@@ -64,7 +78,7 @@ export default function OrderQueueList() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">
-            {orders.length} pesanan aktif
+            {filteredOrders.length} pesanan aktif
           </span>
           {/* Live indicator */}
           <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
@@ -75,13 +89,32 @@ export default function OrderQueueList() {
             Live
           </span>
         </div>
-        <button
-          onClick={refresh}
-          className="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:underline"
-          aria-label="Refresh antrean"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Filter dropdown */}
+          <label htmlFor="order-type-filter" className="sr-only">
+            Filter pesanan
+          </label>
+          <select
+            id="order-type-filter"
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+            aria-label="Filter berdasarkan tipe pesanan"
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={refresh}
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:underline"
+            aria-label="Refresh antrean"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Error banner */}
@@ -95,14 +128,18 @@ export default function OrderQueueList() {
       )}
 
       {/* Empty state */}
-      {orders.length === 0 ? (
+      {filteredOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
           <span className="text-5xl" aria-hidden="true">
             📭
           </span>
           <p className="text-base font-medium">Antrean kosong</p>
           <p className="text-sm text-center max-w-xs">
-            Pesanan baru dari kasir akan muncul di sini secara otomatis.
+            {filterType === "ALL"
+              ? "Pesanan baru dari kasir akan muncul di sini secara otomatis."
+              : filterType === "ONLINE"
+              ? "Tidak ada pesanan online aktif saat ini."
+              : "Tidak ada pesanan kasir aktif saat ini."}
           </p>
         </div>
       ) : (
@@ -112,12 +149,15 @@ export default function OrderQueueList() {
           aria-live="polite"
           aria-atomic="false"
         >
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <OrderQueueCard
               key={order._id?.toString()}
               order={order}
               onMarkReady={handleMarkReady}
               isProcessing={processingId === order._id?.toString()}
+              onConfirmCOD={refresh}
+              onConfirmTransfer={refresh}
+              onMarkShipping={refresh}
             />
           ))}
         </div>

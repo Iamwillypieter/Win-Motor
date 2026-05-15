@@ -1,23 +1,49 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { formatRupiah } from "@/lib/utils";
 
 const STOCK_THRESHOLD_LOW = 5;
 
 /**
  * OwnerProductList — tabel produk toko untuk Owner.
- * Fitur: search nama, filter SKU, filter status stok, sort kolom.
+ * Fitur: search nama, filter SKU, filter status stok, sort kolom, refresh data.
  */
 export default function OwnerProductList({ initialProducts = [] }) {
+  const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
   const [skuFilter, setSkuFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("all"); // all | out | low | ok
   const [sortBy, setSortBy] = useState("name"); // name | stock | price
   const [sortDir, setSortDir] = useState("asc");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/products");
+      const body = await res.json();
+      if (res.ok && body.data) {
+        setProducts(
+          body.data.map((p) => ({
+            _id: p._id?.toString(),
+            name: p.name,
+            sku: p.sku,
+            price: p.price,
+            stock: p.stock,
+            imageUrl: p.imageUrl ?? null,
+          }))
+        );
+      }
+    } catch {
+      // silent — data lama tetap ditampilkan
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
 
   const filtered = useMemo(() => {
-    let list = [...initialProducts];
+    let list = [...products];
 
     // Filter nama
     if (search.trim()) {
@@ -48,7 +74,7 @@ export default function OwnerProductList({ initialProducts = [] }) {
     });
 
     return list;
-  }, [initialProducts, search, skuFilter, stockFilter, sortBy, sortDir]);
+  }, [products, search, skuFilter, stockFilter, sortBy, sortDir]);
 
   function toggleSort(col) {
     if (sortBy === col) {
@@ -65,9 +91,9 @@ export default function OwnerProductList({ initialProducts = [] }) {
   }
 
   // Ringkasan stok
-  const outOfStock = initialProducts.filter((p) => p.stock === 0).length;
-  const lowStock = initialProducts.filter((p) => p.stock > 0 && p.stock <= STOCK_THRESHOLD_LOW).length;
-  const totalStock = initialProducts.reduce((sum, p) => sum + p.stock, 0);
+  const outOfStock = products.filter((p) => p.stock === 0).length;
+  const lowStock = products.filter((p) => p.stock > 0 && p.stock <= STOCK_THRESHOLD_LOW).length;
+  const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
 
   return (
     <div className="space-y-4">
@@ -75,7 +101,7 @@ export default function OwnerProductList({ initialProducts = [] }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-xs text-gray-500">Total Produk</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{initialProducts.length}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{products.length}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-xs text-gray-500">Total Stok</p>
@@ -159,9 +185,20 @@ export default function OwnerProductList({ initialProducts = [] }) {
           </button>
         )}
 
-        <span className="text-xs text-gray-400 ml-auto">
-          {filtered.length} dari {initialProducts.length} produk
-        </span>
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-xs text-gray-400">
+            {filtered.length} dari {products.length} produk
+          </span>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title="Refresh data produk"
+            className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            <span className={isRefreshing ? "animate-spin inline-block" : "inline-block"}>🔄</span>
+            {isRefreshing ? "Memuat..." : "Refresh"}
+          </button>
+        </div>
       </div>
 
       {/* Tabel */}
@@ -261,7 +298,7 @@ export default function OwnerProductList({ initialProducts = [] }) {
 
         {filtered.length > 0 && (
           <div className="px-4 py-3 border-t border-gray-100 text-xs text-gray-400">
-            Menampilkan {filtered.length} dari {initialProducts.length} produk aktif
+            Menampilkan {filtered.length} dari {products.length} produk aktif
           </div>
         )}
       </div>

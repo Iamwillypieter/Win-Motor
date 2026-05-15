@@ -84,7 +84,7 @@ describe("AnalyticsService — getMetrics", () => {
 
   it("harus menghitung totalRevenue, totalOrders, dan averageOrderValue dengan benar", async () => {
     Order.aggregate.mockResolvedValue([
-      { _id: null, totalRevenue: 125000, totalOrders: 2 },
+      { _id: "OFFLINE", revenue: 125000, orders: 2 },
     ]);
 
     const result = await getMetrics("monthly");
@@ -107,7 +107,7 @@ describe("AnalyticsService — getMetrics", () => {
   it("harus membulatkan averageOrderValue ke integer", async () => {
     // 100000 / 3 = 33333.33... → should round to 33333
     Order.aggregate.mockResolvedValue([
-      { _id: null, totalRevenue: 100000, totalOrders: 3 },
+      { _id: "OFFLINE", revenue: 100000, orders: 3 },
     ]);
 
     const result = await getMetrics("monthly");
@@ -143,7 +143,7 @@ describe("AnalyticsService — getMetrics", () => {
 
   it("harus mendukung custom range dengan from dan to", async () => {
     Order.aggregate.mockResolvedValue([
-      { _id: null, totalRevenue: 50000, totalOrders: 1 },
+      { _id: "OFFLINE", revenue: 50000, orders: 1 },
     ]);
 
     const result = await getMetrics("monthly", "2026-05-01", "2026-05-07");

@@ -96,7 +96,7 @@ import {
   PaymentError,
   PaymentErrorCode,
 } from "@/server/services/payment.service";
-import { createOrder } from "@/server/services/order.service";
+import { createOrder, createOnlineOrder } from "@/server/services/order.service";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -212,20 +212,16 @@ describe("Skenario 1: Alur Cash end-to-end — create order → konfirmasi Cash 
 
     // Setup mock untuk completePayment
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(mockOrder),
+      lean: vi.fn().mockResolvedValue(mockOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
     Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
     User.findById.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        session: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockCashier),
-        }),
+        lean: vi.fn().mockResolvedValue(mockCashier),
       }),
     });
-    Invoice.create.mockResolvedValue([
-      { toObject: () => ({ ...mockInvoiceDoc }) },
-    ]);
+    Invoice.create.mockResolvedValue({ toObject: () => ({ ...mockInvoiceDoc }) });
   });
 
   it("createOrder() harus membuat pesanan dengan status awal yang benar", async () => {
@@ -264,8 +260,7 @@ describe("Skenario 1: Alur Cash end-to-end — create order → konfirmasi Cash 
           orderStatus: "completed",
           paymentMethod: "CASH",
         }),
-      }),
-      expect.anything()
+      })
     );
   });
 
@@ -311,8 +306,7 @@ describe("Skenario 1: Alur Cash end-to-end — create order → konfirmasi Cash 
     });
 
     expect(Invoice.create).toHaveBeenCalledTimes(1);
-    const [invoiceArray] = Invoice.create.mock.calls[0];
-    const invoiceData = invoiceArray[0];
+    const [invoiceData] = Invoice.create.mock.calls[0];
 
     // Requirement 6.4: invoiceNumber, transactionAt, items, totalAmount, paymentMethod, cashierName
     expect(invoiceData.invoiceNumber).toBeDefined();
@@ -330,8 +324,8 @@ describe("Skenario 1: Alur Cash end-to-end — create order → konfirmasi Cash 
       changeAmount: 10000,
     });
 
-    const [invoiceArray] = Invoice.create.mock.calls[0];
-    const { items } = invoiceArray[0];
+    const [invoiceData] = Invoice.create.mock.calls[0];
+    const { items } = invoiceData;
 
     expect(items[0]).toMatchObject({
       productName: "Kopi Arabika",
@@ -385,8 +379,7 @@ describe("Skenario 1: Alur Cash end-to-end — create order → konfirmasi Cash 
           paymentStatus: "paid",
           orderStatus: "completed",
         }),
-      }),
-      expect.anything()
+      })
     );
   });
 });
@@ -426,20 +419,16 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
     mongoose.startSession.mockResolvedValue(mockSession);
 
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(mockQrisOrder),
+      lean: vi.fn().mockResolvedValue(mockQrisOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
     Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
     User.findById.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        session: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockCashier),
-        }),
+        lean: vi.fn().mockResolvedValue(mockCashier),
       }),
     });
-    Invoice.create.mockResolvedValue([
-      { toObject: () => ({ ...mockQrisInvoice }) },
-    ]);
+    Invoice.create.mockResolvedValue({ toObject: () => ({ ...mockQrisInvoice }) });
   });
 
   it("completePayment() dengan metode QRIS harus mengubah paymentStatus menjadi 'paid'", async () => {
@@ -457,8 +446,7 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
           orderStatus: "completed",
           paymentMethod: "QRIS",
         }),
-      }),
-      expect.anything()
+      })
     );
   });
 
@@ -482,8 +470,7 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
     });
 
     expect(Invoice.create).toHaveBeenCalledTimes(1);
-    const [invoiceArray] = Invoice.create.mock.calls[0];
-    const invoiceData = invoiceArray[0];
+    const [invoiceData] = Invoice.create.mock.calls[0];
 
     expect(invoiceData.invoiceNumber).toBeDefined();
     expect(invoiceData.transactionAt).toBeInstanceOf(Date);
@@ -527,7 +514,7 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
   it("webhook QRIS: order dengan paymentStatus 'paid' harus ditolak (idempotency)", async () => {
     // Simulasi order yang sudah dibayar (idempotency guard)
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue({
+      lean: vi.fn().mockResolvedValue({
         ...mockQrisOrder,
         paymentStatus: "paid",
         orderStatus: "completed",
@@ -548,7 +535,7 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
 
   it("webhook QRIS: order dengan paymentStatus 'expired' harus ditolak", async () => {
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue({
+      lean: vi.fn().mockResolvedValue({
         ...mockQrisOrder,
         paymentStatus: "expired",
         qrisCode: null,
@@ -574,7 +561,7 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
 
   it("webhook QRIS: order yang tidak ditemukan harus melempar ORDER_NOT_FOUND", async () => {
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(null),
+      lean: vi.fn().mockResolvedValue(null),
     });
 
     await expect(
@@ -605,7 +592,7 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
     mongoose.startSession.mockResolvedValue(mockSession);
 
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(mockOrder),
+      lean: vi.fn().mockResolvedValue(mockOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
   });
@@ -683,9 +670,7 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
     Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
     User.findById.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        session: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockCashier),
-        }),
+        lean: vi.fn().mockResolvedValue(mockCashier),
       }),
     });
     Invoice.create.mockRejectedValue(new Error("Database write failed"));
@@ -709,7 +694,7 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
     expect(sseManager.broadcastToRole).not.toHaveBeenCalled();
   });
 
-  it("session harus selalu di-end meskipun transaksi gagal (resource cleanup)", async () => {
+  it("error rollback tidak boleh menyiarkan event SSE order_completed", async () => {
     Product.bulkWrite.mockResolvedValue({ modifiedCount: 0 });
 
     try {
@@ -722,7 +707,7 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
       // expected
     }
 
-    expect(mockSession.endSession).toHaveBeenCalledTimes(1);
+    expect(sseManager.broadcastToRole).not.toHaveBeenCalled();
   });
 
   it("rollback QRIS: kegagalan stok saat webhook QRIS → tidak ada Invoice, tidak ada SSE", async () => {
@@ -735,7 +720,7 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
     };
 
     Order.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(mockQrisOrder),
+      lean: vi.fn().mockResolvedValue(mockQrisOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
     // Simulasi stok habis saat QRIS dikonfirmasi
@@ -764,9 +749,7 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
     Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
     User.findById.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        session: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockCashier),
-        }),
+        lean: vi.fn().mockResolvedValue(mockCashier),
       }),
     });
     Invoice.create.mockRejectedValue(new Error("Invoice write error"));
@@ -786,5 +769,190 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
     // Dalam transaksi nyata, MongoDB akan rollback semua perubahan.
     expect(Invoice.create).toHaveBeenCalledTimes(1); // dipanggil tapi gagal
     expect(sseManager.broadcastToRole).not.toHaveBeenCalled(); // SSE tidak di-broadcast
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Skenario 4: Online QRIS end-to-end (service integration)
+// Validates: Requirements 7.1, 7.2, 7.4
+// ---------------------------------------------------------------------------
+
+describe("Skenario 4: Online QRIS — create order online → complete payment → status completed + stok berkurang + Invoice terbuat", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    Product.findById.mockReturnValue({
+      lean: vi.fn().mockResolvedValue(mockProduct),
+    });
+
+    Order.create.mockResolvedValue({
+      toObject: () => ({
+        _id: "online-order-qris-001",
+        invoiceNumber: "INV-20260507-ONLINE-0001",
+        cashierId: null,
+        orderType: "ONLINE",
+        customerName: "Andi",
+        customerWhatsapp: "081234567890",
+        shippingAddress: "Jl. Mawar No. 9",
+        paymentMethod: "QRIS",
+        items: mockOrderItems,
+        totalAmount: 50000,
+        orderStatus: "waiting_preparation",
+        paymentStatus: "pending",
+        sseToken: "token-online-qris",
+        createdAt: new Date("2026-05-07T08:00:00.000Z"),
+        updatedAt: new Date("2026-05-07T08:00:00.000Z"),
+      }),
+    });
+
+    // Payment stage: order already ready in warehouse queue
+    Order.findById.mockReturnValue({
+      lean: vi.fn().mockResolvedValue({
+        ...mockOrder,
+        _id: "online-order-qris-001",
+        invoiceNumber: "INV-20260507-ONLINE-0001",
+        cashierId: null,
+        orderType: "ONLINE",
+        paymentMethod: "QRIS",
+        orderStatus: "ready",
+        paymentStatus: "pending",
+        sseToken: "token-online-qris",
+      }),
+    });
+    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
+    User.findById.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ _id: "cashier-system", name: "Kasir" }),
+      }),
+    });
+    Invoice.create.mockResolvedValue({
+      toObject: () => ({
+        ...mockInvoiceDoc,
+        orderId: "online-order-qris-001",
+        invoiceNumber: "INV-20260507-ONLINE-0001",
+        paymentMethod: "QRIS",
+        cashReceived: null,
+        changeAmount: null,
+      }),
+    });
+  });
+
+  it("harus menghasilkan order ONLINE, lalu completePayment membuat invoice dan mengurangi stok", async () => {
+    const onlineOrder = await createOnlineOrder({
+      items: [{ productId: "product-id-001", quantity: 2 }],
+      customerName: "Andi",
+      customerWhatsapp: "081234567890",
+      shippingAddress: "Jl. Mawar No. 9",
+      paymentMethod: "QRIS",
+    });
+
+    expect(onlineOrder.orderType).toBe("ONLINE");
+    expect(onlineOrder.paymentStatus).toBe("pending");
+
+    const invoice = await completePayment(onlineOrder._id, {
+      method: "QRIS",
+      cashReceived: null,
+      changeAmount: null,
+    });
+
+    expect(invoice.invoiceNumber).toBe("INV-20260507-ONLINE-0001");
+    expect(invoice.paymentMethod).toBe("QRIS");
+    expect(Product.bulkWrite).toHaveBeenCalledTimes(1);
+    expect(Invoice.create).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Skenario 5: Online COD flow (service integration)
+// Validates: Requirements 8.1, 8.2, 8.3
+// ---------------------------------------------------------------------------
+
+describe("Skenario 5: Online COD — create order online → warehouse ready → konfirmasi COD → status completed", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    Product.findById.mockReturnValue({
+      lean: vi.fn().mockResolvedValue(mockProduct),
+    });
+
+    Order.create.mockResolvedValue({
+      toObject: () => ({
+        _id: "online-order-cod-001",
+        invoiceNumber: "INV-20260507-ONLINE-0002",
+        cashierId: null,
+        orderType: "ONLINE",
+        customerName: "Sari",
+        customerWhatsapp: "081111111111",
+        shippingAddress: "Jl. Melati No. 7",
+        paymentMethod: "CASH",
+        items: mockOrderItems,
+        totalAmount: 50000,
+        orderStatus: "waiting_preparation",
+        paymentStatus: "pending",
+        sseToken: "token-online-cod",
+        createdAt: new Date("2026-05-07T08:10:00.000Z"),
+        updatedAt: new Date("2026-05-07T08:10:00.000Z"),
+      }),
+    });
+
+    // Simulate warehouse already moved order to `ready`
+    Order.findById.mockReturnValue({
+      lean: vi.fn().mockResolvedValue({
+        ...mockOrder,
+        _id: "online-order-cod-001",
+        invoiceNumber: "INV-20260507-ONLINE-0002",
+        cashierId: null,
+        orderType: "ONLINE",
+        paymentMethod: "CASH",
+        orderStatus: "ready",
+        paymentStatus: "pending",
+        sseToken: "token-online-cod",
+      }),
+    });
+    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
+    User.findById.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ _id: "cashier-system", name: "Kasir" }),
+      }),
+    });
+    Invoice.create.mockResolvedValue({
+      toObject: () => ({
+        ...mockInvoiceDoc,
+        orderId: "online-order-cod-001",
+        invoiceNumber: "INV-20260507-ONLINE-0002",
+        paymentMethod: "CASH",
+        cashReceived: null,
+        changeAmount: null,
+      }),
+    });
+  });
+
+  it("harus menyelesaikan pesanan COD online setelah konfirmasi pembayaran manual", async () => {
+    const onlineOrder = await createOnlineOrder({
+      items: [{ productId: "product-id-001", quantity: 2 }],
+      customerName: "Sari",
+      customerWhatsapp: "081111111111",
+      shippingAddress: "Jl. Melati No. 7",
+      paymentMethod: "CASH",
+    });
+
+    const invoice = await completePayment(onlineOrder._id, {
+      method: "CASH",
+      cashReceived: null,
+      changeAmount: null,
+    });
+
+    expect(invoice.invoiceNumber).toBe("INV-20260507-ONLINE-0002");
+    expect(Order.updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "online-order-cod-001" }),
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          orderStatus: "completed",
+          paymentStatus: "paid",
+        }),
+      })
+    );
   });
 });

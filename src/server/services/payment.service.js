@@ -5,6 +5,7 @@ import Product from "@/models/Product";
 import User from "@/models/User";
 import Invoice from "@/models/Invoice";
 import sseManager from "@/lib/sse";
+import { notifyOrderConfirmed } from "@/lib/whatsapp";
 
 /**
  * Custom error class for payment operations.
@@ -82,7 +83,15 @@ export async function completePayment(orderId, paymentData) {
     throw new PaymentError(PaymentErrorCode.QRIS_EXPIRED, "Kode QRIS sudah kedaluwarsa");
   }
 
-  if (order.orderStatus !== "ready") {
+  // Untuk pesanan ONLINE dengan pembayaran digital (QRIS/e-wallet), order tidak harus
+  // dalam state "ready" — pembayaran bisa dikonfirmasi kapan saja setelah order dibuat.
+  // Untuk pesanan OFFLINE atau pembayaran manual (CASH/BANK_TRANSFER), order harus "ready".
+  const isDigitalOnlinePayment =
+    order.orderType === "ONLINE" &&
+    order.paymentMethod !== "CASH" &&
+    order.paymentMethod !== "BANK_TRANSFER";
+
+  if (!isDigitalOnlinePayment && order.orderStatus !== "ready") {
     throw new PaymentError(
       PaymentErrorCode.ORDER_NOT_READY,
       "Pesanan belum siap. Tunggu konfirmasi dari staf gudang."
@@ -91,17 +100,25 @@ export async function completePayment(orderId, paymentData) {
 
   const now = new Date();
 
+  // Untuk pesanan ONLINE dengan pembayaran digital yang belum "ready",
+  // set orderStatus ke "preparing" agar gudang tahu perlu disiapkan.
+  // Untuk pesanan yang sudah "ready", langsung ke "completed".
+  const newOrderStatus =
+    isDigitalOnlinePayment && order.orderStatus !== "ready"
+      ? "preparing"
+      : "completed";
+
   // ── Step 1: Update Order status ──────────────────────────────────────────────
   await Order.updateOne(
     { _id: orderId },
     {
       $set: {
         paymentStatus: "paid",
-        orderStatus: "completed",
+        orderStatus: newOrderStatus,
         paymentMethod: paymentData.method,
         cashReceived: paymentData.cashReceived ?? null,
         changeAmount: paymentData.changeAmount ?? null,
-        completedAt: now,
+        completedAt: newOrderStatus === "completed" ? now : null,
         updatedAt: now,
       },
     }
@@ -134,8 +151,8 @@ export async function completePayment(orderId, paymentData) {
       {
         $set: {
           paymentStatus: "pending",
-          orderStatus: "ready",
-          paymentMethod: null,
+          orderStatus: order.orderStatus, // kembalikan ke status semula
+          paymentMethod: order.paymentMethod ?? null,
           cashReceived: null,
           changeAmount: null,
           completedAt: null,
@@ -185,8 +202,8 @@ export async function completePayment(orderId, paymentData) {
       {
         $set: {
           paymentStatus: "pending",
-          orderStatus: "ready",
-          paymentMethod: null,
+          orderStatus: order.orderStatus, // kembalikan ke status semula
+          paymentMethod: order.paymentMethod ?? null,
           cashReceived: null,
           changeAmount: null,
           completedAt: null,
@@ -213,12 +230,29 @@ export async function completePayment(orderId, paymentData) {
 
   // ── Broadcast SSE ────────────────────────────────────────────────────────────
   try {
+    const eventType = newOrderStatus === "completed" ? "order_completed" : "order_status_updated";
     sseManager.broadcastToRole(
-      { type: "order_completed", data: { orderId: orderId.toString() } },
+      { type: eventType, data: { orderId: orderId.toString(), orderStatus: newOrderStatus } },
       ["CASHIER", "WAREHOUSE"]
     );
   } catch (err) {
     console.error("SSE broadcast error (order_completed):", err);
+  }
+
+  // ── Notifikasi WhatsApp ke pelanggan ─────────────────────────────────────────
+  if (order.orderType === "ONLINE" && order.customerWhatsapp) {
+    try {
+      await notifyOrderConfirmed({
+        customerName: order.customerName,
+        customerWhatsapp: order.customerWhatsapp,
+        invoiceNumber: order.invoiceNumber,
+        totalAmount: order.totalAmount,
+        paymentMethod: paymentData.method,
+      });
+    } catch (err) {
+      // WA failure must not break the payment flow
+      console.error("WhatsApp notification error (order confirmed):", err);
+    }
   }
 
   return invoice;

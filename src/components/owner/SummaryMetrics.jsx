@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatRupiah } from "@/lib/utils";
 
 /**
@@ -11,21 +11,22 @@ export default function SummaryMetrics({ refreshKey }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetch_() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/analytics/summary");
-        const body = await res.json();
-        if (res.ok) setData(body);
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-      }
+  const fetchSummary = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/analytics/summary");
+      const body = await res.json();
+      if (res.ok) setData(body);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
     }
-    fetch_();
-  }, [refreshKey]);
+  }, []);
+
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary, refreshKey]);
 
   if (loading) {
     return (

@@ -71,8 +71,12 @@ export async function POST(request) {
  * List orders with optional filters.
  * Role: CASHIER, WAREHOUSE.
  *
- * Query params: ?status=<orderStatus>, ?cashierId=<id>
- * Response 200: { data: Order[] }
+ * Query params:
+ *   ?status=<orderStatus>       — filter by order status
+ *   ?cashierId=<id>             — filter by cashier
+ *   ?orderType=ONLINE|OFFLINE   — filter by order type (for warehouse view)
+ * Response 200: { data: Order[], total: number }
+ * Response 400: { error: { code, message } } — if orderType value is invalid
  */
 export async function GET(request) {
   const session = await auth();
@@ -95,8 +99,21 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || undefined;
     const cashierId = searchParams.get("cashierId") || undefined;
+    const orderType = searchParams.get("orderType") || undefined;
 
-    const orders = await getOrders({ status, cashierId });
+    if (orderType !== undefined && !["ONLINE", "OFFLINE"].includes(orderType)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "orderType harus berupa ONLINE atau OFFLINE",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    const orders = await getOrders({ status, cashierId, orderType });
 
     return NextResponse.json({ data: orders, total: orders.length });
   } catch (err) {

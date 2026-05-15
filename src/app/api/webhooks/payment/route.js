@@ -6,6 +6,7 @@ import {
   PaymentError,
   PaymentErrorCode,
 } from "@/server/services/payment.service";
+import sseManager from "@/lib/sse";
 
 /**
  * Verify the webhook signature from the payment gateway.
@@ -114,11 +115,31 @@ export async function POST(request) {
       );
     }
 
-    await completePayment(orderId, {
+    const invoice = await completePayment(orderId, {
       method: "QRIS",
       cashReceived: null,
       changeAmount: null,
     });
+
+    // Broadcast payment_confirmed to the customer's SSE connection (ONLINE orders only)
+    if (order.orderType === "ONLINE" && order.sseToken) {
+      try {
+        sseManager.broadcastToToken(
+          {
+            type: "payment_confirmed",
+            data: {
+              orderId,
+              invoiceNumber: invoice.invoiceNumber,
+              orderStatus: "completed",
+            },
+          },
+          order.sseToken
+        );
+      } catch (sseErr) {
+        // SSE broadcast failure must not break the webhook response
+        console.error("SSE broadcastToToken error (payment_confirmed):", sseErr);
+      }
+    }
 
     return NextResponse.json({ data: { success: true, processed: true } });
   } catch (err) {

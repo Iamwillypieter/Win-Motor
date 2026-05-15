@@ -6,7 +6,7 @@ Sistem Point of Sale (POS) berbasis web yang dibangun dengan Next.js 14 App Rout
 
 ### Tujuan Desain
 
-- **Konsistensi data**: Penyelesaian pembayaran dan pengurangan stok dilakukan dalam satu operasi atomik menggunakan Prisma transactions.
+- **Konsistensi data**: Penyelesaian pembayaran dan pengurangan stok dilakukan dalam satu operasi sekuensial dengan manual rollback menggunakan Mongoose, kompatibel dengan MongoDB standalone instance.
 - **Real-time**: Perubahan status pesanan dan stok dipropagasi ke semua klien yang relevan dalam < 3 detik menggunakan Server-Sent Events (SSE).
 - **Keamanan berbasis peran**: Setiap rute dilindungi di sisi server menggunakan NextAuth.js middleware; klien tidak pernah menjadi satu-satunya penjaga akses.
 - **Integritas historis**: Produk tidak pernah dihapus secara permanen (soft delete) sehingga data pesanan lama tetap valid.
@@ -1369,4 +1369,3 @@ Integration tests berfokus pada:
 - **Webhook QRIS**: Verifikasi webhook dari payment gateway memicu penyelesaian pesanan
 - **Database transactions**: Verifikasi rollback terjadi saat ada kegagalan parsial
 - **File upload**: Verifikasi validasi format dan ukuran gambar end-to-end
-

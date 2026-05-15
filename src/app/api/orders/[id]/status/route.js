@@ -3,26 +3,30 @@ import { auth } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
 import sseManager from "@/lib/sse";
+import { completePayment, PaymentError } from "@/server/services/payment.service";
+import { notifyOrderShipping } from "@/lib/whatsapp";
 
 /** Valid status transitions allowed by WAREHOUSE staff */
-const ALLOWED_STATUSES = ["preparing", "ready"];
+const ALLOWED_STATUSES = ["preparing", "ready", "shipping"];
 
 /**
  * PATCH /api/orders/[id]/status
  * Update the orderStatus of an order.
  * Role: WAREHOUSE only.
  *
- * Body: { orderStatus: "preparing" | "ready" }
+ * Body: { orderStatus: "preparing" | "ready" | "shipping" | "completed" }
  *
- * When status becomes "ready":
- *   - Broadcasts `order_ready` event to the specific cashier who created the order
- *
- * Always broadcasts `order_status_updated` to WAREHOUSE clients.
+ * Status transitions:
+ *   - "preparing" | "ready" — update orderStatus directly
+ *   - "shipping" — hanya untuk pesanan ONLINE yang sudah paymentStatus "paid".
+ *       Mengirim notifikasi WhatsApp ke pelanggan bahwa pesanan sedang dikirim.
+ *   - "completed" — hanya untuk ONLINE + CASH atau ONLINE + BANK_TRANSFER.
+ *       Memanggil completePayment() yang atomically:
+ *         1. Sets paymentStatus → "paid", orderStatus → "completed"
+ *         2. Decrements stock
+ *         3. Creates Invoice
  *
  * Response 200: { data: { orderId, orderStatus } }
- * Response 400: { error: { code, message } }
- * Response 403: { error: { code, message } }
- * Response 404: { error: { code, message } }
  */
 export async function PATCH(request, { params }) {
   const session = await auth();
@@ -55,12 +59,14 @@ export async function PATCH(request, { params }) {
 
   const { orderStatus } = body;
 
-  if (!orderStatus || !ALLOWED_STATUSES.includes(orderStatus)) {
+  const allAllowedStatuses = [...ALLOWED_STATUSES, "completed"];
+
+  if (!orderStatus || !allAllowedStatuses.includes(orderStatus)) {
     return NextResponse.json(
       {
         error: {
           code: "VALIDATION_ERROR",
-          message: `orderStatus harus salah satu dari: ${ALLOWED_STATUSES.join(", ")}`,
+          message: `orderStatus harus salah satu dari: ${allAllowedStatuses.join(", ")}`,
         },
       },
       { status: 400 }
@@ -79,7 +85,161 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    // Only allow updating orders that are still in the active queue
+    // ── Shipping Path (ONLINE + sudah bayar → shipping) ──────────────────────
+    if (orderStatus === "shipping") {
+      if (order.orderType !== "ONLINE") {
+        return NextResponse.json(
+          {
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Status 'shipping' hanya untuk pesanan online.",
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      if (order.paymentStatus !== "paid") {
+        return NextResponse.json(
+          {
+            error: {
+              code: "INVALID_STATUS",
+              message: "Pesanan belum dibayar. Tidak dapat ditandai sebagai dikirim.",
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!["preparing", "ready"].includes(order.orderStatus)) {
+        return NextResponse.json(
+          {
+            error: {
+              code: "INVALID_STATUS",
+              message: `Tidak dapat mengubah status dari "${order.orderStatus}" ke "shipping".`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      order.orderStatus = "shipping";
+      order.updatedAt = new Date();
+      await order.save();
+
+      // Broadcast ke WAREHOUSE dan CASHIER
+      try {
+        sseManager.broadcastToRole(
+          { type: "order_status_updated", data: { orderId, orderStatus: "shipping" } },
+          ["WAREHOUSE", "CASHIER"]
+        );
+      } catch (err) {
+        console.error("SSE broadcast error (shipping):", err);
+      }
+
+      // Notifikasi SSE ke pelanggan
+      try {
+        if (order.sseToken) {
+          sseManager.broadcastToToken(
+            {
+              type: "order_shipping",
+              data: { orderId, invoiceNumber: order.invoiceNumber, orderStatus: "shipping" },
+            },
+            order.sseToken
+          );
+        }
+      } catch (err) {
+        console.error("SSE broadcast error (order_shipping → customer token):", err);
+      }
+
+      // Notifikasi WhatsApp ke pelanggan
+      if (order.customerWhatsapp) {
+        try {
+          await notifyOrderShipping({
+            customerName: order.customerName,
+            customerWhatsapp: order.customerWhatsapp,
+            invoiceNumber: order.invoiceNumber,
+            shippingAddress: order.shippingAddress,
+          });
+        } catch (err) {
+          console.error("WhatsApp notification error (shipping):", err);
+        }
+      }
+
+      return NextResponse.json({ data: { orderId, orderStatus: "shipping" } });
+    }
+
+    // ── Manual Completion Path (ONLINE + CASH or ONLINE + BANK_TRANSFER → completed) ──
+    if (orderStatus === "completed") {
+      const isManualCompletion =
+        order.orderType === "ONLINE" &&
+        (order.paymentMethod === "CASH" || order.paymentMethod === "BANK_TRANSFER");
+
+      if (!isManualCompletion) {
+        return NextResponse.json(
+          {
+            error: {
+              code: "VALIDATION_ERROR",
+              message: `orderStatus harus salah satu dari: ${ALLOWED_STATUSES.join(", ")}`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      if (order.orderStatus !== "ready") {
+        const methodLabel = order.paymentMethod === "CASH" ? "COD" : "Transfer Bank";
+        return NextResponse.json(
+          {
+            error: {
+              code: "INVALID_STATUS",
+              message: `Tidak dapat mengkonfirmasi ${methodLabel}. Pesanan harus berstatus "ready" terlebih dahulu (saat ini: ${order.orderStatus})`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      try {
+        await completePayment(orderId, {
+          method: order.paymentMethod,
+          cashReceived: null,
+          changeAmount: null,
+        });
+      } catch (err) {
+        if (err instanceof PaymentError) {
+          return NextResponse.json(
+            { error: { code: err.code, message: err.message } },
+            { status: 400 }
+          );
+        }
+        throw err;
+      }
+
+      // Notify customer's SSE connection
+      try {
+        if (order.sseToken) {
+          sseManager.broadcastToToken(
+            {
+              type: "order_completed",
+              data: {
+                orderId,
+                invoiceNumber: order.invoiceNumber,
+                orderStatus: "completed",
+              },
+            },
+            order.sseToken
+          );
+        }
+      } catch (err) {
+        console.error("SSE broadcast error (order_completed → customer token):", err);
+      }
+
+      return NextResponse.json({ data: { orderId, orderStatus: "completed" } });
+    }
+
+    // ── Standard Status Update Path (preparing | ready) ──────────────────────
+
     if (!["waiting_preparation", "preparing"].includes(order.orderStatus)) {
       return NextResponse.json(
         {
@@ -96,22 +256,17 @@ export async function PATCH(request, { params }) {
     order.updatedAt = new Date();
     await order.save();
 
-    const orderObj = order.toObject();
-
-    // Broadcast status update to all WAREHOUSE clients
+    // Broadcast status update to WAREHOUSE
     try {
       sseManager.broadcastToRole(
-        {
-          type: "order_status_updated",
-          data: { orderId: orderId, orderStatus },
-        },
+        { type: "order_status_updated", data: { orderId, orderStatus } },
         ["WAREHOUSE"]
       );
     } catch (err) {
       console.error("SSE broadcast error (order_status_updated):", err);
     }
 
-    // When order is ready, notify the specific cashier who created it
+    // When order is ready, notify cashier (OFFLINE) or customer SSE token (ONLINE)
     if (orderStatus === "ready") {
       try {
         const cashierId = order.cashierId?.toString();
@@ -119,23 +274,31 @@ export async function PATCH(request, { params }) {
           sseManager.broadcastToUser(
             {
               type: "order_ready",
-              data: {
-                orderId: orderId,
-                invoiceNumber: order.invoiceNumber,
-                orderStatus: "ready",
-              },
+              data: { orderId, invoiceNumber: order.invoiceNumber, orderStatus: "ready" },
             },
             cashierId
           );
         }
       } catch (err) {
-        console.error("SSE broadcast error (order_ready):", err);
+        console.error("SSE broadcast error (order_ready → cashier):", err);
+      }
+
+      try {
+        if (order.orderType === "ONLINE" && order.sseToken) {
+          sseManager.broadcastToToken(
+            {
+              type: "order_ready",
+              data: { orderId, invoiceNumber: order.invoiceNumber, orderStatus: "ready" },
+            },
+            order.sseToken
+          );
+        }
+      } catch (err) {
+        console.error("SSE broadcast error (order_ready → customer token):", err);
       }
     }
 
-    return NextResponse.json({
-      data: { orderId, orderStatus },
-    });
+    return NextResponse.json({ data: { orderId, orderStatus } });
   } catch (err) {
     console.error(`PATCH /api/orders/${orderId}/status error:`, err);
     return NextResponse.json(

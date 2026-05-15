@@ -121,19 +121,29 @@ export async function getMonthlyMetrics() {
 }
 
 /**
- * Get summary metrics for completed orders in the given time range.
+ * Get summary metrics for completed orders in the given time range,
+ * segmented by orderType (OFFLINE / ONLINE).
  *
  * @param {"daily"|"weekly"|"monthly"} range
  * @param {string|null} [from] - ISO date string
  * @param {string|null} [to]   - ISO date string
  * @param {string|null} [month] - Format "YYYY-MM"
- * @returns {Promise<{ totalRevenue: number, totalOrders: number, averageOrderValue: number }>}
+ * @returns {Promise<{
+ *   totalRevenue: number,
+ *   offlineRevenue: number,
+ *   onlineRevenue: number,
+ *   totalOrders: number,
+ *   offlineOrders: number,
+ *   onlineOrders: number,
+ *   averageOrderValue: number
+ * }>}
  */
 export async function getMetrics(range, from = null, to = null, month = null) {
   await connectDB();
 
   const { startDate, endDate } = buildDateRange(range, from, to, month);
 
+  // Aggregate per orderType so we get offline/online breakdown in one query
   const result = await Order.aggregate([
     {
       $match: {
@@ -143,21 +153,43 @@ export async function getMetrics(range, from = null, to = null, month = null) {
     },
     {
       $group: {
-        _id: null,
-        totalRevenue: { $sum: "$totalAmount" },
-        totalOrders: { $sum: 1 },
+        _id: "$orderType", // "OFFLINE" | "ONLINE" | null (legacy orders without orderType)
+        revenue: { $sum: "$totalAmount" },
+        orders: { $sum: 1 },
       },
     },
   ]);
 
-  if (!result.length) {
-    return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
+  // Initialise counters
+  let offlineRevenue = 0;
+  let onlineRevenue = 0;
+  let offlineOrders = 0;
+  let onlineOrders = 0;
+
+  for (const row of result) {
+    if (row._id === "ONLINE") {
+      onlineRevenue = row.revenue;
+      onlineOrders = row.orders;
+    } else {
+      // "OFFLINE" or null (legacy orders created before orderType field existed)
+      offlineRevenue += row.revenue;
+      offlineOrders += row.orders;
+    }
   }
 
-  const { totalRevenue, totalOrders } = result[0];
+  const totalRevenue = offlineRevenue + onlineRevenue;
+  const totalOrders = offlineOrders + onlineOrders;
   const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
 
-  return { totalRevenue, totalOrders, averageOrderValue };
+  return {
+    totalRevenue,
+    offlineRevenue,
+    onlineRevenue,
+    totalOrders,
+    offlineOrders,
+    onlineOrders,
+    averageOrderValue,
+  };
 }
 
 /**
@@ -309,9 +341,12 @@ export async function getTopProducts(limit = 10) {
 
 /**
  * Generate a CSV string for completed orders in the given time range.
- * Columns: invoiceNumber, tanggal, nama Kasir, items, totalAmount, metode pembayaran
+ * Columns: invoiceNumber, tanggal, nama Kasir, items, totalAmount, metode pembayaran,
+ *          orderType, customerName, customerWhatsapp, shippingAddress
  *
  * Uses Invoice collection for cashierName snapshot.
+ * For OFFLINE orders, the customer-specific columns (customerName, customerWhatsapp,
+ * shippingAddress) will be empty for backward compatibility.
  *
  * @param {"daily"|"weekly"|"monthly"} range
  * @param {string|null} [from] - ISO date string
@@ -338,6 +373,10 @@ export async function exportCSV(range, from = null, to = null) {
     "items",
     "totalAmount",
     "metode pembayaran",
+    "orderType",
+    "customerName",
+    "customerWhatsapp",
+    "shippingAddress",
   ];
 
   const rows = invoices.map((inv) => {
@@ -354,6 +393,13 @@ export async function exportCSV(range, from = null, to = null) {
       .map((item) => `${item.productName} x${item.quantity}`)
       .join("; ");
 
+    // For OFFLINE orders (or legacy orders without orderType), customer fields are empty
+    const orderType = inv.orderType || "OFFLINE";
+    const customerName = inv.customerName || "";
+    const customerWhatsapp = inv.customerWhatsapp || "";
+    // Wrap shippingAddress in quotes to handle commas/newlines in addresses
+    const shippingAddress = inv.shippingAddress ? `"${inv.shippingAddress.replace(/"/g, '""')}"` : "";
+
     return [
       inv.invoiceNumber,
       tanggal,
@@ -361,6 +407,10 @@ export async function exportCSV(range, from = null, to = null) {
       `"${itemsStr}"`,
       inv.totalAmount,
       inv.paymentMethod,
+      orderType,
+      customerName,
+      customerWhatsapp,
+      shippingAddress,
     ].join(",");
   });
 

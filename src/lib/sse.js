@@ -23,11 +23,12 @@ class SSEManager {
    * Register a new SSE client.
    *
    * @param {string} clientId - Unique ID for this connection (e.g. userId + timestamp)
-   * @param {string} userId - Authenticated user's ID
-   * @param {string} role - User's role (CASHIER | WAREHOUSE | OWNER)
+   * @param {string} userId - Authenticated user's ID (or null for public connections)
+   * @param {string} role - User's role (CASHIER | WAREHOUSE | OWNER | null for public)
    * @param {ReadableStreamDefaultController} controller - Stream controller
+   * @param {string|null} [sseToken] - Optional one-time token for public customer connections
    */
-  register(clientId, userId, role, controller) {
+  register(clientId, userId, role, controller, sseToken = null) {
     // Send initial connection confirmation
     try {
       controller.enqueue(
@@ -48,7 +49,7 @@ class SSEManager {
       }
     }, HEARTBEAT_INTERVAL_MS);
 
-    this.clients.set(clientId, { userId, role, controller, heartbeatInterval });
+    this.clients.set(clientId, { userId, role, controller, heartbeatInterval, sseToken });
   }
 
   /**
@@ -75,6 +76,29 @@ class SSEManager {
 
     for (const [clientId, client] of this.clients.entries()) {
       if (roles.includes(client.role)) {
+        try {
+          client.controller.enqueue(payload);
+        } catch {
+          // Connection closed — clean up stale client
+          this.unregister(clientId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Broadcast an event to all public SSE connections identified by a sseToken.
+   * Used for customer-facing order status updates (no auth session).
+   *
+   * @param {{ type: string, data: unknown }} event
+   * @param {string} sseToken - The one-time token stored on the Order document
+   */
+  broadcastToToken(event, sseToken) {
+    if (!sseToken) return;
+    const payload = `data: ${JSON.stringify(event)}\n\n`;
+
+    for (const [clientId, client] of this.clients.entries()) {
+      if (client.sseToken === sseToken) {
         try {
           client.controller.enqueue(payload);
         } catch {

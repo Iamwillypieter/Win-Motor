@@ -57,18 +57,42 @@ export default auth(function middleware(req) {
     return NextResponse.redirect(forbiddenUrl);
   }
 
-  return NextResponse.next();
+  // Pass pathname as header so Server Components (e.g. Navbar) can read it
+  const response = NextResponse.next();
+  response.headers.set("x-pathname", pathname);
+  return response;
 });
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico
-     * - public folder files
+     * Hanya cocokkan rute yang memerlukan auth:
+     * - /login, /403 (halaman auth)
+     * - /cashier/* (kasir)
+     * - /warehouse/* (staf gudang)
+     * - /owner/* (owner)
+     * - /api/* KECUALI /api/store/* dan /api/auth/* dan /api/sse/public
+     *
+     * Rute yang TIDAK diproteksi (tidak masuk matcher):
+     * - /store/* (halaman publik online ordering)
+     * - /api/store/* (endpoint publik online ordering)
+     * - /api/sse/public (SSE publik untuk pelanggan)
+     * - /api/auth/* (NextAuth internal)
+     * - /api/webhooks/* (webhook payment gateway)
+     * - /_next/*, /favicon.ico, file statis
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/login",
+    "/403",
+    "/cashier/:path*",
+    "/warehouse/:path*",
+    "/owner/:path*",
+    "/api/analytics/:path*",
+    "/api/invoices/:path*",
+    "/api/orders/:path*",
+    "/api/products/:path*",
+    "/api/reports/:path*",
+    "/api/sse",
+    "/api/users/:path*",
+    "/api/cron/:path*",
   ],
 };

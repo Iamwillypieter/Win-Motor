@@ -7,6 +7,7 @@ import CashierRanking from "@/components/owner/CashierRanking";
 import TopProducts from "@/components/owner/TopProducts";
 import LowStockAlert from "@/components/owner/LowStockAlert";
 import SummaryMetrics from "@/components/owner/SummaryMetrics";
+import MetricCards from "@/components/owner/MetricCards";
 
 const AUTO_REFRESH_INTERVAL = 30_000; // 30 detik
 
@@ -154,6 +155,16 @@ export default function OwnerDashboardPage() {
             {error}
           </div>
         )}
+
+        {/* Metrik utama — total, online, offline, pesanan, rata-rata (sesuai range yang dipilih) */}
+        <MetricCards
+          totalRevenue={summary?.totalRevenue ?? 0}
+          onlineRevenue={summary?.onlineRevenue ?? 0}
+          offlineRevenue={summary?.offlineRevenue ?? 0}
+          totalOrders={summary?.totalOrders ?? 0}
+          averageOrderValue={summary?.averageOrderValue ?? 0}
+          loading={loading}
+        />
 
         {/* Summary harian & bulanan — selalu menampilkan hari ini dan bulan berjalan */}
         <SummaryMetrics refreshKey={lastRefresh} />

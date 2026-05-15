@@ -146,9 +146,9 @@ describe("P21: Metrik Dashboard Akurat", () => {
 
             Order.aggregate.mockResolvedValue([
               {
-                _id: null,
-                totalRevenue: expectedRevenue,
-                totalOrders: expectedOrders,
+                _id: "OFFLINE",
+                revenue: expectedRevenue,
+                orders: expectedOrders,
               },
             ]);
 
@@ -179,7 +179,7 @@ describe("P21: Metrik Dashboard Akurat", () => {
             vi.clearAllMocks();
 
             Order.aggregate.mockResolvedValue([
-              { _id: null, totalRevenue, totalOrders: count },
+              { _id: "OFFLINE", revenue: totalRevenue, orders: count },
             ]);
 
             const result = await getMetrics(range);
@@ -212,7 +212,7 @@ describe("P21: Metrik Dashboard Akurat", () => {
             const expectedAvg = Math.round(totalRevenue / totalOrders);
 
             Order.aggregate.mockResolvedValue([
-              { _id: null, totalRevenue, totalOrders },
+              { _id: "OFFLINE", revenue: totalRevenue, orders: totalOrders },
             ]);
 
             const result = await getMetrics(range);
@@ -274,7 +274,7 @@ describe("P21: Metrik Dashboard Akurat", () => {
             } else {
               const totalRevenue = amounts.reduce((sum, a) => sum + a, 0);
               Order.aggregate.mockResolvedValue([
-                { _id: null, totalRevenue, totalOrders: amounts.length },
+                { _id: "OFFLINE", revenue: totalRevenue, orders: amounts.length },
               ]);
             }
 

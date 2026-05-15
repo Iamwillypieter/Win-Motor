@@ -12,7 +12,10 @@ export default function LogoutButton({ className = "" }) {
 
   async function handleLogout() {
     setIsLoggingOut(true);
-    await signOut({ callbackUrl: "/login" });
+    // Langsung redirect ke /login tanpa menunggu server response
+    // signOut tetap dipanggil di background untuk membersihkan sesi
+    signOut({ callbackUrl: "/login", redirect: false });
+    window.location.href = "/login";
   }
 
   return (

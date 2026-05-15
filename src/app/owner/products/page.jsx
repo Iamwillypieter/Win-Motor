@@ -16,6 +16,8 @@ export default async function OwnerProductsPage() {
   }
 
   let products = [];
+  let fetchError = null;
+
   try {
     await connectDB();
     const docs = await Product.find({ isActive: true })
@@ -34,6 +36,7 @@ export default async function OwnerProductsPage() {
     }));
   } catch (err) {
     console.error("OwnerProductsPage: failed to fetch products", err);
+    fetchError = "Gagal memuat data produk. Silakan refresh halaman.";
   }
 
   return (
@@ -45,7 +48,14 @@ export default async function OwnerProductsPage() {
             {products.length} produk aktif
           </p>
         </div>
-        <OwnerProductList initialProducts={products} />
+
+        {fetchError ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+            {fetchError}
+          </div>
+        ) : (
+          <OwnerProductList initialProducts={products} />
+        )}
       </div>
     </main>
   );

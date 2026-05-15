@@ -16,10 +16,12 @@ function MetricCard({ title, value, subtitle }) {
 }
 
 /**
- * MetricCards — displays totalRevenue, totalOrders, averageOrderValue.
+ * MetricCards — displays totalRevenue, onlineRevenue, offlineRevenue, totalOrders, averageOrderValue.
  *
  * @param {{
  *   totalRevenue: number,
+ *   onlineRevenue: number,
+ *   offlineRevenue: number,
  *   totalOrders: number,
  *   averageOrderValue: number,
  *   loading?: boolean
@@ -27,14 +29,16 @@ function MetricCard({ title, value, subtitle }) {
  */
 export default function MetricCards({
   totalRevenue = 0,
+  onlineRevenue = 0,
+  offlineRevenue = 0,
   totalOrders = 0,
   averageOrderValue = 0,
   loading = false,
 }) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className="h-32 animate-pulse rounded-xl border border-gray-200 bg-gray-100"
@@ -45,11 +49,21 @@ export default function MetricCards({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <MetricCard
         title="Total Pendapatan"
         value={formatRupiah(totalRevenue)}
         subtitle="Dari pesanan selesai"
+      />
+      <MetricCard
+        title="Pendapatan Online"
+        value={formatRupiah(onlineRevenue)}
+        subtitle="Pesanan kanal online"
+      />
+      <MetricCard
+        title="Pendapatan Toko"
+        value={formatRupiah(offlineRevenue)}
+        subtitle="Pesanan kasir toko"
       />
       <MetricCard
         title="Total Pesanan"

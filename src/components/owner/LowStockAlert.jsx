@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const THRESHOLD = 5; // produk dengan stok <= 5 dianggap hampir habis
 const REFRESH_INTERVAL = 60_000; // refresh setiap 1 menit
@@ -19,7 +19,7 @@ export default function LowStockAlert({ refreshKey }) {
   const [error, setError] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
 
-  async function fetchLowStock() {
+  const fetchLowStock = useCallback(async () => {
     try {
       const res = await fetch(`/api/products/low-stock?threshold=${THRESHOLD}`);
       const body = await res.json();
@@ -32,17 +32,17 @@ export default function LowStockAlert({ refreshKey }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     fetchLowStock();
-  }, [refreshKey]);
+  }, [fetchLowStock, refreshKey]);
 
   // Auto-refresh setiap 1 menit
   useEffect(() => {
     const interval = setInterval(fetchLowStock, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchLowStock]);
 
   // Tidak tampilkan apa-apa jika loading pertama kali dan tidak ada masalah
   if (loading) return null;
