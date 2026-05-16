@@ -6,7 +6,7 @@ import { ROUTE_ROLE_MAP } from "@/types/auth.types";
  * Public routes that do not require authentication.
  */
 const PUBLIC_ROUTES = ["/login", "/403"];
-const PUBLIC_PREFIXES = ["/api/auth", "/_next", "/favicon.ico"];
+const PUBLIC_PREFIXES = ["/api/auth", "/api/cron", "/api/webhooks", "/_next", "/favicon.ico"];
 
 /**
  * Determine if a pathname is public (no auth required).
@@ -93,6 +93,5 @@ export const config = {
     "/api/reports/:path*",
     "/api/sse",
     "/api/users/:path*",
-    "/api/cron/:path*",
   ],
 };
