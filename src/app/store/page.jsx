@@ -1,49 +1,45 @@
+import connectDB from "@/lib/db";
+import Product from "@/models/Product";
 import ProductGrid from "@/components/store/ProductGrid";
 
 /**
  * StorePage — halaman katalog publik toko online.
  *
- * Server Component: fetch produk dari /api/store/products saat request,
- * lalu render ProductGrid (client component) dengan data tersebut.
+ * Server Component: fetch produk langsung dari MongoDB (bukan via HTTP)
+ * agar data selalu sinkron dengan kasir dan gudang — tidak ada cache layer.
  *
- * Tidak memerlukan autentikasi staf (Requirement 1.1).
- * CartDrawer sudah dikelola oleh StoreHeader di layout.
- *
- * Requirements:
- * - 1.1: Halaman publik di /store, dapat diakses tanpa autentikasi staf
- * - 1.5: Waktu muat awal < 3 detik pada koneksi broadband standar
+ * Menggunakan query dan model yang sama persis dengan kasir (CashierPage)
+ * sehingga produk, harga, dan stok yang tampil di store selalu identik.
  */
 export const metadata = {
   title: "Katalog Produk — Toko Online",
   description: "Lihat dan pesan produk kami secara online",
 };
 
-async function getProducts() {
-  try {
-    // Gunakan NEXTAUTH_URL untuk absolute URL saat server-side fetch,
-    // fallback ke localhost:3000 jika env tidak tersedia.
-    const baseUrl =
-      process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "http://localhost:3000";
-
-    const res = await fetch(`${baseUrl}/api/store/products`, {
-      next: { revalidate: 60 }, // revalidate setiap 60 detik (ISR)
-    });
-
-    if (!res.ok) {
-      console.error(`GET /api/store/products gagal: ${res.status}`);
-      return [];
-    }
-
-    const json = await res.json();
-    return Array.isArray(json.data) ? json.data : [];
-  } catch (err) {
-    console.error("Gagal mengambil produk:", err);
-    return [];
-  }
-}
+// Paksa halaman ini selalu server-render (tidak di-cache)
+export const dynamic = "force-dynamic";
 
 export default async function StorePage() {
-  const products = await getProducts();
+  let products = [];
+
+  try {
+    await connectDB();
+
+    const raw = await Product.find({ isActive: true })
+      .sort({ name: 1 })
+      .lean();
+
+    // Serialisasi ObjectId dan Date ke plain values (sama seperti CashierPage)
+    products = raw.map((p) => ({
+      _id: p._id.toString(),
+      name: p.name,
+      price: p.price,
+      stock: p.stock,
+      imageUrl: p.imageUrl ?? null,
+    }));
+  } catch (err) {
+    console.error("StorePage: gagal mengambil produk", err);
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">

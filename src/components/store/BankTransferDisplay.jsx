@@ -17,14 +17,11 @@ const BANK_LABELS = {
 /**
  * BankTransferDisplay — menampilkan instruksi transfer bank lengkap:
  * nama bank, nomor rekening, nama penerima, nominal yang harus ditransfer,
- * dan tombol "Saya Sudah Transfer" untuk notifikasi konfirmasi manual.
- *
- * Requirements:
- * - 4.6: Tampilkan nomor rekening tujuan, nama bank, dan nominal yang harus ditransfer
- * - 5.2: Tampilkan instruksi pembayaran sesuai metode pada halaman konfirmasi
+ * dan tombol "Saya Sudah Transfer" untuk notifikasi konfirmasi ke gudang.
  *
  * @param {{
  *   orderId: string,
+ *   sseToken: string,
  *   totalAmount: number,
  *   bankTransferBank: string | null,
  *   bankTransferAccount: string | null,
@@ -34,6 +31,7 @@ const BANK_LABELS = {
  */
 export default function BankTransferDisplay({
   orderId,
+  sseToken,
   totalAmount,
   bankTransferBank,
   bankTransferAccount,
@@ -45,41 +43,31 @@ export default function BankTransferDisplay({
 
   const bankLabel = BANK_LABELS[bankTransferBank] ?? bankTransferBank ?? "—";
 
-  // ── Salin nomor rekening ke clipboard ────────────────────────────────────
-
   async function handleCopyAccount() {
     if (!bankTransferAccount) return;
-    try {
-      await navigator.clipboard.writeText(bankTransferAccount);
-    } catch {
-      // Clipboard API tidak tersedia — abaikan secara diam-diam
-    }
+    try { await navigator.clipboard.writeText(bankTransferAccount); } catch { /* diam-diam */ }
   }
-
-  // ── Konfirmasi "Saya Sudah Transfer" ─────────────────────────────────────
 
   async function handleConfirm() {
     if (status === "loading" || status === "confirmed") return;
-
     setStatus("loading");
     setErrorMessage("");
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/payment`, {
+      const res = await fetch(`/api/store/orders/${orderId}/confirm-payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "notify_transfer" }),
+        body: JSON.stringify({ sseToken, paymentMethod: "BANK_TRANSFER" }),
       });
+
+      const json = await res.json();
 
       if (res.ok) {
         setStatus("confirmed");
         onConfirmed?.();
       } else {
-        const json = await res.json().catch(() => ({}));
         setErrorMessage(
-          json?.error?.message ||
-            json?.message ||
-            "Gagal mengirim notifikasi. Silakan coba lagi."
+          json?.error?.message || "Gagal mengirim notifikasi. Silakan coba lagi."
         );
         setStatus("error");
       }

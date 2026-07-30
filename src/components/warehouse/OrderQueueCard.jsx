@@ -90,15 +90,19 @@ function getPaymentBadge(paymentMethod, paymentStatus) {
   }
   if (paymentMethod === "BANK_TRANSFER") {
     return {
-      label: "Transfer Bank",
-      style: "bg-indigo-100 text-indigo-800 border-indigo-200",
+      label: paymentStatus === "paid" ? "Transfer — Lunas ✓" : "Transfer Bank",
+      style: paymentStatus === "paid"
+        ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+        : "bg-indigo-100 text-indigo-800 border-indigo-200",
     };
   }
   if (paymentMethod?.startsWith("EWALLET_")) {
     const walletName = paymentMethod.replace("EWALLET_", "");
     return {
-      label: walletName,
-      style: "bg-cyan-100 text-cyan-800 border-cyan-200",
+      label: paymentStatus === "paid" ? `${walletName} — Lunas ✓` : walletName,
+      style: paymentStatus === "paid"
+        ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+        : "bg-cyan-100 text-cyan-800 border-cyan-200",
     };
   }
   return null;
@@ -128,6 +132,8 @@ export default function OrderQueueCard({
   const [codError, setCodError] = useState(null);
   const [isConfirmingTransfer, setIsConfirmingTransfer] = useState(false);
   const [transferError, setTransferError] = useState(null);
+  const [isConfirmingEwallet, setIsConfirmingEwallet] = useState(false);
+  const [ewalletError, setEwalletError] = useState(null);
   const [isMarkingShipping, setIsMarkingShipping] = useState(false);
   const [shippingError, setShippingError] = useState(null);
 
@@ -148,6 +154,17 @@ export default function OrderQueueCard({
   const showConfirmTransfer =
     order.orderType === "ONLINE" &&
     order.paymentMethod === "BANK_TRANSFER" &&
+    order.paymentStatus !== "paid" &&
+    order.orderStatus === "ready";
+
+  /**
+   * Konfirmasi e-wallet — untuk ONLINE + EWALLET_* yang belum "paid".
+   * Gudang memverifikasi secara manual bahwa pembayaran sudah masuk.
+   */
+  const showConfirmEwallet =
+    order.orderType === "ONLINE" &&
+    order.paymentMethod?.startsWith("EWALLET_") &&
+    order.paymentStatus !== "paid" &&
     order.orderStatus === "ready";
 
   /**
@@ -200,9 +217,7 @@ export default function OrderQueueCard({
   }
 
   /**
-   * Handle Bank Transfer confirmation — calls PATCH /api/orders/[id]/status with { orderStatus: "completed" }.
-   * If a parent callback is provided via onConfirmTransfer, it is called after success so the parent
-   * can refresh the queue. Otherwise the component handles the API call internally.
+   * Handle Bank Transfer confirmation
    */
   async function handleConfirmTransfer() {
     const orderId = order._id?.toString();
@@ -227,7 +242,6 @@ export default function OrderQueueCard({
         return;
       }
 
-      // Notify parent so it can refresh the queue
       if (typeof onConfirmTransfer === "function") {
         onConfirmTransfer(orderId);
       }
@@ -235,6 +249,41 @@ export default function OrderQueueCard({
       setTransferError("Terjadi kesalahan jaringan. Silakan coba lagi.");
     } finally {
       setIsConfirmingTransfer(false);
+    }
+  }
+
+  /**
+   * Handle E-Wallet confirmation — gudang verifikasi manual bahwa e-wallet sudah masuk.
+   * Memanggil completePayment via status route.
+   */
+  async function handleConfirmEwallet() {
+    const orderId = order._id?.toString();
+    if (!orderId) return;
+
+    setEwalletError(null);
+    setIsConfirmingEwallet(true);
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderStatus: "completed" }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setEwalletError(json?.error?.message || "Gagal mengkonfirmasi pembayaran e-wallet.");
+        return;
+      }
+
+      if (typeof onConfirmTransfer === "function") {
+        onConfirmTransfer(orderId);
+      }
+    } catch {
+      setEwalletError("Terjadi kesalahan jaringan. Silakan coba lagi.");
+    } finally {
+      setIsConfirmingEwallet(false);
     }
   }
 
@@ -440,6 +489,32 @@ export default function OrderQueueCard({
           {transferError && (
             <p className="text-xs text-red-600 text-right max-w-[180px]" role="alert">
               {transferError}
+            </p>
+          )}
+
+          {/* "Konfirmasi E-Wallet" button — untuk ONLINE + EWALLET + ready + belum paid */}
+          {showConfirmEwallet && (
+            <button
+              onClick={handleConfirmEwallet}
+              disabled={isConfirmingEwallet}
+              aria-label={`Konfirmasi pembayaran e-wallet pesanan ${order.invoiceNumber}`}
+              className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isConfirmingEwallet ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Memproses...
+                </span>
+              ) : (
+                `✓ Konfirmasi ${order.paymentMethod?.replace("EWALLET_", "")}`
+              )}
+            </button>
+          )}
+
+          {/* Inline error message for e-wallet confirmation */}
+          {ewalletError && (
+            <p className="text-xs text-red-600 text-right max-w-[180px]" role="alert">
+              {ewalletError}
             </p>
           )}
 

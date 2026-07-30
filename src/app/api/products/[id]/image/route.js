@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
-import {
-  updateProduct,
-  validateImageFile,
-  ProductError,
-} from "@/server/services/product.service";
+import { updateProduct, ProductError } from "@/server/services/product.service";
 import { ProductErrorCode } from "@/types/product.types";
 
 /**
@@ -49,16 +45,41 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Validate MIME type and size
-    validateImageFile(file.type, file.size);
+    // Validate MIME type and size — sekarang hanya menerima WebP karena
+    // client sudah mengkonversi semua format ke WebP sebelum upload
+    const allowedMimes = ["image/webp", "image/jpeg", "image/png"];
+    if (!allowedMimes.includes(file.type)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "INVALID_IMAGE_FORMAT",
+            message: "Format gambar tidak didukung. Gunakan WebP, JPG, atau PNG.",
+          },
+        },
+        { status: 400 }
+      );
+    }
 
-    // Determine file extension from MIME type
+    const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+    if (file.size > MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "IMAGE_TOO_LARGE",
+            message: "Ukuran gambar melebihi batas 2MB.",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Tentukan ekstensi — prioritaskan WebP
     const extensionMap = {
+      "image/webp": ".webp",
       "image/jpeg": ".jpg",
       "image/png": ".png",
-      "image/webp": ".webp",
     };
-    const ext = extensionMap[file.type];
+    const ext = extensionMap[file.type] ?? ".webp";
     const filename = `product-${params.id}-${Date.now()}${ext}`;
 
     // Save to public/uploads/

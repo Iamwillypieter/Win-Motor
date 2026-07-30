@@ -278,7 +278,7 @@ export default function QrisPaymentDisplay({
             >
               2
             </span>
-            Pilih menu "Scan QR" atau "Bayar"
+            Pilih menu &ldquo;Scan QR&rdquo; atau &ldquo;Bayar&rdquo;
           </li>
           <li className="flex items-start gap-2">
             <span

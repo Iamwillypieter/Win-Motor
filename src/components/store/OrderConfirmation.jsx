@@ -198,62 +198,186 @@ function QrisPaymentDisplay({
 
 // ─── E-Wallet Payment Display ─────────────────────────────────────────────────
 
-/**
- * EwalletPaymentDisplay — menampilkan instruksi pembayaran e-wallet.
- *
- * @param {{ paymentMethod: string, qrisCode: string | null, qrisExpiresAt: string | null, totalAmount: number, orderId: string, onRegenerate: () => void, isRegenerating: boolean }} props
- */
-function EwalletPaymentDisplay({
-  paymentMethod,
-  qrisCode,
-  qrisExpiresAt,
-  totalAmount,
-  orderId,
-  onRegenerate,
-  isRegenerating,
-}) {
-  const walletNames = {
-    EWALLET_DANA: "DANA",
-    EWALLET_OVO: "OVO",
-    EWALLET_GOPAY: "GoPay",
-  };
+const EWALLET_CONFIG = {
+  EWALLET_DANA: {
+    name: "DANA",
+    icon: "💙",
+    colorClass: "bg-blue-50 border-blue-200",
+    headerClass: "bg-blue-600",
+    destinationNumber: process.env.NEXT_PUBLIC_EWALLET_DANA_NUMBER || "",
+  },
+  EWALLET_OVO: {
+    name: "OVO",
+    icon: "💜",
+    colorClass: "bg-purple-50 border-purple-200",
+    headerClass: "bg-purple-600",
+    destinationNumber: process.env.NEXT_PUBLIC_EWALLET_OVO_NUMBER || "",
+  },
+  EWALLET_GOPAY: {
+    name: "GoPay",
+    icon: "💚",
+    colorClass: "bg-green-50 border-green-200",
+    headerClass: "bg-green-600",
+    destinationNumber: process.env.NEXT_PUBLIC_EWALLET_GOPAY_NUMBER || "",
+  },
+};
 
-  const walletName = walletNames[paymentMethod] ?? paymentMethod;
+/**
+ * CopyButton — tombol salin ke clipboard dengan feedback visual.
+ */
+function CopyButton({ value, label }) {
+  const [copied, setCopied] = useState(false);
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* diam-diam */ }
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label={copied ? `${label} disalin` : `Salin ${label}`}
+      className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95"
+    >
+      {copied ? (
+        <><svg className="h-3.5 w-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg><span className="text-green-600">Disalin</span></>
+      ) : (
+        <><svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" /></svg>Salin</>
+      )}
+    </button>
+  );
+}
+
+/**
+ * EwalletPaymentDisplay — instruksi pembayaran e-wallet step-by-step
+ * dengan tombol "Saya Sudah Bayar" untuk konfirmasi ke gudang.
+ */
+function EwalletPaymentDisplay({ paymentMethod, totalAmount, orderId, sseToken, onPaymentSubmitted }) {
+  const config = EWALLET_CONFIG[paymentMethod];
+  const [confirmState, setConfirmState] = useState("idle"); // idle | loading | done | error
+  const [confirmError, setConfirmError] = useState("");
+
+  async function handleConfirm() {
+    if (confirmState === "loading" || confirmState === "done") return;
+    setConfirmState("loading");
+    setConfirmError("");
+    try {
+      const res = await fetch(`/api/store/orders/${orderId}/confirm-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sseToken, paymentMethod }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setConfirmError(json?.error?.message || "Gagal mengirim konfirmasi. Coba lagi.");
+        setConfirmState("error");
+        return;
+      }
+      setConfirmState("done");
+      onPaymentSubmitted?.();
+    } catch {
+      setConfirmError("Gagal terhubung ke server. Periksa koneksi internet Anda.");
+      setConfirmState("error");
+    }
+  }
+
+  if (!config) return null;
+
+  const steps = [
+    `Buka aplikasi ${config.name} di ponsel Anda`,
+    `Pilih menu "Kirim" atau "Transfer"`,
+    config.destinationNumber
+      ? `Masukkan nomor tujuan: ${config.destinationNumber}`
+      : `Masukkan nomor tujuan ${config.name} toko kami`,
+    `Masukkan nominal ${formatRupiah(totalAmount)} dengan tepat`,
+    `Selesaikan pembayaran, lalu tekan tombol konfirmasi di bawah`,
+  ];
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xl" aria-hidden="true">
-            {PAYMENT_METHOD_ICONS[paymentMethod]}
-          </span>
-          <p className="text-sm font-semibold text-blue-800">
-            Bayar via {walletName}
-          </p>
+    <div className={`overflow-hidden rounded-2xl border ${config.colorClass} shadow-sm`}>
+      {/* Header */}
+      <div className={`${config.headerClass} flex items-center gap-3 px-5 py-4`}>
+        <span className="text-3xl" aria-hidden="true">{config.icon}</span>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-white/80">Pembayaran via</p>
+          <h3 className="text-xl font-bold text-white">{config.name}</h3>
         </div>
-        <p className="text-sm text-blue-700">
-          Nominal yang harus dibayar:{" "}
-          <span className="font-bold">{formatRupiah(totalAmount)}</span>
-        </p>
       </div>
 
-      {/* Jika ada qrisCode, tampilkan QR untuk e-wallet */}
-      {qrisCode ? (
-        <QrisPaymentDisplay
-          orderId={orderId}
-          qrisCode={qrisCode}
-          qrisExpiresAt={qrisExpiresAt}
-          onRegenerate={onRegenerate}
-          isRegenerating={isRegenerating}
-        />
-      ) : (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
-          <p className="text-sm text-gray-600">
-            Buka aplikasi <strong>{walletName}</strong> dan scan kode QR, atau ikuti
-            instruksi yang dikirimkan ke nomor WhatsApp Anda.
-          </p>
+      <div className="space-y-5 p-5">
+        {/* Nomor tujuan & nominal */}
+        {config.destinationNumber && (
+          <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">Nomor Tujuan {config.name}</p>
+            <div className="flex items-center gap-3">
+              <p className="text-xl font-bold tracking-widest text-gray-900">{config.destinationNumber}</p>
+              <CopyButton value={config.destinationNumber} label="nomor tujuan" />
+            </div>
+          </div>
+        )}
+
+        <div>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">Nominal yang Harus Dibayar</p>
+          <div className="flex items-center gap-3">
+            <p className="text-2xl font-bold text-gray-900">{formatRupiah(totalAmount)}</p>
+            <CopyButton value={String(totalAmount)} label="nominal" />
+          </div>
+          <p className="mt-1 text-xs text-gray-500">Pastikan nominal transfer tepat hingga angka terakhir.</p>
         </div>
-      )}
+
+        {/* Langkah-langkah */}
+        <div className="rounded-xl bg-white/80 p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Cara Pembayaran</p>
+          <ol className="space-y-2.5">
+            {steps.map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span
+                  className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${config.headerClass}`}
+                  aria-hidden="true"
+                >
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Error */}
+        {confirmState === "error" && confirmError && (
+          <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <span className="flex-shrink-0 text-red-500" aria-hidden="true">⚠️</span>
+            <p className="text-sm font-medium text-red-700">{confirmError}</p>
+          </div>
+        )}
+
+        {/* Tombol konfirmasi / sudah dikonfirmasi */}
+        {confirmState === "done" ? (
+          <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-green-300 bg-green-50 px-5 py-4">
+            <span className="flex-shrink-0 text-2xl" aria-hidden="true">✅</span>
+            <div>
+              <p className="text-sm font-bold text-green-800">Konfirmasi Terkirim</p>
+              <p className="text-xs text-green-700 mt-0.5">Tim kami akan memverifikasi pembayaran Anda segera.</p>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={confirmState === "loading"}
+            aria-busy={confirmState === "loading"}
+            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed ${config.headerClass} hover:opacity-90 focus-visible:ring-blue-500`}
+          >
+            {confirmState === "loading" ? (
+              <><svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Mengirim Konfirmasi...</>
+            ) : (
+              <>✅ Saya Sudah Bayar via {config.name}</>
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -262,15 +386,9 @@ function EwalletPaymentDisplay({
 
 /**
  * PaymentInstructions — menampilkan instruksi pembayaran sesuai metode.
- *
- * Requirements:
- * - 5.3: QRIS → tampilkan QR Code + countdown 5 menit
- * - 5.4: CASH → tampilkan "Pembayaran akan dilakukan saat barang diterima (COD)"
- *
- * @param {{ order: object, onRegenerate: () => void, isRegenerating: boolean }} props
  */
-function PaymentInstructions({ order, onRegenerate, isRegenerating }) {
-  const { paymentMethod, qrisCode, qrisExpiresAt, totalAmount, _id } = order;
+function PaymentInstructions({ order, onRegenerate, isRegenerating, onPaymentSubmitted }) {
+  const { paymentMethod, qrisCode, qrisExpiresAt, totalAmount, _id, sseToken } = order;
 
   if (paymentMethod === "CASH") {
     return (
@@ -306,12 +424,10 @@ function PaymentInstructions({ order, onRegenerate, isRegenerating }) {
     return (
       <EwalletPaymentDisplay
         paymentMethod={paymentMethod}
-        qrisCode={qrisCode}
-        qrisExpiresAt={qrisExpiresAt}
         totalAmount={totalAmount}
         orderId={_id}
-        onRegenerate={onRegenerate}
-        isRegenerating={isRegenerating}
+        sseToken={sseToken}
+        onPaymentSubmitted={onPaymentSubmitted}
       />
     );
   }
@@ -320,10 +436,12 @@ function PaymentInstructions({ order, onRegenerate, isRegenerating }) {
     return (
       <BankTransferDisplay
         orderId={_id}
+        sseToken={sseToken}
         totalAmount={totalAmount}
         bankTransferBank={order.bankTransferBank ?? null}
         bankTransferAccount={order.bankTransferAccount ?? null}
         recipientName={order.bankTransferRecipientName ?? null}
+        onConfirmed={onPaymentSubmitted}
       />
     );
   }
@@ -534,7 +652,20 @@ export default function OrderConfirmation({ order: initialOrder }) {
                 order={order}
                 onRegenerate={handleRegenerate}
                 isRegenerating={isRegenerating}
+                onPaymentSubmitted={() => {
+                  // Tampilkan banner "menunggu verifikasi" setelah pelanggan konfirmasi
+                  setOrder((prev) => ({ ...prev, _paymentSubmitted: true }));
+                }}
               />
+              {order._paymentSubmitted && !isPaid && (
+                <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
+                  <span className="flex-shrink-0 text-2xl" aria-hidden="true">⏳</span>
+                  <div>
+                    <p className="text-sm font-bold text-blue-800">Menunggu Verifikasi</p>
+                    <p className="text-xs text-blue-700 mt-0.5">Tim kami sedang memverifikasi pembayaran Anda. Halaman ini akan otomatis diperbarui.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -561,7 +692,7 @@ export default function OrderConfirmation({ order: initialOrder }) {
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {item.name}
+                    {item.productName ?? item.name}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {formatRupiah(item.unitPrice)} × {item.quantity}

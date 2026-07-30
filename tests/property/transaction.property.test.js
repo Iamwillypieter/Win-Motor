@@ -232,7 +232,10 @@ function setupFailingTransaction({ order, failAt }) {
   if (failAt === "order_update") {
     Order.updateOne.mockRejectedValue(new Error("DB write failed"));
   } else if (failAt === "stock_update") {
-    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    // Step 1 succeeds, step 2 fails, rollback calls updateOne again
+    Order.updateOne
+      .mockResolvedValueOnce({ modifiedCount: 1 }) // step 1 OK
+      .mockResolvedValueOnce({ modifiedCount: 1 }); // rollback OK
     Product.bulkWrite.mockRejectedValue(new Error("Stock write failed"));
   } else if (failAt === "invoice_create") {
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -752,8 +755,8 @@ describe("P19: Rollback Atomik Saat Kegagalan", () => {
               // expected
             }
 
-            // Order update was called (step 1 succeeded before failure)
-            expect(Order.updateOne).toHaveBeenCalledTimes(1);
+            // Order update was called twice: step 1 + rollback after stock failure
+            expect(Order.updateOne).toHaveBeenCalledTimes(2);
 
             // Stock update was attempted but failed
             expect(Product.bulkWrite).toHaveBeenCalledTimes(1);
@@ -964,9 +967,9 @@ describe("P19: Rollback Atomik Saat Kegagalan", () => {
 
             mongoose.startSession.mockResolvedValue(mockSession);
 
-            // Order not found
+            // Order not found — service uses findById().lean() directly
             Order.findById.mockReturnValue({
-              session: vi.fn().mockResolvedValue(null),
+              lean: vi.fn().mockResolvedValue(null),
             });
 
             const paymentData = {
@@ -1176,7 +1179,7 @@ describe("P20: Invoice Lengkap Setelah Transaksi Selesai", () => {
 
             // Inspect Invoice.create call arguments
             expect(Invoice.create).toHaveBeenCalledTimes(1);
-            const invoiceData = Invoice.create.mock.calls[0][0][0];
+            const invoiceData = Invoice.create.mock.calls[0][0];
 
             // invoiceNumber must match the order's invoiceNumber
             expect(invoiceData.invoiceNumber).toBe(invoiceNumber);
@@ -1240,7 +1243,7 @@ describe("P20: Invoice Lengkap Setelah Transaksi Selesai", () => {
 
             await completePayment(orderId, paymentData);
 
-            const invoiceData = Invoice.create.mock.calls[0][0][0];
+            const invoiceData = Invoice.create.mock.calls[0][0];
 
             // Must have the same number of items as the order
             expect(invoiceData.items).toHaveLength(items.length);
@@ -1307,7 +1310,7 @@ describe("P20: Invoice Lengkap Setelah Transaksi Selesai", () => {
 
             await completePayment(orderId, paymentData);
 
-            const invoiceData = Invoice.create.mock.calls[0][0][0];
+            const invoiceData = Invoice.create.mock.calls[0][0];
 
             // Invoice totalAmount must match order totalAmount
             expect(invoiceData.totalAmount).toBe(totalAmount);
@@ -1374,7 +1377,7 @@ describe("P20: Invoice Lengkap Setelah Transaksi Selesai", () => {
 
             await completePayment(orderId, paymentData);
 
-            const invoiceData = Invoice.create.mock.calls[0][0][0];
+            const invoiceData = Invoice.create.mock.calls[0][0];
 
             // CASH invoice must record the received amount
             expect(invoiceData.cashReceived).toBe(cashReceived);
@@ -1430,7 +1433,7 @@ describe("P20: Invoice Lengkap Setelah Transaksi Selesai", () => {
 
             await completePayment(orderId, paymentData);
 
-            const invoiceData = Invoice.create.mock.calls[0][0][0];
+            const invoiceData = Invoice.create.mock.calls[0][0];
 
             // QRIS invoice must have null for cash fields
             expect(invoiceData.cashReceived).toBeNull();

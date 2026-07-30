@@ -109,20 +109,25 @@ export async function completePayment(orderId, paymentData) {
       : "completed";
 
   // ── Step 1: Update Order status ──────────────────────────────────────────────
-  await Order.updateOne(
-    { _id: orderId },
-    {
-      $set: {
-        paymentStatus: "paid",
-        orderStatus: newOrderStatus,
-        paymentMethod: paymentData.method,
-        cashReceived: paymentData.cashReceived ?? null,
-        changeAmount: paymentData.changeAmount ?? null,
-        completedAt: newOrderStatus === "completed" ? now : null,
-        updatedAt: now,
-      },
-    }
-  );
+  try {
+    await Order.updateOne(
+      { _id: orderId },
+      {
+        $set: {
+          paymentStatus: "paid",
+          orderStatus: newOrderStatus,
+          paymentMethod: paymentData.method,
+          cashReceived: paymentData.cashReceived ?? null,
+          changeAmount: paymentData.changeAmount ?? null,
+          completedAt: newOrderStatus === "completed" ? now : null,
+          updatedAt: now,
+        },
+      }
+    );
+  } catch (err) {
+    console.error("completePayment: step 1 (order update) failed", err);
+    throw new PaymentError(PaymentErrorCode.TRANSACTION_FAILED, "Gagal memperbarui status pesanan");
+  }
 
   // ── Step 2: Decrement stock ──────────────────────────────────────────────────
   let stockDecrementDone = false;

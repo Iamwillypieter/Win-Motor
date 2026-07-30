@@ -1,10 +1,19 @@
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { getDefaultRedirect } from "@/lib/auth";
 
 /**
- * Root page — redirect semua pengunjung ke halaman login.
- * Middleware akan menangani redirect ke halaman yang sesuai
- * jika pengguna sudah memiliki sesi aktif.
+ * Root page — redirect berdasarkan status sesi:
+ * - Sudah login → halaman sesuai role
+ * - Belum login → halaman toko online publik (/store)
  */
-export default function RootPage() {
-  redirect("/login");
+export default async function RootPage() {
+  const session = await auth();
+
+  if (session?.user?.role) {
+    redirect(getDefaultRedirect(session.user.role));
+  }
+
+  // Pelanggan yang belum login diarahkan ke toko online
+  redirect("/store");
 }

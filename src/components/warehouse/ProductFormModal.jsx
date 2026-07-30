@@ -24,6 +24,8 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(product?.imageUrl || null);
+  const [imageConverting, setImageConverting] = useState(false);
+  const [imageInfo, setImageInfo] = useState("");
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -55,12 +57,12 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Client-side validation
-    const allowedMimes = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowedMimes.includes(file.type)) {
+    // Client-side validation — terima semua format gambar umum
+    const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/tiff"];
+    if (!file.type.startsWith("image/")) {
       setErrors((prev) => ({
         ...prev,
-        image: `Format gambar tidak didukung. Gunakan JPG, PNG, atau WEBP`,
+        image: "File harus berupa gambar (JPG, PNG, WEBP, dll)",
       }));
       e.target.value = "";
       return;
@@ -76,8 +78,71 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
     }
 
     setErrors((prev) => ({ ...prev, image: "" }));
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImageConverting(true);
+
+    // Konversi ke WebP di browser menggunakan Canvas API
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        // Hitung dimensi — maksimal 800px di sisi terpanjang
+        const MAX_SIDE = 800;
+        let { width, height } = img;
+        if (width > MAX_SIDE || height > MAX_SIDE) {
+          if (width > height) {
+            height = Math.round((height * MAX_SIDE) / width);
+            width = MAX_SIDE;
+          } else {
+            width = Math.round((width * MAX_SIDE) / height);
+            height = MAX_SIDE;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Export sebagai WebP kualitas 80%
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              // Fallback: pakai file asli jika browser tidak support WebP
+              setImageFile(file);
+              setImagePreview(URL.createObjectURL(file));
+              setImageConverting(false);
+              return;
+            }
+            const webpFile = new File(
+              [blob],
+              file.name.replace(/\.[^.]+$/, ".webp"),
+              { type: "image/webp" }
+            );
+            setImageFile(webpFile);
+            setImagePreview(URL.createObjectURL(blob));
+            setImageConverting(false);
+
+            // Tampilkan info kompresi
+            const savedKB = Math.round((file.size - blob.size) / 1024);
+            const savedPct = Math.round((1 - blob.size / file.size) * 100);
+            if (savedKB > 0) {
+              setImageInfo(`WebP ${Math.round(blob.size / 1024)}KB (hemat ${savedKB}KB / ${savedPct}%)`);
+            } else {
+              setImageInfo(`WebP ${Math.round(blob.size / 1024)}KB`);
+            }
+          },
+          "image/webp",
+          0.8 // kualitas 80%
+        );
+      };
+      img.onerror = () => {
+        setErrors((prev) => ({ ...prev, image: "Gagal memproses gambar. Coba file lain." }));
+        setImageConverting(false);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   function validate() {
@@ -247,7 +312,7 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
               className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${
                 errors.name ? "border-red-400 bg-red-50" : "border-gray-300"
               }`}
-              placeholder="Contoh: Kopi Arabika"
+              placeholder="Contoh: Piston"
             />
             {errors.name && (
               <p id="name-error" className="mt-1 text-xs text-red-600">
@@ -276,7 +341,7 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
               className={`w-full rounded-lg border px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-gray-50 ${
                 errors.sku ? "border-red-400 bg-red-50" : "border-gray-300"
               }`}
-              placeholder="Contoh: KOP-001"
+              placeholder="Contoh: 13104-GN5-913"
             />
             {!isNew && (
               <p className="mt-1 text-xs text-gray-400">SKU tidak dapat diubah setelah produk dibuat</p>
@@ -361,12 +426,33 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
 
             {/* Preview */}
             {imagePreview && (
-              <div className="mb-2">
+              <div className="mb-2 relative inline-block">
                 <img
                   src={imagePreview}
                   alt="Preview gambar produk"
                   className="h-24 w-24 rounded-lg object-cover border border-gray-200"
                 />
+                {imageConverting && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Converting indicator */}
+            {imageConverting && (
+              <div className="mb-2 flex items-center gap-2 text-xs text-blue-600">
+                <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                Mengkonversi ke WebP...
+              </div>
+            )}
+
+            {/* Compression info */}
+            {imageInfo && !imageConverting && (
+              <div className="mb-2 flex items-center gap-1.5 text-xs text-green-600">
+                <span>✅</span>
+                <span>{imageInfo}</span>
               </div>
             )}
 
@@ -375,15 +461,15 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
               id="image"
               name="image"
               type="file"
-              accept={ALLOWED_IMAGE_EXTENSIONS.join(",")}
+              accept="image/*"
               onChange={handleImageChange}
-              disabled={isLoading}
+              disabled={isLoading || imageConverting}
               aria-invalid={!!errors.image}
               aria-describedby={errors.image ? "image-error" : "image-hint"}
               className="w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
             />
             <p id="image-hint" className="mt-1 text-xs text-gray-400">
-              Format: JPG, PNG, WEBP — Maks. {MAX_IMAGE_SIZE_MB}MB
+              Format apapun diterima — otomatis dikonversi ke WebP (maks. {MAX_IMAGE_SIZE_MB}MB)
             </p>
             {errors.image && (
               <p id="image-error" className="mt-1 text-xs text-red-600">
@@ -404,11 +490,13 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || imageConverting}
               aria-busy={isLoading}
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {isLoading
+              {imageConverting
+                ? "Memproses gambar..."
+                : isLoading
                 ? "Menyimpan..."
                 : isNew
                 ? "Tambah Produk"

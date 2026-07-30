@@ -129,3 +129,34 @@ export async function notifyOrderShipping(order) {
 
   return sendWhatsApp(customerWhatsapp, message);
 }
+
+/**
+ * Kirim notifikasi "Pesanan siap diambil" ke pelanggan online.
+ * Dipanggil saat staf gudang menekan tombol "Tandai Siap" (orderStatus → "ready").
+ * Hanya untuk pesanan ONLINE — pesanan kasir tidak memerlukan notifikasi ini.
+ *
+ * @param {{ customerName: string, customerWhatsapp: string, invoiceNumber: string, totalAmount: number, paymentMethod: string }} order
+ */
+export async function notifyOrderReady(order) {
+  const { customerName, customerWhatsapp, invoiceNumber, totalAmount, paymentMethod } = order;
+
+  const methodLabel = {
+    CASH: "COD (Bayar di Tempat)",
+    QRIS: "QRIS",
+    BANK_TRANSFER: "Transfer Bank",
+    EWALLET_DANA: "DANA",
+    EWALLET_OVO: "OVO",
+    EWALLET_GOPAY: "GoPay",
+  }[paymentMethod] ?? paymentMethod;
+
+  const message =
+    `Halo ${customerName}! 👋\n\n` +
+    `✅ *Pesanan Anda sudah siap!*\n\n` +
+    `📋 No. Invoice: *${invoiceNumber}*\n` +
+    `💰 Total: Rp ${totalAmount.toLocaleString("id-ID")}\n` +
+    `💳 Metode Bayar: ${methodLabel}\n\n` +
+    `🏪 Pesanan Anda telah selesai disiapkan dan siap untuk diproses.\n\n` +
+    `Terima kasih telah berbelanja! 🙏`;
+
+  return sendWhatsApp(customerWhatsapp, message);
+}

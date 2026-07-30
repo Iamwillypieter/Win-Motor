@@ -4,7 +4,7 @@ import connectDB from "@/lib/db";
 import Order from "@/models/Order";
 import sseManager from "@/lib/sse";
 import { completePayment, PaymentError } from "@/server/services/payment.service";
-import { notifyOrderShipping } from "@/lib/whatsapp";
+import { notifyOrderShipping, notifyOrderReady } from "@/lib/whatsapp";
 
 /** Valid status transitions allowed by WAREHOUSE staff */
 const ALLOWED_STATUSES = ["preparing", "ready", "shipping"];
@@ -169,11 +169,13 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ data: { orderId, orderStatus: "shipping" } });
     }
 
-    // ── Manual Completion Path (ONLINE + CASH or ONLINE + BANK_TRANSFER → completed) ──
+    // ── Manual Completion Path (ONLINE + CASH / BANK_TRANSFER / EWALLET → completed) ──
     if (orderStatus === "completed") {
       const isManualCompletion =
         order.orderType === "ONLINE" &&
-        (order.paymentMethod === "CASH" || order.paymentMethod === "BANK_TRANSFER");
+        (order.paymentMethod === "CASH" ||
+          order.paymentMethod === "BANK_TRANSFER" ||
+          order.paymentMethod?.startsWith("EWALLET_"));
 
       if (!isManualCompletion) {
         return NextResponse.json(
@@ -188,7 +190,12 @@ export async function PATCH(request, { params }) {
       }
 
       if (order.orderStatus !== "ready") {
-        const methodLabel = order.paymentMethod === "CASH" ? "COD" : "Transfer Bank";
+        const methodLabel =
+          order.paymentMethod === "CASH"
+            ? "COD"
+            : order.paymentMethod === "BANK_TRANSFER"
+            ? "Transfer Bank"
+            : order.paymentMethod?.replace("EWALLET_", "") ?? "E-Wallet";
         return NextResponse.json(
           {
             error: {
@@ -233,6 +240,16 @@ export async function PATCH(request, { params }) {
         }
       } catch (err) {
         console.error("SSE broadcast error (order_completed → customer token):", err);
+      }
+
+      // Broadcast ke WAREHOUSE dan CASHIER
+      try {
+        sseManager.broadcastToRole(
+          { type: "order_status_updated", data: { orderId, orderStatus: "completed" } },
+          ["WAREHOUSE", "CASHIER"]
+        );
+      } catch (err) {
+        console.error("SSE broadcast error (completed → warehouse/cashier):", err);
       }
 
       return NextResponse.json({ data: { orderId, orderStatus: "completed" } });
@@ -295,6 +312,22 @@ export async function PATCH(request, { params }) {
         }
       } catch (err) {
         console.error("SSE broadcast error (order_ready → customer token):", err);
+      }
+
+      // Notifikasi WhatsApp ke pelanggan ONLINE saat pesanan siap
+      if (order.orderType === "ONLINE" && order.customerWhatsapp) {
+        try {
+          await notifyOrderReady({
+            customerName: order.customerName,
+            customerWhatsapp: order.customerWhatsapp,
+            invoiceNumber: order.invoiceNumber,
+            totalAmount: order.totalAmount,
+            paymentMethod: order.paymentMethod,
+          });
+        } catch (err) {
+          // Kegagalan WA tidak boleh membatalkan update status
+          console.error("WhatsApp notification error (order_ready):", err);
+        }
       }
     }
 

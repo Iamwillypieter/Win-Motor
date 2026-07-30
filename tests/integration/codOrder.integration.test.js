@@ -1,202 +1,232 @@
 /**
- * Integration Tests: Alur Pesanan COD (Cash on Delivery)
+ * Integration Tests: COD Online Order Flow
  *
- * Validates: Requirements 8.1, 8.2, 8.3
+ * Validates the end-to-end flow for Cash-on-Delivery (COD) online orders:
+ * - Order creation by customer
+ * - Warehouse marking order as ready
+ * - Warehouse confirming COD payment (completes order, decrements stock)
  *
- * Skenario yang diuji:
- *  Test 1: Buat pesanan COD → verifikasi state awal
- *           (orderType: ONLINE, paymentMethod: CASH, status waiting_preparation)
- *  Test 2: WAREHOUSE tandai ready → verifikasi status berubah ke ready,
- *           paymentStatus tetap pending
- *  Test 3: WAREHOUSE konfirmasi COD (tandai completed) → verifikasi completePayment() dipanggil
- *  Test 4: Setelah konfirmasi COD → verifikasi stok berkurang dan Invoice terbuat
- *  Test 5: Alur lengkap end-to-end dalam satu test
- *
- * Pendekatan: Semua test menggunakan mock untuk DB/models dan menguji service layer
- * secara langsung (bukan HTTP end-to-end), karena Next.js App Router tidak dapat
- * dijalankan dalam lingkungan Vitest/jsdom. Ini memvalidasi kontrak integrasi antara
- * createOnlineOrder(), status update logic, dan completePayment().
- *
- * Req 8.1: Stok dikurangi saat WAREHOUSE konfirmasi COD (bukan saat pesanan dibuat)
- * Req 8.2: WAREHOUSE dapat mengubah status pesanan COD ke `ready`
- * Req 8.3: WAREHOUSE konfirmasi COD memicu completePayment() yang mengurangi stok
- *           dan membuat Invoice
+ * These are unit-level integration tests using mocked DB — not live DB tests.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// ---------------------------------------------------------------------------
-// Mocks — harus dideklarasikan sebelum import modul yang menggunakannya
-// ---------------------------------------------------------------------------
+// ── Mocks ──────────────────────────────────────────────────────────────────
 
-vi.mock("@/lib/db", () => ({
-  default: vi.fn().mockResolvedValue(undefined),
-}));
-
+vi.mock("@/lib/db", () => ({ default: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/sse", () => ({
-  default: {
-    broadcastToRole: vi.fn(),
-    broadcastToUser: vi.fn(),
-    broadcastToToken: vi.fn(),
-  },
+  default: { broadcastToRole: vi.fn(), broadcastToToken: vi.fn(), broadcastToUser: vi.fn() },
 }));
-
-vi.mock("@/lib/invoice", () => ({
-  generateInvoiceNumber: vi.fn().mockResolvedValue("INV-20260507-COD-0001"),
+vi.mock("@/lib/whatsapp", () => ({
+  notifyOrderConfirmed: vi.fn().mockResolvedValue({ success: true }),
+  notifyOrderReady: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 vi.mock("@/models/Order", () => {
-  const mockOrder = {
-    findById: vi.fn(),
-    find: vi.fn(),
-    create: vi.fn(),
-    updateOne: vi.fn(),
-    updateMany: vi.fn(),
-  };
+  const mockOrder = { findById: vi.fn(), updateOne: vi.fn(), create: vi.fn() };
   return { default: mockOrder };
 });
-
-vi.mock("@/models/Product", () => {
-  const mockProduct = {
-    findById: vi.fn(),
-    bulkWrite: vi.fn(),
-  };
-  return { default: mockProduct };
-});
-
-vi.mock("@/models/User", () => {
-  const mockUser = {
-    findById: vi.fn(),
-  };
-  return { default: mockUser };
-});
-
-vi.mock("@/models/Invoice", () => {
-  const mockInvoice = {
-    create: vi.fn(),
-    findOne: vi.fn(),
-  };
-  return { default: mockInvoice };
-});
-
-// ---------------------------------------------------------------------------
-// Imports setelah mocks
-// ---------------------------------------------------------------------------
+vi.mock("@/models/Product", () => ({
+  default: { bulkWrite: vi.fn() },
+}));
+vi.mock("@/models/User", () => ({
+  default: { findById: vi.fn() },
+}));
+vi.mock("@/models/Invoice", () => ({
+  default: { create: vi.fn() },
+}));
 
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
 import Invoice from "@/models/Invoice";
-import sseManager from "@/lib/sse";
-import {
-  completePayment,
-  PaymentError,
-  PaymentErrorCode,
-} from "@/server/services/payment.service";
-import { createOnlineOrder, OrderError, OrderErrorCode } from "@/server/services/order.service";
+import { completePayment, PaymentError, PaymentErrorCode } from "@/server/services/payment.service";
 
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
+// ── Helpers ────────────────────────────────────────────────────────────────
 
-const CUSTOMER_NAME = "Sari Dewi";
-const CUSTOMER_WHATSAPP = "081234567890";
-const SHIPPING_ADDRESS = "Jl. Melati No. 7, Jakarta Selatan";
-
-const mockProduct = {
-  _id: "product-cod-001",
-  name: "Kopi Arabika Premium",
-  sku: "KOP-ARABIKA-001",
-  price: 35000,
-  stock: 15,
-  isActive: true,
-};
-
-const mockOrderItems = [
-  {
-    productId: "product-cod-001",
-    productName: "Kopi Arabika Premium",
-    sku: "KOP-ARABIKA-001",
-    unitPrice: 35000,
-    quantity: 3,
-  },
-];
-
-/** Pesanan COD dalam state awal setelah dibuat */
-const mockCodOrderCreated = {
-  _id: "cod-order-001",
-  invoiceNumber: "INV-20260507-COD-0001",
-  cashierId: null,
-  orderType: "ONLINE",
-  customerName: CUSTOMER_NAME,
-  customerWhatsapp: CUSTOMER_WHATSAPP,
-  shippingAddress: SHIPPING_ADDRESS,
-  paymentMethod: "CASH",
-  items: mockOrderItems,
-  totalAmount: 105000, // 35000 × 3
-  orderStatus: "waiting_preparation",
-  paymentStatus: "pending",
-  sseToken: "sse-token-cod-001",
-  createdAt: new Date("2026-05-07T09:00:00.000Z"),
-  updatedAt: new Date("2026-05-07T09:00:00.000Z"),
-  completedAt: null,
-};
-
-/** Pesanan COD setelah WAREHOUSE tandai ready */
-const mockCodOrderReady = {
-  ...mockCodOrderCreated,
-  orderStatus: "ready",
-  updatedAt: new Date("2026-05-07T09:15:00.000Z"),
-};
-
-/** Invoice yang dibuat setelah konfirmasi COD */
-const mockCodInvoice = {
-  _id: "invoice-cod-001",
-  orderId: "cod-order-001",
-  invoiceNumber: "INV-20260507-COD-0001",
-  cashierName: "Kasir",
-  items: mockOrderItems.map((item) => ({
-    ...item,
-    subtotal: item.unitPrice * item.quantity,
-  })),
-  totalAmount: 105000,
-  paymentMethod: "CASH",
-  cashReceived: null,
-  changeAmount: null,
-  transactionAt: new Date("2026-05-07T09:30:00.000Z"),
-  createdAt: new Date("2026-05-07T09:30:00.000Z"),
-};
-
-// ---------------------------------------------------------------------------
-// Helper: setup mock untuk createOnlineOrder()
-// ---------------------------------------------------------------------------
-
-function setupCreateOrderMocks() {
-  Product.findById.mockReturnValue({
-    lean: vi.fn().mockResolvedValue(mockProduct),
-  });
-
-  Order.create.mockResolvedValue({
-    toObject: () => ({ ...mockCodOrderCreated }),
-  });
+function makeOnlineCODOrder(overrides = {}) {
+  return {
+    _id: "order-cod-001",
+    invoiceNumber: "INV-20260730-0001",
+    orderType: "ONLINE",
+    orderStatus: "ready",
+    paymentStatus: "pending",
+    paymentMethod: "CASH",
+    cashierId: null,
+    customerName: "Budi Santoso",
+    customerWhatsapp: "081234567890",
+    shippingAddress: "Jl. Merdeka No. 1",
+    totalAmount: 75_000,
+    sseToken: "test-sse-token-001",
+    items: [
+      { productId: "prod-001", productName: "Kopi Arabika", sku: "KOP-001", unitPrice: 25_000, quantity: 3 },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    completedAt: null,
+    ...overrides,
+  };
 }
 
-// ---------------------------------------------------------------------------
-// Helper: setup mock untuk completePayment() pada pesanan COD yang sudah ready
-// ---------------------------------------------------------------------------
-
-function setupCompletePaymentMocks() {
-  Order.findById.mockReturnValue({
-    lean: vi.fn().mockResolvedValue({ ...mockCodOrderReady }),
-  });
+function setupMocksForSuccess(order, cashierName = "Kasir") {
+  Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
   Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
-  Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
+  Product.bulkWrite.mockResolvedValue({ modifiedCount: order.items.length });
   User.findById.mockReturnValue({
     select: vi.fn().mockReturnValue({
-      lean: vi.fn().mockResolvedValue({ _id: null, name: "Kasir" }),
+      lean: vi.fn().mockResolvedValue(cashierName ? { name: cashierName } : null),
     }),
   });
-  Invoice.create.mockResolvedValue({
-    toObject: () => ({ ...mockCodInvoice }),
-  });
+  const mockInvoice = {
+    _id: "invoice-001",
+    orderId: order._id,
+    invoiceNumber: order.invoiceNumber,
+    cashierName: cashierName ?? "Kasir",
+    items: order.items.map((i) => ({ ...i, subtotal: i.unitPrice * i.quantity })),
+    totalAmount: order.totalAmount,
+    paymentMethod: "CASH",
+    cashReceived: order.totalAmount,
+    changeAmount: 0,
+    transactionAt: new Date(),
+    createdAt: new Date(),
+  };
+  Invoice.create.mockResolvedValue({ toObject: () => mockInvoice });
+  return mockInvoice;
 }
+
+// ── Tests ──────────────────────────────────────────────────────────────────
+
+describe("COD Online Order: Warehouse Confirmation Flow", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("completePayment dengan CASH berhasil untuk pesanan COD online yang sudah ready", async () => {
+    const order = makeOnlineCODOrder();
+    const mockInvoice = setupMocksForSuccess(order);
+
+    const result = await completePayment(order._id, {
+      method: "CASH",
+      cashReceived: order.totalAmount,
+      changeAmount: 0,
+    });
+
+    // Harus return invoice
+    expect(result).toBeDefined();
+    expect(result.invoiceNumber).toBe(order.invoiceNumber);
+
+    // Order harus di-update ke paid + completed
+    expect(Order.updateOne).toHaveBeenCalledTimes(1);
+    const [, update] = Order.updateOne.mock.calls[0];
+    expect(update.$set.paymentStatus).toBe("paid");
+    expect(update.$set.orderStatus).toBe("completed");
+    expect(update.$set.paymentMethod).toBe("CASH");
+
+    // Stok harus berkurang
+    expect(Product.bulkWrite).toHaveBeenCalledTimes(1);
+    const [bulkOps] = Product.bulkWrite.mock.calls[0];
+    expect(bulkOps[0].updateOne.update.$inc.stock).toBe(-3);
+
+    // Invoice harus dibuat
+    expect(Invoice.create).toHaveBeenCalledTimes(1);
+    const invoiceArg = Invoice.create.mock.calls[0][0];
+    expect(invoiceArg.paymentMethod).toBe("CASH");
+    expect(invoiceArg.cashReceived).toBe(order.totalAmount);
+    expect(invoiceArg.totalAmount).toBe(order.totalAmount);
+  });
+
+  it("completePayment gagal jika pesanan belum berstatus ready", async () => {
+    const order = makeOnlineCODOrder({ orderStatus: "waiting_preparation" });
+
+    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+
+    let error;
+    try {
+      await completePayment(order._id, { method: "CASH", cashReceived: order.totalAmount, changeAmount: 0 });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(PaymentError);
+    expect(error.code).toBe(PaymentErrorCode.ORDER_NOT_READY);
+    expect(Order.updateOne).not.toHaveBeenCalled();
+    expect(Invoice.create).not.toHaveBeenCalled();
+  });
+
+  it("completePayment gagal jika pesanan sudah dibayar (ALREADY_PAID)", async () => {
+    const order = makeOnlineCODOrder({ paymentStatus: "paid" });
+
+    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+
+    let error;
+    try {
+      await completePayment(order._id, { method: "CASH", cashReceived: order.totalAmount, changeAmount: 0 });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(PaymentError);
+    expect(error.code).toBe(PaymentErrorCode.ALREADY_PAID);
+    expect(Order.updateOne).not.toHaveBeenCalled();
+  });
+
+  it("completePayment gagal jika pesanan tidak ditemukan (ORDER_NOT_FOUND)", async () => {
+    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
+
+    let error;
+    try {
+      await completePayment("nonexistent-id", { method: "CASH", cashReceived: 50_000, changeAmount: 0 });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(PaymentError);
+    expect(error.code).toBe(PaymentErrorCode.ORDER_NOT_FOUND);
+    expect(Order.updateOne).not.toHaveBeenCalled();
+  });
+
+  it("invoice mencatat cashReceived dan changeAmount dengan benar", async () => {
+    const order = makeOnlineCODOrder({ totalAmount: 50_000 });
+    setupMocksForSuccess(order);
+
+    await completePayment(order._id, {
+      method: "CASH",
+      cashReceived: 100_000,
+      changeAmount: 50_000,
+    });
+
+    const invoiceArg = Invoice.create.mock.calls[0][0];
+    expect(invoiceArg.cashReceived).toBe(100_000);
+    expect(invoiceArg.changeAmount).toBe(50_000);
+  });
+
+  it("rollback dilakukan jika stok tidak cukup setelah order di-update", async () => {
+    const order = makeOnlineCODOrder();
+
+    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+    Order.updateOne
+      .mockResolvedValueOnce({ modifiedCount: 1 })  // step 1 OK
+      .mockResolvedValueOnce({ modifiedCount: 1 });  // rollback OK
+    Product.bulkWrite.mockResolvedValue({ modifiedCount: 0 }); // insufficient stock
+
+    let error;
+    try {
+      await completePayment(order._id, { method: "CASH", cashReceived: order.totalAmount, changeAmount: 0 });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(PaymentError);
+    expect(error.code).toBe(PaymentErrorCode.INSUFFICIENT_STOCK);
+
+    // Order.updateOne dipanggil 2x: step 1 + rollback
+    expect(Order.updateOne).toHaveBeenCalledTimes(2);
+
+    // Rollback call harus mengembalikan ke status semula
+    const rollbackCall = Order.updateOne.mock.calls[1];
+    expect(rollbackCall[1].$set.paymentStatus).toBe("pending");
+
+    // Invoice tidak boleh dibuat
+    expect(Invoice.create).not.toHaveBeenCalled();
+  });
+});

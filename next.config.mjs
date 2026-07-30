@@ -11,7 +11,10 @@ const nextConfig = {
   },
 
   // Pastikan bcryptjs dan mongoose berjalan di Node.js runtime (bukan Edge)
-  serverExternalPackages: ["bcryptjs", "mongoose"],
+  // Next.js 14 menggunakan experimental.serverComponentsExternalPackages
+  experimental: {
+    serverComponentsExternalPackages: ["bcryptjs", "mongoose"],
+  },
 
   webpack: (config, { dev }) => {
     if (dev) {
