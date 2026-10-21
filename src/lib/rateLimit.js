@@ -9,6 +9,31 @@
 const requestCounts = new Map();
 
 /**
+ * Extract the real client IP from a Next.js Request object.
+ *
+ * Priority:
+ * 1. `x-real-ip`       — di-set oleh Vercel edge network, tidak bisa dimanipulasi client
+ * 2. `x-forwarded-for` — ambil entri pertama (client asli), fallback jika x-real-ip tidak ada
+ * 3. "unknown"         — jika tidak ada header sama sekali
+ *
+ * Catatan: Di Vercel production, `x-real-ip` selalu ada dan terpercaya.
+ * Di environment lain tanpa trusted proxy, x-forwarded-for bisa di-spoof —
+ * sehingga rate limiting tidak 100% andal tanpa infrastruktur proxy yang benar.
+ *
+ * @param {Request} request - Next.js Request object
+ * @returns {string} IP address string
+ */
+export function getClientIp(request) {
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+
+  return "unknown";
+}
+
+/**
  * Check whether a given IP is within the allowed request rate.
  *
  * @param {string} ip - Client IP address

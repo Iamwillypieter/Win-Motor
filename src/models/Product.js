@@ -9,6 +9,8 @@ const ProductSchema = new Schema({
     uppercase: true,
     trim: true,
   },
+  brand: { type: String, default: null, trim: true },   // merk produk, opsional
+  aliases: { type: [String], default: [] },              // nama alternatif/sebutan pelanggan
   price: { type: Number, required: true, min: 0 }, // integer rupiah
   stock: { type: Number, required: true, min: 0, default: 0 },
   imageUrl: { type: String, default: null },
@@ -22,8 +24,8 @@ const ProductSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Full-text search on name
-ProductSchema.index({ name: "text" });
+// Full-text search on name, brand, and aliases
+ProductSchema.index({ name: "text", brand: "text", aliases: "text" });
 // Fast lookup by active status (sku index sudah dibuat otomatis via unique: true)
 ProductSchema.index({ isActive: 1 });
 

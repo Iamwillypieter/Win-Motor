@@ -69,7 +69,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { name, sku, price, stock, imageUrl } = body;
+    const { name, sku, price, stock, imageUrl, brand, aliases } = body;
 
     if (!name || !sku || price === undefined || stock === undefined) {
       return NextResponse.json(
@@ -107,12 +107,22 @@ export async function POST(request) {
       );
     }
 
+    // Validasi aliases jika ada
+    if (aliases !== undefined && !Array.isArray(aliases)) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: "aliases harus berupa array" } },
+        { status: 400 }
+      );
+    }
+
     const product = await createProduct({
       name,
       sku,
       price,
       stock,
       imageUrl,
+      brand: brand || null,
+      aliases: aliases || [],
       createdBy: session.user.id,
     });
 

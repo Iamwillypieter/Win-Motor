@@ -17,14 +17,19 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
   const [search, setSearch] = useState("");
   const [skuFilter, setSkuFilter] = useState("");
 
-  // Filter produk berdasarkan search nama dan SKU
+  // Filter produk berdasarkan search (nama, merk, alias) dan SKU
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const sku = skuFilter.trim().toLowerCase();
     return products.filter((p) => {
-      const matchName = !q || p.name.toLowerCase().includes(q);
       const matchSku = !sku || p.sku.toLowerCase().includes(sku);
-      return matchName && matchSku;
+      if (!q) return matchSku;
+
+      const matchName = p.name.toLowerCase().includes(q);
+      const matchBrand = p.brand?.toLowerCase().includes(q);
+      const matchAlias = p.aliases?.some((a) => a.toLowerCase().includes(q));
+
+      return (matchName || matchBrand || matchAlias) && matchSku;
     });
   }, [products, search, skuFilter]);
 
@@ -76,7 +81,7 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama produk..."
+            placeholder="Cari nama, merk, atau alias produk..."
             className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             aria-label="Cari nama produk"
           />
@@ -203,6 +208,9 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
                   <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight">
                     {product.name}
                   </p>
+                  {product.brand && (
+                    <p className="text-xs text-gray-500">{product.brand}</p>
+                  )}
                   <p className="text-xs text-gray-400 font-mono">{product.sku}</p>
                   <p className="text-sm font-bold text-blue-600 mt-auto pt-1">
                     {formatRupiah(product.price)}

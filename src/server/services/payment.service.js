@@ -335,3 +335,317 @@ export async function expireQRISOrders() {
 
   return result.modifiedCount;
 }
+
+/**
+ * Complete an order with DEBT payment method (utang).
+ *
+ * Berbeda dari completePayment biasa:
+ *  - paymentStatus tetap "pending" (belum lunas)
+ *  - orderStatus → "completed" (barang sudah diserahkan)
+ *  - Stok tetap dikurangi (barang sudah keluar)
+ *  - Invoice dibuat dengan paymentMethod: "DEBT"
+ *  - customerName WAJIB ada
+ *
+ * @param {string} orderId
+ * @param {{ dueDate?: string, note?: string }} debtData
+ * @returns {Promise<Object>} Created invoice document (plain object)
+ * @throws {PaymentError}
+ */
+export async function completeDebtOrder(orderId, debtData = {}) {
+  await connectDB();
+
+  // ── Step 0: Fetch and validate ───────────────────────────────────────────────
+  const order = await Order.findById(orderId).lean();
+
+  if (!order) {
+    throw new PaymentError(PaymentErrorCode.ORDER_NOT_FOUND, "Pesanan tidak ditemukan");
+  }
+
+  if (order.paymentStatus === "paid") {
+    throw new PaymentError(PaymentErrorCode.ALREADY_PAID, "Pesanan sudah dibayar");
+  }
+
+  if (order.paymentMethod === "DEBT" && order.orderStatus === "completed") {
+    throw new PaymentError(PaymentErrorCode.ALREADY_PAID, "Pesanan sudah dicatat sebagai utang");
+  }
+
+  if (order.orderStatus !== "ready") {
+    throw new PaymentError(
+      PaymentErrorCode.ORDER_NOT_READY,
+      "Pesanan belum siap. Tunggu konfirmasi dari staf gudang."
+    );
+  }
+
+  if (!order.customerName?.trim()) {
+    throw new PaymentError(
+      "CUSTOMER_NAME_REQUIRED",
+      "Nama pelanggan wajib diisi untuk transaksi utang"
+    );
+  }
+
+  const now = new Date();
+  const dueDate = debtData.dueDate ? new Date(debtData.dueDate) : null;
+
+  // ── Step 1: Update Order ─────────────────────────────────────────────────────
+  try {
+    await Order.updateOne(
+      { _id: orderId },
+      {
+        $set: {
+          paymentMethod: "DEBT",
+          paymentStatus: "pending",   // belum lunas — owner yang akan update saat lunas
+          orderStatus: "completed",   // barang sudah diserahkan
+          completedAt: now,
+          debtDueDate: dueDate,
+          debtNote: debtData.note?.trim() || null,
+          updatedAt: now,
+        },
+      }
+    );
+  } catch (err) {
+    console.error("completeDebtOrder: step 1 (order update) failed", err);
+    throw new PaymentError(PaymentErrorCode.TRANSACTION_FAILED, "Gagal memperbarui status pesanan");
+  }
+
+  // ── Step 2: Decrement stock ──────────────────────────────────────────────────
+  let stockDecrementDone = false;
+  try {
+    const stockUpdates = order.items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.productId, stock: { $gte: item.quantity } },
+        update: { $inc: { stock: -item.quantity }, $set: { updatedAt: now } },
+      },
+    }));
+
+    const bulkResult = await Product.bulkWrite(stockUpdates);
+
+    if (bulkResult.modifiedCount !== order.items.length) {
+      throw new PaymentError(
+        PaymentErrorCode.INSUFFICIENT_STOCK,
+        "Stok tidak mencukupi untuk satu atau lebih produk"
+      );
+    }
+
+    stockDecrementDone = true;
+  } catch (err) {
+    // Roll back step 1
+    await Order.updateOne(
+      { _id: orderId },
+      {
+        $set: {
+          paymentMethod: null,
+          paymentStatus: "pending",
+          orderStatus: order.orderStatus,
+          completedAt: null,
+          debtDueDate: null,
+          debtNote: null,
+          updatedAt: now,
+        },
+      }
+    ).catch((e) => console.error("completeDebtOrder: rollback step 1 failed", e));
+
+    if (err instanceof PaymentError) throw err;
+    console.error("completeDebtOrder: step 2 (stock decrement) failed", err);
+    throw new PaymentError(PaymentErrorCode.TRANSACTION_FAILED, "Gagal mengurangi stok");
+  }
+
+  // ── Step 3: Create Invoice ───────────────────────────────────────────────────
+  let invoice;
+  try {
+    const cashier = await User.findById(order.cashierId).select("name").lean();
+    const cashierName = cashier?.name ?? "Kasir";
+
+    const invoiceItems = order.items.map((item) => ({
+      productName: item.productName,
+      sku: item.sku,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      subtotal: item.unitPrice * item.quantity,
+    }));
+
+    const created = await Invoice.create({
+      orderId: order._id,
+      invoiceNumber: order.invoiceNumber,
+      cashierName,
+      customerName: order.customerName,
+      items: invoiceItems,
+      totalAmount: order.totalAmount,
+      paymentMethod: "DEBT",
+      cashReceived: null,
+      changeAmount: null,
+      transactionAt: now,
+    });
+
+    invoice = created.toObject();
+  } catch (err) {
+    // Roll back step 1 dan step 2
+    await Order.updateOne(
+      { _id: orderId },
+      {
+        $set: {
+          paymentMethod: null,
+          paymentStatus: "pending",
+          orderStatus: order.orderStatus,
+          completedAt: null,
+          debtDueDate: null,
+          debtNote: null,
+          updatedAt: now,
+        },
+      }
+    ).catch((e) => console.error("completeDebtOrder: rollback step 1 failed", e));
+
+    if (stockDecrementDone) {
+      const restore = order.items.map((item) => ({
+        updateOne: {
+          filter: { _id: item.productId },
+          update: { $inc: { stock: item.quantity }, $set: { updatedAt: now } },
+        },
+      }));
+      await Product.bulkWrite(restore).catch((e) =>
+        console.error("completeDebtOrder: rollback step 2 failed", e)
+      );
+    }
+
+    console.error("completeDebtOrder: step 3 (invoice create) failed", err);
+    throw new PaymentError(PaymentErrorCode.TRANSACTION_FAILED, "Gagal membuat invoice");
+  }
+
+  // ── Broadcast SSE ────────────────────────────────────────────────────────────
+  try {
+    sseManager.broadcastToRole(
+      {
+        type: "order_completed",
+        data: {
+          orderId: orderId.toString(),
+          orderStatus: "completed",
+          paymentMethod: "DEBT",
+          customerName: order.customerName,
+        },
+      },
+      ["CASHIER", "WAREHOUSE", "OWNER"]
+    );
+  } catch (err) {
+    console.error("SSE broadcast error (order_completed debt):", err);
+  }
+
+  return invoice;
+}
+
+/**
+ * Settle a debt order — mark as paid by the owner.
+ *
+ * Updates:
+ *  - paymentStatus → "paid"
+ *  - debtPaidAt → now
+ *  - debtPaidBy → userId
+ *
+ * @param {string} orderId
+ * @param {string} userId - Owner/kasir yang mengkonfirmasi pelunasan
+ * @returns {Promise<Object>} Updated order (plain object)
+ * @throws {PaymentError}
+ */
+export async function settleDebt(orderId, userId) {
+  await connectDB();
+
+  const order = await Order.findById(orderId).lean();
+
+  if (!order) {
+    throw new PaymentError(PaymentErrorCode.ORDER_NOT_FOUND, "Pesanan tidak ditemukan");
+  }
+
+  if (order.paymentMethod !== "DEBT") {
+    throw new PaymentError("NOT_A_DEBT", "Pesanan ini bukan utang");
+  }
+
+  if (order.paymentStatus === "paid") {
+    throw new PaymentError(PaymentErrorCode.ALREADY_PAID, "Utang sudah dilunasi");
+  }
+
+  const now = new Date();
+
+  const updated = await Order.findByIdAndUpdate(
+    orderId,
+    {
+      $set: {
+        paymentStatus: "paid",
+        debtPaidAt: now,
+        debtPaidBy: userId,
+        updatedAt: now,
+      },
+    },
+    { new: true }
+  ).lean();
+
+  // Broadcast ke semua role
+  try {
+    sseManager.broadcastToRole(
+      {
+        type: "debt_settled",
+        data: {
+          orderId: orderId.toString(),
+          invoiceNumber: order.invoiceNumber,
+          customerName: order.customerName,
+        },
+      },
+      ["CASHIER", "OWNER"]
+    );
+  } catch (err) {
+    console.error("SSE broadcast error (debt_settled):", err);
+  }
+
+  return {
+    ...updated,
+    _id: updated._id.toString(),
+    cashierId: updated.cashierId?.toString() ?? null,
+    debtPaidBy: updated.debtPaidBy?.toString() ?? null,
+    createdAt: updated.createdAt?.toISOString() ?? null,
+    updatedAt: updated.updatedAt?.toISOString() ?? null,
+    completedAt: updated.completedAt?.toISOString() ?? null,
+    debtDueDate: updated.debtDueDate?.toISOString() ?? null,
+    debtPaidAt: updated.debtPaidAt?.toISOString() ?? null,
+  };
+}
+
+/**
+ * Get all debt orders with optional filter.
+ *
+ * @param {{ status?: "unpaid"|"paid"|"all" }} options
+ * @returns {Promise<Object[]>}
+ */
+export async function getDebtOrders({ status = "unpaid" } = {}) {
+  await connectDB();
+
+  const query = { paymentMethod: "DEBT" };
+
+  if (status === "unpaid") {
+    query.paymentStatus = "pending";
+  } else if (status === "paid") {
+    query.paymentStatus = "paid";
+  }
+  // "all" = tidak filter paymentStatus
+
+  const orders = await Order.find(query)
+    .populate("cashierId", "name")
+    .populate("debtPaidBy", "name")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return orders.map((o) => ({
+    ...o,
+    _id: o._id.toString(),
+    cashierName: o.cashierId?.name ?? "Kasir",
+    cashierId: o.cashierId?._id?.toString() ?? o.cashierId?.toString() ?? null,
+    debtPaidByName: o.debtPaidBy?.name ?? null,
+    debtPaidBy: o.debtPaidBy?._id?.toString() ?? o.debtPaidBy?.toString() ?? null,
+    createdAt: o.createdAt?.toISOString() ?? null,
+    updatedAt: o.updatedAt?.toISOString() ?? null,
+    completedAt: o.completedAt?.toISOString() ?? null,
+    debtDueDate: o.debtDueDate?.toISOString() ?? null,
+    debtPaidAt: o.debtPaidAt?.toISOString() ?? null,
+    items: (o.items || []).map((item) => ({
+      ...item,
+      _id: item._id?.toString(),
+      productId: item.productId?.toString(),
+    })),
+  }));
+}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
 import sseManager from "@/lib/sse";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 /**
  * POST /api/store/orders/[id]/confirm-payment
@@ -23,8 +23,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
  */
 export async function POST(request, { params }) {
   // Rate limiting
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+  const ip = getClientIp(request);
   const rateCheck = checkRateLimit(`confirm-payment:${ip}`, 5, 60_000);
   if (!rateCheck.allowed) {
     return NextResponse.json(

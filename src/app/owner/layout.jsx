@@ -18,6 +18,7 @@ export default async function OwnerLayout({ children }) {
     { href: "/owner/dashboard", label: "Dashboard" },
     { href: "/owner/products", label: "Produk" },
     { href: "/owner/users", label: "Karyawan" },
+    { href: "/owner/debts", label: "Piutang" },
   ];
 
   return (

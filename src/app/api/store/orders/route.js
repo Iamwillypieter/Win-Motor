@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createOnlineOrder, OrderError } from "@/server/services/order.service";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 /**
  * POST /api/store/orders
@@ -32,10 +32,9 @@ import { checkRateLimit } from "@/lib/rateLimit";
  */
 export async function POST(request) {
   // --- Rate limiting ---
-  // Prefer x-forwarded-for (set by proxies/load balancers) then fall back to a
-  // generic identifier so the server never crashes on missing headers.
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+  // Gunakan getClientIp untuk mendapatkan IP yang terpercaya.
+  // Di Vercel, x-real-ip di-set oleh edge network dan tidak bisa di-spoof oleh client.
+  const ip = getClientIp(request);
 
   const rateCheck = checkRateLimit(ip, 10, 60_000);
   if (!rateCheck.allowed) {
@@ -71,6 +70,29 @@ export async function POST(request) {
   if (!items || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json(
       { error: { code: "VALIDATION_ERROR", message: "Field wajib: items (array tidak kosong)" } },
+      { status: 400 }
+    );
+  }
+
+  // Validasi struktur tiap item — cegah data kotor masuk ke service layer
+  const isValidItems = items.every(
+    (item) =>
+      item !== null &&
+      typeof item === "object" &&
+      typeof item.productId === "string" &&
+      item.productId.trim().length > 0 &&
+      Number.isInteger(item.quantity) &&
+      item.quantity > 0
+  );
+
+  if (!isValidItems) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Setiap item harus memiliki productId (string) dan quantity (bilangan bulat positif)",
+        },
+      },
       { status: 400 }
     );
   }

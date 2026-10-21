@@ -36,12 +36,35 @@ export async function POST(request) {
     const body = await request.json();
     const { items } = body;
 
-    if (!items || !Array.isArray(items)) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         {
           error: {
             code: "VALIDATION_ERROR",
-            message: "Field wajib: items (array)",
+            message: "Field wajib: items (array tidak kosong)",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validasi struktur tiap item — cegah data kotor masuk ke service layer
+    const isValidItems = items.every(
+      (item) =>
+        item !== null &&
+        typeof item === "object" &&
+        typeof item.productId === "string" &&
+        item.productId.trim().length > 0 &&
+        Number.isInteger(item.quantity) &&
+        item.quantity > 0
+    );
+
+    if (!isValidItems) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Setiap item harus memiliki productId (string) dan quantity (bilangan bulat positif)",
           },
         },
         { status: 400 }

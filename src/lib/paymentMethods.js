@@ -11,7 +11,7 @@ export const DIGITAL_PAYMENT_METHODS = [
 ];
 
 /** Payment methods that require manual confirmation by staff */
-export const MANUAL_PAYMENT_METHODS = ["CASH", "BANK_TRANSFER"];
+export const MANUAL_PAYMENT_METHODS = ["CASH", "BANK_TRANSFER", "DEBT"];
 
 /** All supported payment methods */
 export const ALL_PAYMENT_METHODS = [
@@ -37,4 +37,14 @@ export function isDigitalPayment(method) {
  */
 export function requiresManualConfirmation(method) {
   return MANUAL_PAYMENT_METHODS.includes(method);
+}
+
+/**
+ * Returns true if the payment method is a debt (utang).
+ *
+ * @param {string} method
+ * @returns {boolean}
+ */
+export function isDebtPayment(method) {
+  return method === "DEBT";
 }

@@ -30,6 +30,7 @@ const InvoiceSchema = new Schema({
       "EWALLET_OVO",
       "EWALLET_GOPAY",
       "BANK_TRANSFER",
+      "DEBT",
     ],
     required: true,
   },

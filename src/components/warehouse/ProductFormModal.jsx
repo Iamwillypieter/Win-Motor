@@ -21,7 +21,12 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
     sku: product?.sku || "",
     price: product?.price !== undefined ? String(product.price) : "",
     stock: product?.stock !== undefined ? String(product.stock) : "",
+    brand: product?.brand || "",
+    aliasInput: "",  // input sementara sebelum ditambahkan ke array
   });
+  const [aliases, setAliases] = useState(
+    Array.isArray(product?.aliases) ? product.aliases : []
+  );
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(product?.imageUrl || null);
   const [imageConverting, setImageConverting] = useState(false);
@@ -51,6 +56,25 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  }
+
+  function handleAddAlias() {
+    const val = form.aliasInput.trim();
+    if (!val) return;
+    if (aliases.includes(val)) return; // jangan duplikat
+    setAliases((prev) => [...prev, val]);
+    setForm((prev) => ({ ...prev, aliasInput: "" }));
+  }
+
+  function handleRemoveAlias(idx) {
+    setAliases((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function handleAliasKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddAlias();
+    }
   }
 
   function handleImageChange(e) {
@@ -186,6 +210,8 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
             sku: form.sku.trim().toUpperCase(),
             price: Number(form.price),
             stock: Number(form.stock),
+            brand: form.brand.trim() || null,
+            aliases,
           }),
         });
 
@@ -204,6 +230,8 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
           name: form.name.trim(),
           price: Number(form.price),
           stock: Number(form.stock),
+          brand: form.brand.trim() || null,
+          aliases,
         };
 
         const res = await fetch(`/api/products/${product._id}`, {
@@ -413,6 +441,88 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
                 {errors.stock}
               </p>
             )}
+          </div>
+
+          {/* Brand (Merk) */}
+          <div>
+            <label
+              htmlFor="brand"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Merk <span className="text-gray-400 font-normal">(opsional)</span>
+            </label>
+            <input
+              id="brand"
+              name="brand"
+              type="text"
+              value={form.brand}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              placeholder="Contoh: Honda, Yamaha, AHM"
+            />
+          </div>
+
+          {/* Aliases */}
+          <div>
+            <label
+              htmlFor="aliasInput"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Alias{" "}
+              <span className="text-gray-400 font-normal">
+                (opsional — nama lain yang sering disebut pelanggan)
+              </span>
+            </label>
+
+            {/* Tag list */}
+            {aliases.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {aliases.map((alias, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+                  >
+                    {alias}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAlias(idx)}
+                      disabled={isLoading}
+                      className="text-blue-500 hover:text-blue-800 leading-none focus:outline-none"
+                      aria-label={`Hapus alias ${alias}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Alias input + tombol tambah */}
+            <div className="flex gap-2">
+              <input
+                id="aliasInput"
+                name="aliasInput"
+                type="text"
+                value={form.aliasInput}
+                onChange={handleChange}
+                onKeyDown={handleAliasKeyDown}
+                disabled={isLoading}
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                placeholder="Ketik alias lalu tekan Enter atau klik Tambah"
+              />
+              <button
+                type="button"
+                onClick={handleAddAlias}
+                disabled={isLoading || !form.aliasInput.trim()}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-40 whitespace-nowrap"
+              >
+                + Tambah
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-gray-400">
+              Contoh: &ldquo;ring piston&rdquo;, &ldquo;seher&rdquo;, &ldquo;klep&rdquo;
+            </p>
           </div>
 
           {/* Image upload */}

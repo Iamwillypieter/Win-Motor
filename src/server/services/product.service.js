@@ -35,7 +35,7 @@ export class ProductError extends Error {
  * @returns {Promise<Object>} Created product document (lean)
  * @throws {ProductError} DUPLICATE_SKU if SKU already exists
  */
-export async function createProduct({ name, sku, price, stock, imageUrl, createdBy }) {
+export async function createProduct({ name, sku, price, stock, imageUrl, brand, aliases, createdBy }) {
   await connectDB();
 
   const normalizedSku = sku.toUpperCase().trim();
@@ -45,9 +45,16 @@ export async function createProduct({ name, sku, price, stock, imageUrl, created
     throw new ProductError(ProductErrorCode.DUPLICATE_SKU);
   }
 
+  // Normalisasi aliases: trim tiap entry, buang yang kosong, simpan unik
+  const normalizedAliases = Array.isArray(aliases)
+    ? [...new Set(aliases.map((a) => a.trim()).filter(Boolean))]
+    : [];
+
   const product = await Product.create({
     name: name.trim(),
     sku: normalizedSku,
+    brand: brand?.trim() || null,
+    aliases: normalizedAliases,
     price,
     stock,
     imageUrl: imageUrl || null,
@@ -71,13 +78,22 @@ export async function createProduct({ name, sku, price, stock, imageUrl, created
 export async function updateProduct(id, updates) {
   await connectDB();
 
-  const allowedFields = ["name", "price", "stock", "imageUrl"];
+  const allowedFields = ["name", "price", "stock", "imageUrl", "brand", "aliases"];
   const sanitized = {};
   for (const field of allowedFields) {
     if (updates[field] !== undefined) {
-      sanitized[field] = typeof updates[field] === "string"
-        ? updates[field].trim()
-        : updates[field];
+      if (field === "aliases") {
+        // Normalisasi array alias
+        sanitized.aliases = Array.isArray(updates.aliases)
+          ? [...new Set(updates.aliases.map((a) => a.trim()).filter(Boolean))]
+          : [];
+      } else {
+        sanitized[field] = typeof updates[field] === "string"
+          ? updates[field].trim()
+          : updates[field];
+        // brand boleh null/empty string → simpan sebagai null
+        if (field === "brand" && !sanitized.brand) sanitized.brand = null;
+      }
     }
   }
   sanitized.updatedAt = new Date();
@@ -99,6 +115,8 @@ export async function updateProduct(id, updates) {
     _id: product._id.toString(),
     name: product.name,
     sku: product.sku,
+    brand: product.brand ?? null,
+    aliases: product.aliases ?? [],
     price: product.price,
     stock: product.stock,
     imageUrl: product.imageUrl,
@@ -169,10 +187,24 @@ export async function getProducts({ search, sku } = {}) {
   const query = { isActive: true };
 
   if (search && search.trim()) {
-    query.$text = { $search: search.trim() };
+    const term = search.trim();
+    // Coba full-text search dulu. Kalau kata kunci terlalu pendek (< 3 karakter)
+    // atau tidak cocok di index, gunakan regex fallback yang cek name, brand, dan aliases.
+    if (term.length >= 3) {
+      query.$text = { $search: term };
+    } else {
+      const re = new RegExp(term, "i");
+      query.$or = [
+        { name: re },
+        { brand: re },
+        { aliases: re },
+        { sku: re },
+      ];
+    }
   }
 
   if (sku && sku.trim()) {
+    // Exact match SKU atau regex untuk prefix search (scanner barcode)
     query.sku = sku.toUpperCase().trim();
   }
 
@@ -196,6 +228,48 @@ export async function getProductById(id) {
 
   if (!product) {
     throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND);
+  }
+
+  return product;
+}
+
+/**
+ * Add stock to an existing product (barang masuk).
+ * Uses atomic $inc to avoid race conditions when multiple staff
+ * add stock simultaneously.
+ *
+ * After a successful update, broadcasts SSE events to CASHIER role:
+ *   - { type: "stock_updated", data: { productId, newStock } }
+ *
+ * @param {string} id - Product ObjectId string
+ * @param {number} quantity - Positive integer to add to stock
+ * @returns {Promise<Object>} Updated product document (lean)
+ * @throws {ProductError} PRODUCT_NOT_FOUND if product does not exist
+ */
+export async function addStock(id, quantity) {
+  await connectDB();
+
+  const product = await Product.findByIdAndUpdate(
+    id,
+    { $inc: { stock: quantity }, $set: { updatedAt: new Date() } },
+    { new: true, runValidators: true }
+  ).lean();
+
+  if (!product) {
+    throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND);
+  }
+
+  // Broadcast stock update to all CASHIER clients
+  try {
+    sseManager.broadcastToRole(
+      {
+        type: "stock_updated",
+        data: { productId: product._id.toString(), newStock: product.stock },
+      },
+      ["CASHIER"]
+    );
+  } catch (err) {
+    console.error("product.service: failed to broadcast stock_updated", err);
   }
 
   return product;

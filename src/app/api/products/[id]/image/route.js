@@ -80,7 +80,17 @@ export async function POST(request, { params }) {
       "image/png": ".png",
     };
     const ext = extensionMap[file.type] ?? ".webp";
-    const filename = `product-${params.id}-${Date.now()}${ext}`;
+
+    // Sanitasi params.id — hanya izinkan karakter alfanumerik dan tanda hubung
+    // untuk mencegah path traversal (misal: id berisi "../../../etc")
+    const safeId = params.id.replace(/[^a-zA-Z0-9-_]/g, "");
+    if (!safeId) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: "ID produk tidak valid" } },
+        { status: 400 }
+      );
+    }
+    const filename = `product-${safeId}-${Date.now()}${ext}`;
 
     // Save to public/uploads/
     const uploadsDir = path.join(process.cwd(), "public", "uploads");

@@ -6,12 +6,13 @@ import { formatRupiah } from "@/lib/utils";
 import { playNotificationSound } from "@/components/shared/SoundNotification";
 
 /**
- * PaymentModal — Client Component for processing Cash or QRIS payments.
+ * PaymentModal — Client Component for processing Cash, QRIS, or Debt payments.
  *
  * Features:
- *  - Tab toggle: CASH vs QRIS
+ *  - Tab toggle: CASH | QRIS | UTANG
  *  - CASH: input for amount received, real-time change calculation
  *  - QRIS: QR code display, 5-minute countdown timer, refresh button
+ *  - UTANG: input nama pelanggan (wajib), jatuh tempo opsional, catatan opsional
  *  - After success: invoice summary display
  *  - Shows "Pesanan Belum Siap" warning if orderStatus !== "ready"
  *
@@ -60,6 +61,12 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
   const [qrisLoading, setQrisLoading] = useState(false);
   const [qrisError, setQrisError] = useState("");
   const [timeLeft, setTimeLeft] = useState(0); // seconds remaining
+
+  // DEBT state
+  const [debtDueDate, setDebtDueDate] = useState("");
+  const [debtNote, setDebtNote] = useState("");
+  const [debtError, setDebtError] = useState("");
+  const [debtSubmitting, setDebtSubmitting] = useState(false);
 
   // Success state
   const [invoice, setInvoice] = useState(null);
@@ -178,19 +185,69 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
     });
   };
 
+  // ─── Confirm Debt ───────────────────────────────────────────────────────────
+  const handleDebtPayment = async () => {
+    setDebtError("");
+
+    if (!isOrderReady) {
+      setDebtError("Pesanan belum siap. Tunggu konfirmasi dari staf gudang.");
+      return;
+    }
+
+    if (!currentOrder.customerName?.trim()) {
+      setDebtError("Nama pelanggan wajib diisi sebelum mencatat utang. Kembali ke POS dan isi nama pelanggan.");
+      return;
+    }
+
+    setDebtSubmitting(true);
+    try {
+      const res = await fetch(`/api/orders/${currentOrder._id}/debt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dueDate: debtDueDate || undefined,
+          note: debtNote || undefined,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setDebtError(result.error?.message || "Gagal mencatat utang");
+        return;
+      }
+
+      setInvoice(result.data.invoice);
+      playNotificationSound("payment_success");
+    } catch {
+      setDebtError("Gagal terhubung ke server");
+    } finally {
+      setDebtSubmitting(false);
+    }
+  };
+
   // ─── Invoice Summary (success state) ───────────────────────────────────────
   if (invoice) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-lg mx-auto">
         {/* Success header */}
         <div className="flex flex-col items-center gap-3 mb-6">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-3xl">
-            ✓
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl ${
+            invoice.paymentMethod === "DEBT" ? "bg-orange-100" : "bg-green-100"
+          }`}>
+            {invoice.paymentMethod === "DEBT" ? "📋" : "✓"}
           </div>
-          <h2 className="text-xl font-bold text-gray-900">Pembayaran Berhasil!</h2>
+          <h2 className="text-xl font-bold text-gray-900">
+            {invoice.paymentMethod === "DEBT" ? "Utang Dicatat!" : "Pembayaran Berhasil!"}
+          </h2>
           <p className="text-sm text-gray-500">
-            {invoice.paymentMethod === "CASH" ? "Tunai" : "QRIS"}
+            {invoice.paymentMethod === "CASH" ? "Tunai" : invoice.paymentMethod === "QRIS" ? "QRIS" : "Utang — Belum Lunas"}
           </p>
+          {invoice.paymentMethod === "DEBT" && (
+            <p className="text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 text-center">
+              Transaksi ini dicatat sebagai utang. Owner akan dikonfirmasi saat pelunasan.
+            </p>
+          )}
         </div>
 
         {/* Invoice details */}
@@ -345,7 +402,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
               : "bg-white text-gray-600 hover:bg-gray-50"
           }`}
         >
-          💵 Tunai (Cash)
+          💵 Tunai
         </button>
         <button
           onClick={() => setActiveTab("QRIS")}
@@ -356,6 +413,16 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
           }`}
         >
           📱 QRIS
+        </button>
+        <button
+          onClick={() => setActiveTab("DEBT")}
+          className={`flex-1 py-2.5 text-sm font-semibold transition-colors focus:outline-none ${
+            activeTab === "DEBT"
+              ? "bg-orange-500 text-white"
+              : "bg-white text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          📋 Utang
         </button>
       </div>
 
@@ -428,8 +495,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
       )}
 
       {/* ── QRIS tab ── */}
-      {activeTab === "QRIS" && (
-        <div className="space-y-4">
+      {activeTab === "QRIS" && (        <div className="space-y-4">
           {!isOrderReady && (
             <div className="flex flex-col items-center gap-3 py-6 text-yellow-700 bg-yellow-50 rounded-lg border border-yellow-200">
               <span className="text-3xl">⏳</span>
@@ -504,6 +570,117 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── DEBT tab ── */}
+      {activeTab === "DEBT" && (
+        <div className="space-y-4">
+          {/* Warning: nama pelanggan wajib */}
+          {!currentOrder.customerName?.trim() ? (
+            <div
+              role="alert"
+              className="rounded-lg bg-red-50 border border-red-300 px-4 py-3 flex items-start gap-3"
+            >
+              <span className="text-xl flex-shrink-0">⚠️</span>
+              <div>
+                <p className="text-sm font-semibold text-red-800">Nama Pelanggan Belum Diisi</p>
+                <p className="text-xs text-red-700 mt-0.5">
+                  Kembali ke halaman POS dan isi nama pelanggan terlebih dahulu sebelum mencatat utang.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg bg-orange-50 border border-orange-200 px-4 py-3 flex items-center gap-3">
+              <span className="text-xl">📋</span>
+              <div>
+                <p className="text-sm font-semibold text-orange-800">
+                  Catat sebagai Utang atas nama: {currentOrder.customerName}
+                </p>
+                <p className="text-xs text-orange-700 mt-0.5">
+                  Barang diserahkan sekarang, pembayaran dilunasi nanti. Owner akan menerima notifikasi.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Status pesanan */}
+          {!isOrderReady && (
+            <div
+              role="alert"
+              className="rounded-lg bg-yellow-50 border border-yellow-300 px-4 py-3 flex items-center gap-3"
+            >
+              <span className="text-xl">⏳</span>
+              <p className="text-sm font-semibold text-yellow-800">
+                Pesanan belum siap. Tunggu konfirmasi staf gudang.
+              </p>
+            </div>
+          )}
+
+          {/* Jatuh tempo (opsional) */}
+          <div>
+            <label
+              htmlFor="debtDueDate"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Jatuh Tempo <span className="text-gray-400 font-normal">(opsional)</span>
+            </label>
+            <input
+              id="debtDueDate"
+              type="date"
+              value={debtDueDate}
+              onChange={(e) => setDebtDueDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              disabled={!isOrderReady || !currentOrder.customerName?.trim()}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          {/* Catatan (opsional) */}
+          <div>
+            <label
+              htmlFor="debtNote"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Catatan <span className="text-gray-400 font-normal">(opsional)</span>
+            </label>
+            <textarea
+              id="debtNote"
+              rows={2}
+              value={debtNote}
+              onChange={(e) => setDebtNote(e.target.value)}
+              disabled={!isOrderReady || !currentOrder.customerName?.trim()}
+              placeholder="Contoh: Lunas akhir bulan, nomor HP 08xx..."
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          {debtError && (
+            <div
+              role="alert"
+              className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
+            >
+              {debtError}
+            </div>
+          )}
+
+          <button
+            onClick={handleDebtPayment}
+            disabled={
+              debtSubmitting ||
+              !isOrderReady ||
+              !currentOrder.customerName?.trim()
+            }
+            className="w-full rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {debtSubmitting
+              ? "Menyimpan..."
+              : !isOrderReady
+              ? "Menunggu Pesanan Siap..."
+              : !currentOrder.customerName?.trim()
+              ? "Isi Nama Pelanggan Dulu"
+              : "📋 Catat sebagai Utang"}
+          </button>
         </div>
       )}
     </div>

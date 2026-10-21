@@ -28,7 +28,11 @@ export default async function PaymentPage({ params }) {
     }
 
     // Redirect if already paid or cancelled
-    if (orderDoc.paymentStatus === "paid" || orderDoc.orderStatus === "completed") {
+    // Kecuali: order DEBT yang completed tapi belum lunas — kasir masih bisa lihat invoice
+    if (
+      (orderDoc.paymentStatus === "paid" || orderDoc.orderStatus === "completed") &&
+      orderDoc.paymentMethod !== "DEBT"
+    ) {
       redirect("/cashier");
     }
 

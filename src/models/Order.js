@@ -63,6 +63,7 @@ const OrderSchema = new Schema({
       "EWALLET_OVO",
       "EWALLET_GOPAY",
       "BANK_TRANSFER",
+      "DEBT",
       null,
     ],
     default: null,
@@ -87,6 +88,16 @@ const OrderSchema = new Schema({
     default: null,
   },
 
+  // Debt (utang) fields — diisi saat kasir memilih metode DEBT
+  debtDueDate: { type: Date, default: null },       // jatuh tempo pembayaran (opsional)
+  debtNote: { type: String, default: null },         // catatan tambahan (opsional)
+  debtPaidAt: { type: Date, default: null },         // tanggal utang dilunasi
+  debtPaidBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    default: null,                                   // owner/kasir yang mengkonfirmasi pelunasan
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   completedAt: { type: Date, default: null },
@@ -97,6 +108,8 @@ OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ orderType: 1, orderStatus: 1 });
 OrderSchema.index({ orderType: 1, createdAt: -1 });
+// Index untuk query utang — filter cepat berdasarkan paymentMethod DEBT
+OrderSchema.index({ paymentMethod: 1, createdAt: -1 });
 // invoiceNumber index sudah dibuat otomatis via unique: true di field definition
 
 // Gunakan schema yang sudah ada jika model sudah terdaftar,
