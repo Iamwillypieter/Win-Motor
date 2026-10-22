@@ -22,7 +22,7 @@ export async function POST(request, { params }) {
     );
   }
 
-  if (session.user.role !== "WAREHOUSE") {
+  if (!["WAREHOUSE", "OWNER"].includes(session.user.role)) {
     return NextResponse.json(
       { error: { code: "FORBIDDEN", message: "Akses ditolak" } },
       { status: 403 }

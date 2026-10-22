@@ -28,6 +28,8 @@ export default async function OwnerProductsPage() {
       _id: p._id.toString(),
       name: p.name,
       sku: p.sku,
+      brand: p.brand ?? null,
+      aliases: p.aliases ?? [],
       price: p.price,
       stock: p.stock,
       imageUrl: p.imageUrl ?? null,

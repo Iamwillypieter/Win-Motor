@@ -60,7 +60,7 @@ export async function POST(request) {
     );
   }
 
-  if (session.user.role !== "WAREHOUSE") {
+  if (session.user.role !== "WAREHOUSE" && session.user.role !== "OWNER") {
     return NextResponse.json(
       { error: { code: "FORBIDDEN", message: "Akses ditolak" } },
       { status: 403 }

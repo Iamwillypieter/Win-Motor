@@ -49,7 +49,7 @@ export async function GET(request, { params }) {
 
 /**
  * PATCH /api/products/:id
- * Update product (name, price, stock, imageUrl). Accessible by WAREHOUSE only.
+ * Update product (name, price, stock, imageUrl). Accessible by WAREHOUSE and OWNER.
  */
 export async function PATCH(request, { params }) {
   const session = await auth();
@@ -61,7 +61,7 @@ export async function PATCH(request, { params }) {
     );
   }
 
-  if (session.user.role !== "WAREHOUSE") {
+  if (!["WAREHOUSE", "OWNER"].includes(session.user.role)) {
     return NextResponse.json(
       { error: { code: "FORBIDDEN", message: "Akses ditolak" } },
       { status: 403 }
@@ -90,7 +90,7 @@ export async function PATCH(request, { params }) {
 
 /**
  * DELETE /api/products/:id
- * Soft-delete a product (sets isActive: false). Accessible by WAREHOUSE only.
+ * Soft-delete a product (sets isActive: false). Accessible by WAREHOUSE and OWNER.
  */
 export async function DELETE(request, { params }) {
   const session = await auth();
@@ -102,7 +102,7 @@ export async function DELETE(request, { params }) {
     );
   }
 
-  if (session.user.role !== "WAREHOUSE") {
+  if (!["WAREHOUSE", "OWNER"].includes(session.user.role)) {
     return NextResponse.json(
       { error: { code: "FORBIDDEN", message: "Akses ditolak" } },
       { status: 403 }
