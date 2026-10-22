@@ -28,7 +28,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
   // Replaces the previous 3-second polling approach
   useEffect(() => {
     if (typeof window === "undefined" || typeof EventSource === "undefined") return;
-    if (currentOrder.orderStatus === "ready" || currentOrder.orderStatus === "completed") return;
+    if (currentOrder.orderStatus === "completed") return;
 
     const es = new EventSource("/api/sse");
 
@@ -78,7 +78,8 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
     ? cashReceivedNum - currentOrder.totalAmount
     : null;
 
-  const isOrderReady = currentOrder.orderStatus === "ready";
+  // Status badge — hanya untuk info tracking, tidak memblokir pembayaran
+  const isOrderReady = currentOrder.orderStatus === "ready" || currentOrder.orderStatus === "completed";
 
   // ─── QRIS countdown timer ───────────────────────────────────────────────────
   useEffect(() => {
@@ -141,11 +142,6 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
   const handleCashPayment = () => {
     setCashError("");
 
-    if (!isOrderReady) {
-      setCashError("Pesanan belum siap. Tunggu konfirmasi dari staf gudang.");
-      return;
-    }
-
     const amount = parseInt(cashReceived, 10);
 
     if (!cashReceived || isNaN(amount)) {
@@ -188,11 +184,6 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
   // ─── Confirm Debt ───────────────────────────────────────────────────────────
   const handleDebtPayment = async () => {
     setDebtError("");
-
-    if (!isOrderReady) {
-      setDebtError("Pesanan belum siap. Tunggu konfirmasi dari staf gudang.");
-      return;
-    }
 
     if (!currentOrder.customerName?.trim()) {
       setDebtError("Nama pelanggan wajib diisi sebelum mencatat utang. Kembali ke POS dan isi nama pelanggan.");
@@ -349,29 +340,26 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
         <p className="text-sm text-gray-500">Invoice: {currentOrder.invoiceNumber}</p>
       </div>
 
-      {/* Order status banner */}
-      {!isOrderReady ? (
-        <div
-          role="alert"
-          className="mb-6 rounded-lg bg-yellow-50 border border-yellow-300 px-4 py-3 flex items-center gap-3"
-        >
-          <span className="text-xl">⏳</span>
-          <div>
-            <p className="text-sm font-semibold text-yellow-800">Pesanan Belum Siap</p>
-            <p className="text-xs text-yellow-700 mt-0.5">
-              Menunggu staf gudang menandai pesanan sebagai siap. Halaman ini akan otomatis diperbarui.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div
-          role="status"
-          className="mb-6 rounded-lg bg-green-50 border border-green-300 px-4 py-3 flex items-center gap-3"
-        >
-          <span className="text-xl">✅</span>
-          <p className="text-sm font-semibold text-green-800">Pesanan Siap — Silakan proses pembayaran</p>
-        </div>
-      )}
+      {/* Order status banner — info saja, tidak memblokir pembayaran */}
+      <div
+        role="status"
+        className={`mb-6 rounded-lg px-4 py-3 flex items-center gap-3 ${
+          currentOrder.orderStatus === "ready" || currentOrder.orderStatus === "completed"
+            ? "bg-green-50 border border-green-300"
+            : "bg-blue-50 border border-blue-200"
+        }`}
+      >
+        <span className="text-xl">
+          {currentOrder.orderStatus === "ready" || currentOrder.orderStatus === "completed" ? "✅" : "📦"}
+        </span>
+        <p className="text-sm font-medium text-gray-800">
+          {currentOrder.orderStatus === "ready"
+            ? "Gudang sudah menandai pesanan siap"
+            : currentOrder.orderStatus === "completed"
+            ? "Pesanan selesai"
+            : "Pesanan sedang diproses gudang — kasir bisa lanjut bayar"}
+        </p>
+      </div>
 
       {/* Items summary */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
@@ -446,9 +434,8 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
                 setCashReceived(e.target.value);
                 setCashError("");
               }}
-              disabled={!isOrderReady}
               placeholder={`Min. ${formatRupiah(currentOrder.totalAmount)}`}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
@@ -485,32 +472,25 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
 
           <button
             onClick={handleCashPayment}
-            disabled={isPending || computedChange === null || !isOrderReady}
+            disabled={isPending || computedChange === null}
             aria-busy={isPending}
             className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isPending ? "Memproses..." : !isOrderReady ? "Menunggu Pesanan Siap..." : "Konfirmasi Pembayaran Cash"}
+            {isPending ? "Memproses..." : "Konfirmasi Pembayaran Cash"}
           </button>
         </div>
       )}
 
       {/* ── QRIS tab ── */}
       {activeTab === "QRIS" && (        <div className="space-y-4">
-          {!isOrderReady && (
-            <div className="flex flex-col items-center gap-3 py-6 text-yellow-700 bg-yellow-50 rounded-lg border border-yellow-200">
-              <span className="text-3xl">⏳</span>
-              <p className="text-sm font-medium">Menunggu pesanan siap dari gudang</p>
-            </div>
-          )}
-
-          {isOrderReady && qrisLoading && (
+          {qrisLoading && (
             <div className="flex flex-col items-center gap-3 py-8 text-gray-500">
               <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
               <p className="text-sm">Membuat kode QRIS...</p>
             </div>
           )}
 
-          {isOrderReady && qrisError && (
+          {qrisError && (
             <div
               role="alert"
               className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
@@ -519,7 +499,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
             </div>
           )}
 
-          {isOrderReady && qrisData && !qrisLoading && (
+          {qrisData && !qrisLoading && (
             <div className="flex flex-col items-center gap-4">
               {/* QR Code — tampilkan sebagai teks kode karena tidak ada payment gateway sungguhan */}
               <div
@@ -604,15 +584,12 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
             </div>
           )}
 
-          {/* Status pesanan */}
-          {!isOrderReady && (
-            <div
-              role="alert"
-              className="rounded-lg bg-yellow-50 border border-yellow-300 px-4 py-3 flex items-center gap-3"
-            >
-              <span className="text-xl">⏳</span>
-              <p className="text-sm font-semibold text-yellow-800">
-                Pesanan belum siap. Tunggu konfirmasi staf gudang.
+          {/* Info status pesanan — tidak memblokir */}
+          {currentOrder.orderStatus !== "ready" && currentOrder.orderStatus !== "completed" && (
+            <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 flex items-center gap-3">
+              <span className="text-xl">📦</span>
+              <p className="text-sm text-blue-800">
+                Gudang sedang menyiapkan pesanan. Kasir tetap bisa mencatat utang.
               </p>
             </div>
           )}
@@ -631,7 +608,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
               value={debtDueDate}
               onChange={(e) => setDebtDueDate(e.target.value)}
               min={new Date().toISOString().split("T")[0]}
-              disabled={!isOrderReady || !currentOrder.customerName?.trim()}
+              disabled={!currentOrder.customerName?.trim()}
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
@@ -649,7 +626,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
               rows={2}
               value={debtNote}
               onChange={(e) => setDebtNote(e.target.value)}
-              disabled={!isOrderReady || !currentOrder.customerName?.trim()}
+              disabled={!currentOrder.customerName?.trim()}
               placeholder="Contoh: Lunas akhir bulan, nomor HP 08xx..."
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
@@ -668,15 +645,12 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
             onClick={handleDebtPayment}
             disabled={
               debtSubmitting ||
-              !isOrderReady ||
               !currentOrder.customerName?.trim()
             }
             className="w-full rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {debtSubmitting
               ? "Menyimpan..."
-              : !isOrderReady
-              ? "Menunggu Pesanan Siap..."
               : !currentOrder.customerName?.trim()
               ? "Isi Nama Pelanggan Dulu"
               : "📋 Catat sebagai Utang"}

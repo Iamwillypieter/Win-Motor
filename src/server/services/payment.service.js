@@ -83,26 +83,16 @@ export async function completePayment(orderId, paymentData) {
     throw new PaymentError(PaymentErrorCode.QRIS_EXPIRED, "Kode QRIS sudah kedaluwarsa");
   }
 
-  // Untuk pesanan ONLINE dengan pembayaran digital (QRIS/e-wallet), order tidak harus
-  // dalam state "ready" — pembayaran bisa dikonfirmasi kapan saja setelah order dibuat.
-  // Untuk pesanan OFFLINE atau pembayaran manual (CASH/BANK_TRANSFER), order harus "ready".
+  const now = new Date();
+
+  // Untuk semua jenis pesanan OFFLINE, orderStatus selalu → "completed" langsung.
+  // Untuk pesanan ONLINE dengan pembayaran digital (belum "ready"), set ke "preparing"
+  // agar gudang tahu perlu disiapkan, lalu completed setelah siap.
   const isDigitalOnlinePayment =
     order.orderType === "ONLINE" &&
     order.paymentMethod !== "CASH" &&
     order.paymentMethod !== "BANK_TRANSFER";
 
-  if (!isDigitalOnlinePayment && order.orderStatus !== "ready") {
-    throw new PaymentError(
-      PaymentErrorCode.ORDER_NOT_READY,
-      "Pesanan belum siap. Tunggu konfirmasi dari staf gudang."
-    );
-  }
-
-  const now = new Date();
-
-  // Untuk pesanan ONLINE dengan pembayaran digital yang belum "ready",
-  // set orderStatus ke "preparing" agar gudang tahu perlu disiapkan.
-  // Untuk pesanan yang sudah "ready", langsung ke "completed".
   const newOrderStatus =
     isDigitalOnlinePayment && order.orderStatus !== "ready"
       ? "preparing"
@@ -367,13 +357,6 @@ export async function completeDebtOrder(orderId, debtData = {}) {
 
   if (order.paymentMethod === "DEBT" && order.orderStatus === "completed") {
     throw new PaymentError(PaymentErrorCode.ALREADY_PAID, "Pesanan sudah dicatat sebagai utang");
-  }
-
-  if (order.orderStatus !== "ready") {
-    throw new PaymentError(
-      PaymentErrorCode.ORDER_NOT_READY,
-      "Pesanan belum siap. Tunggu konfirmasi dari staf gudang."
-    );
   }
 
   if (!order.customerName?.trim()) {

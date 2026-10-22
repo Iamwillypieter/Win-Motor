@@ -129,7 +129,6 @@ export async function POST(request, { params }) {
         [PaymentErrorCode.ALREADY_PAID]: 400,
         [PaymentErrorCode.INSUFFICIENT_STOCK]: 400,
         [PaymentErrorCode.QRIS_EXPIRED]: 409,
-        [PaymentErrorCode.ORDER_NOT_READY]: 400,
         [PaymentErrorCode.TRANSACTION_FAILED]: 500,
       };
       const status = statusMap[err.code] || 400;

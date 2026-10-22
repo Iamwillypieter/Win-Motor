@@ -16,7 +16,7 @@ const STATUS_CONFIG = {
     className: "bg-blue-100 text-blue-800 border-blue-200",
   },
   ready: {
-    label: "Siap Dibayar",
+    label: "Siap",
     className: "bg-green-100 text-green-800 border-green-200",
   },
   completed: {
@@ -286,7 +286,8 @@ export default function CashierOrderList({ cashierId }) {
               className: "bg-gray-100 text-gray-700 border-gray-200",
             };
             const isActive = ["waiting_preparation", "preparing", "ready"].includes(order.orderStatus);
-            const canPay = order.orderStatus === "ready" && order.paymentStatus === "pending";
+            // Kasir bisa bayar kapanpun selama pesanan belum selesai/dibatalkan
+            const canPay = isActive && order.paymentStatus === "pending";
 
             return (
               <div key={order._id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -338,9 +339,6 @@ export default function CashierOrderList({ cashierId }) {
                   >
                     💳 Proses Pembayaran
                   </Link>
-                )}
-                {isActive && !canPay && (
-                  <p className="text-xs text-center text-gray-400">Menunggu konfirmasi dari gudang...</p>
                 )}
                 {order.orderStatus === "completed" && (
                   <div className="flex items-center justify-between">
