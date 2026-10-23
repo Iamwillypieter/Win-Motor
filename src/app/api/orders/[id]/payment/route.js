@@ -48,30 +48,38 @@ export async function POST(request, { params }) {
     );
   }
 
-  const { cashReceived } = body;
+  const { cashReceived, itemDiscounts } = body;
 
   if (cashReceived === undefined || cashReceived === null) {
     return NextResponse.json(
-      {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Field wajib: cashReceived",
-        },
-      },
+      { error: { code: "VALIDATION_ERROR", message: "Field wajib: cashReceived" } },
       { status: 400 }
     );
   }
 
   if (typeof cashReceived !== "number" || !Number.isInteger(cashReceived) || cashReceived < 0) {
     return NextResponse.json(
-      {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "cashReceived harus berupa bilangan bulat positif (rupiah)",
-        },
-      },
+      { error: { code: "VALIDATION_ERROR", message: "cashReceived harus berupa bilangan bulat positif (rupiah)" } },
       { status: 400 }
     );
+  }
+
+  // Validasi itemDiscounts jika dikirim
+  if (itemDiscounts !== undefined) {
+    if (!Array.isArray(itemDiscounts)) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: "itemDiscounts harus berupa array" } },
+        { status: 400 }
+      );
+    }
+    for (const d of itemDiscounts) {
+      if (typeof d.discountPercent !== "number" || d.discountPercent < 0 || d.discountPercent > 100) {
+        return NextResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "discountPercent harus angka 0–100" } },
+          { status: 400 }
+        );
+      }
+    }
   }
 
   try {
@@ -87,24 +95,38 @@ export async function POST(request, { params }) {
       );
     }
 
-    if (cashReceived < order.totalAmount) {
+    // Hitung total setelah diskon untuk validasi cashReceived
+    let discountTotal = 0;
+    if (Array.isArray(itemDiscounts)) {
+      for (const item of order.items) {
+        const pid = item.productId.toString();
+        const d = itemDiscounts.find((x) => x.productId === pid);
+        if (d && d.discountPercent > 0) {
+          discountTotal += Math.round(item.unitPrice * item.quantity * d.discountPercent / 100);
+        }
+      }
+    }
+    const effectiveTotal = order.totalAmount - discountTotal;
+
+    if (cashReceived < effectiveTotal) {
       return NextResponse.json(
         {
           error: {
             code: "INSUFFICIENT_CASH",
-            message: `Uang yang diterima (${cashReceived}) kurang dari total pesanan (${order.totalAmount})`,
+            message: `Uang yang diterima (${cashReceived}) kurang dari total pesanan (${effectiveTotal})`,
           },
         },
         { status: 400 }
       );
     }
 
-    const changeAmount = cashReceived - order.totalAmount;
+    const changeAmount = cashReceived - effectiveTotal;
 
     const invoice = await completePayment(orderId, {
       method: "CASH",
       cashReceived,
       changeAmount,
+      itemDiscounts: itemDiscounts ?? [],
     });
 
     // Serialize invoice for JSON response

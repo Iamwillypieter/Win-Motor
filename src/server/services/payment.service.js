@@ -61,7 +61,7 @@ export const PaymentErrorCode = {
  * After success: broadcasts SSE "order_completed" event.
  *
  * @param {string} orderId - Order ObjectId string
- * @param {{ method: "CASH"|"QRIS", cashReceived?: number, changeAmount?: number }} paymentData
+ * @param {{ method: "CASH"|"QRIS", cashReceived?: number, changeAmount?: number, itemDiscounts?: Array<{productId: string, discountPercent: number}> }} paymentData
  * @returns {Promise<Object>} Created invoice document (plain object)
  * @throws {PaymentError}
  */
@@ -85,9 +85,31 @@ export async function completePayment(orderId, paymentData) {
 
   const now = new Date();
 
-  // Untuk semua jenis pesanan OFFLINE, orderStatus selalu → "completed" langsung.
-  // Untuk pesanan ONLINE dengan pembayaran digital (belum "ready"), set ke "preparing"
-  // agar gudang tahu perlu disiapkan, lalu completed setelah siap.
+  // ── Hitung diskon per item ───────────────────────────────────────────────────
+  // itemDiscounts: [{ productId: string, discountPercent: 0–100 }]
+  // Jika tidak ada → semua discountPercent = 0 (harga normal)
+  const discountMap = {};
+  if (Array.isArray(paymentData.itemDiscounts)) {
+    for (const d of paymentData.itemDiscounts) {
+      if (d.productId && typeof d.discountPercent === "number") {
+        discountMap[d.productId.toString()] = Math.min(100, Math.max(0, d.discountPercent));
+      }
+    }
+  }
+
+  let discountTotal = 0;
+  const itemsWithDiscount = order.items.map((item) => {
+    const pid = item.productId.toString();
+    const pct = discountMap[pid] ?? 0;
+    const originalSubtotal = item.unitPrice * item.quantity;
+    const discountAmount = pct > 0 ? Math.round(originalSubtotal * pct / 100) : 0;
+    const finalPrice = originalSubtotal - discountAmount;
+    discountTotal += discountAmount;
+    return { ...item, discountPercent: pct, discountAmount, finalPrice };
+  });
+
+  const finalTotalAmount = order.totalAmount - discountTotal;
+
   const isDigitalOnlinePayment =
     order.orderType === "ONLINE" &&
     order.paymentMethod !== "CASH" &&
@@ -98,7 +120,7 @@ export async function completePayment(orderId, paymentData) {
       ? "preparing"
       : "completed";
 
-  // ── Step 1: Update Order status ──────────────────────────────────────────────
+  // ── Step 1: Update Order status + diskon ────────────────────────────────────
   try {
     await Order.updateOne(
       { _id: orderId },
@@ -109,6 +131,9 @@ export async function completePayment(orderId, paymentData) {
           paymentMethod: paymentData.method,
           cashReceived: paymentData.cashReceived ?? null,
           changeAmount: paymentData.changeAmount ?? null,
+          totalAmount: finalTotalAmount,
+          discountTotal,
+          items: itemsWithDiscount,
           completedAt: newOrderStatus === "completed" ? now : null,
           updatedAt: now,
         },
@@ -146,10 +171,12 @@ export async function completePayment(orderId, paymentData) {
       {
         $set: {
           paymentStatus: "pending",
-          orderStatus: order.orderStatus, // kembalikan ke status semula
+          orderStatus: order.orderStatus,
           paymentMethod: order.paymentMethod ?? null,
           cashReceived: null,
           changeAmount: null,
+          totalAmount: order.totalAmount,
+          discountTotal: order.discountTotal ?? 0,
           completedAt: null,
           updatedAt: now,
         },
@@ -174,15 +201,23 @@ export async function completePayment(orderId, paymentData) {
       sku: item.sku,
       unitPrice: item.unitPrice,
       quantity: item.quantity,
-      subtotal: item.unitPrice * item.quantity,
+      discountPercent: discountMap[item.productId.toString()] ?? 0,
+      discountAmount: itemsWithDiscount.find(
+        (i) => i.productId.toString() === item.productId.toString()
+      )?.discountAmount ?? 0,
+      subtotal: itemsWithDiscount.find(
+        (i) => i.productId.toString() === item.productId.toString()
+      )?.finalPrice ?? item.unitPrice * item.quantity,
     }));
 
     const created = await Invoice.create({
       orderId: order._id,
       invoiceNumber: order.invoiceNumber,
       cashierName,
+      customerName: order.customerName ?? null,
       items: invoiceItems,
-      totalAmount: order.totalAmount,
+      totalAmount: finalTotalAmount,
+      discountTotal,
       paymentMethod: paymentData.method,
       cashReceived: paymentData.cashReceived ?? null,
       changeAmount: paymentData.changeAmount ?? null,
@@ -197,10 +232,12 @@ export async function completePayment(orderId, paymentData) {
       {
         $set: {
           paymentStatus: "pending",
-          orderStatus: order.orderStatus, // kembalikan ke status semula
+          orderStatus: order.orderStatus,
           paymentMethod: order.paymentMethod ?? null,
           cashReceived: null,
           changeAmount: null,
+          totalAmount: order.totalAmount,
+          discountTotal: order.discountTotal ?? 0,
           completedAt: null,
           updatedAt: now,
         },
@@ -329,15 +366,8 @@ export async function expireQRISOrders() {
 /**
  * Complete an order with DEBT payment method (utang).
  *
- * Berbeda dari completePayment biasa:
- *  - paymentStatus tetap "pending" (belum lunas)
- *  - orderStatus → "completed" (barang sudah diserahkan)
- *  - Stok tetap dikurangi (barang sudah keluar)
- *  - Invoice dibuat dengan paymentMethod: "DEBT"
- *  - customerName WAJIB ada
- *
  * @param {string} orderId
- * @param {{ dueDate?: string, note?: string }} debtData
+ * @param {{ dueDate?: string, note?: string, itemDiscounts?: Array<{productId: string, discountPercent: number}> }} debtData
  * @returns {Promise<Object>} Created invoice document (plain object)
  * @throws {PaymentError}
  */
@@ -369,6 +399,29 @@ export async function completeDebtOrder(orderId, debtData = {}) {
   const now = new Date();
   const dueDate = debtData.dueDate ? new Date(debtData.dueDate) : null;
 
+  // ── Hitung diskon per item ───────────────────────────────────────────────────
+  const discountMap = {};
+  if (Array.isArray(debtData.itemDiscounts)) {
+    for (const d of debtData.itemDiscounts) {
+      if (d.productId && typeof d.discountPercent === "number") {
+        discountMap[d.productId.toString()] = Math.min(100, Math.max(0, d.discountPercent));
+      }
+    }
+  }
+
+  let discountTotal = 0;
+  const itemsWithDiscount = order.items.map((item) => {
+    const pid = item.productId.toString();
+    const pct = discountMap[pid] ?? 0;
+    const originalSubtotal = item.unitPrice * item.quantity;
+    const discountAmount = pct > 0 ? Math.round(originalSubtotal * pct / 100) : 0;
+    const finalPrice = originalSubtotal - discountAmount;
+    discountTotal += discountAmount;
+    return { ...item, discountPercent: pct, discountAmount, finalPrice };
+  });
+
+  const finalTotalAmount = order.totalAmount - discountTotal;
+
   // ── Step 1: Update Order ─────────────────────────────────────────────────────
   try {
     await Order.updateOne(
@@ -376,11 +429,14 @@ export async function completeDebtOrder(orderId, debtData = {}) {
       {
         $set: {
           paymentMethod: "DEBT",
-          paymentStatus: "pending",   // belum lunas — owner yang akan update saat lunas
-          orderStatus: "completed",   // barang sudah diserahkan
+          paymentStatus: "pending",
+          orderStatus: "completed",
           completedAt: now,
           debtDueDate: dueDate,
           debtNote: debtData.note?.trim() || null,
+          totalAmount: finalTotalAmount,
+          discountTotal,
+          items: itemsWithDiscount,
           updatedAt: now,
         },
       }
@@ -443,7 +499,13 @@ export async function completeDebtOrder(orderId, debtData = {}) {
       sku: item.sku,
       unitPrice: item.unitPrice,
       quantity: item.quantity,
-      subtotal: item.unitPrice * item.quantity,
+      discountPercent: discountMap[item.productId.toString()] ?? 0,
+      discountAmount: itemsWithDiscount.find(
+        (i) => i.productId.toString() === item.productId.toString()
+      )?.discountAmount ?? 0,
+      subtotal: itemsWithDiscount.find(
+        (i) => i.productId.toString() === item.productId.toString()
+      )?.finalPrice ?? item.unitPrice * item.quantity,
     }));
 
     const created = await Invoice.create({
@@ -452,7 +514,8 @@ export async function completeDebtOrder(orderId, debtData = {}) {
       cashierName,
       customerName: order.customerName,
       items: invoiceItems,
-      totalAmount: order.totalAmount,
+      totalAmount: finalTotalAmount,
+      discountTotal,
       paymentMethod: "DEBT",
       cashReceived: null,
       changeAmount: null,

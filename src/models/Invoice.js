@@ -3,9 +3,11 @@ import mongoose, { Schema } from "mongoose";
 const InvoiceItemSchema = new Schema({
   productName: { type: String, required: true },
   sku: { type: String, required: true },
-  unitPrice: { type: Number, required: true }, // integer rupiah
+  unitPrice: { type: Number, required: true },   // harga satuan asli (sebelum diskon)
   quantity: { type: Number, required: true, min: 1 },
-  subtotal: { type: Number, required: true }, // unitPrice * quantity
+  discountPercent: { type: Number, default: 0 }, // persentase diskon 0–100
+  discountAmount: { type: Number, default: 0 },  // total potongan item ini (rupiah)
+  subtotal: { type: Number, required: true },    // harga SETELAH diskon * qty
 });
 
 const InvoiceSchema = new Schema({
@@ -20,7 +22,8 @@ const InvoiceSchema = new Schema({
 
   items: { type: [InvoiceItemSchema], required: true },
 
-  totalAmount: { type: Number, required: true, min: 0 }, // integer rupiah
+  totalAmount: { type: Number, required: true, min: 0 }, // integer rupiah — harga SETELAH diskon
+  discountTotal: { type: Number, default: 0 },           // total potongan semua item (rupiah)
   paymentMethod: {
     type: String,
     enum: [

@@ -48,9 +48,8 @@ export async function POST(request, { params }) {
     // body opsional — lanjut dengan default kosong
   }
 
-  const { dueDate, note } = body;
+  const { dueDate, note, itemDiscounts } = body;
 
-  // Validasi dueDate jika ada — harus tanggal valid di masa depan
   if (dueDate) {
     const parsed = new Date(dueDate);
     if (isNaN(parsed.getTime())) {
@@ -68,8 +67,25 @@ export async function POST(request, { params }) {
     );
   }
 
+  if (itemDiscounts !== undefined) {
+    if (!Array.isArray(itemDiscounts)) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: "itemDiscounts harus berupa array" } },
+        { status: 400 }
+      );
+    }
+    for (const d of itemDiscounts) {
+      if (typeof d.discountPercent !== "number" || d.discountPercent < 0 || d.discountPercent > 100) {
+        return NextResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "discountPercent harus angka 0–100" } },
+          { status: 400 }
+        );
+      }
+    }
+  }
+
   try {
-    const invoice = await completeDebtOrder(safeId, { dueDate, note });
+    const invoice = await completeDebtOrder(safeId, { dueDate, note, itemDiscounts: itemDiscounts ?? [] });
 
     return NextResponse.json({ data: { invoice } }, { status: 200 });
   } catch (err) {

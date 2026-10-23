@@ -9,12 +9,12 @@ import { playNotificationSound } from "@/components/shared/SoundNotification";
  * PaymentModal — Client Component for processing Cash, QRIS, or Debt payments.
  *
  * Features:
+ *  - Input diskon % per item — kasir ketik angka di samping setiap item, total langsung update
  *  - Tab toggle: CASH | QRIS | UTANG
- *  - CASH: input for amount received, real-time change calculation
- *  - QRIS: QR code display, 5-minute countdown timer, refresh button
- *  - UTANG: input nama pelanggan (wajib), jatuh tempo opsional, catatan opsional
- *  - After success: invoice summary display
- *  - Shows "Pesanan Belum Siap" warning if orderStatus !== "ready"
+ *  - CASH: input uang diterima, kembalian real-time
+ *  - QRIS: QR code display, 5-minute countdown
+ *  - UTANG: jatuh tempo opsional, catatan opsional
+ *  - Invoice summary tampilkan harga coret + diskon + harga akhir
  *
  * @param {{ order: Object, cashierName: string }} props
  */
@@ -24,14 +24,42 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
   const [isPending, startTransition] = useTransition();
   const [currentOrder, setCurrentOrder] = useState(initialOrder);
 
-  // Subscribe to SSE events for real-time order status updates
-  // Replaces the previous 3-second polling approach
+  // ── Diskon per item ──────────────────────────────────────────────────────────
+  // discounts: { [productId]: number (0–100) }
+  const [discounts, setDiscounts] = useState(() => {
+    const init = {};
+    for (const item of initialOrder.items) {
+      init[item.productId] = 0;
+    }
+    return init;
+  });
+
+  // Kalkulasi derived values dari diskon
+  const itemsWithCalc = currentOrder.items.map((item) => {
+    const pct = discounts[item.productId] ?? 0;
+    const originalSubtotal = item.unitPrice * item.quantity;
+    const discountAmount = pct > 0 ? Math.round(originalSubtotal * pct / 100) : 0;
+    const finalSubtotal = originalSubtotal - discountAmount;
+    return { ...item, pct, originalSubtotal, discountAmount, finalSubtotal };
+  });
+
+  const discountTotal = itemsWithCalc.reduce((s, i) => s + i.discountAmount, 0);
+  const effectiveTotal = currentOrder.totalAmount - discountTotal;
+  const hasDiscount = discountTotal > 0;
+
+  // Helper: itemDiscounts array untuk dikirim ke API
+  const buildItemDiscounts = () =>
+    currentOrder.items.map((item) => ({
+      productId: item.productId,
+      discountPercent: discounts[item.productId] ?? 0,
+    }));
+
+  // ── SSE — update status pesanan real-time ───────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined" || typeof EventSource === "undefined") return;
     if (currentOrder.orderStatus === "completed") return;
 
     const es = new EventSource("/api/sse");
-
     es.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data);
@@ -44,47 +72,28 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
             orderStatus: parsed.data.orderStatus ?? "ready",
           }));
         }
-      } catch {
-        // ignore parse errors
-      }
+      } catch { /* ignore */ }
     };
-
     return () => es.close();
   }, [currentOrder._id, currentOrder.orderStatus]);
 
-  // CASH state
+  // ── CASH state ───────────────────────────────────────────────────────────────
   const [cashReceived, setCashReceived] = useState("");
   const [cashError, setCashError] = useState("");
 
-  // QRIS state
+  const cashReceivedNum = parseInt(cashReceived, 10) || 0;
+  const computedChange = cashReceivedNum >= effectiveTotal
+    ? cashReceivedNum - effectiveTotal
+    : null;
+
+  // ── QRIS state ───────────────────────────────────────────────────────────────
   const [qrisData, setQrisData] = useState(null);
   const [qrisLoading, setQrisLoading] = useState(false);
   const [qrisError, setQrisError] = useState("");
-  const [timeLeft, setTimeLeft] = useState(0); // seconds remaining
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  // DEBT state
-  const [debtDueDate, setDebtDueDate] = useState("");
-  const [debtNote, setDebtNote] = useState("");
-  const [debtError, setDebtError] = useState("");
-  const [debtSubmitting, setDebtSubmitting] = useState(false);
-
-  // Success state
-  const [invoice, setInvoice] = useState(null);
-  const [changeAmount, setChangeAmount] = useState(null);
-
-  // Computed change for CASH
-  const cashReceivedNum = parseInt(cashReceived, 10) || 0;
-  const computedChange = cashReceivedNum >= currentOrder.totalAmount
-    ? cashReceivedNum - currentOrder.totalAmount
-    : null;
-
-  // Status badge — hanya untuk info tracking, tidak memblokir pembayaran
-  const isOrderReady = currentOrder.orderStatus === "ready" || currentOrder.orderStatus === "completed";
-
-  // ─── QRIS countdown timer ───────────────────────────────────────────────────
   useEffect(() => {
     if (!qrisData?.qrisExpiresAt) return;
-
     const updateTimer = () => {
       const remaining = Math.max(
         0,
@@ -92,104 +101,80 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
       );
       setTimeLeft(remaining);
     };
-
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [qrisData?.qrisExpiresAt]);
 
-  const formatTimeLeft = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${String(s).padStart(2, "0")}`;
-  };
-
+  const formatTimeLeft = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const isQrisExpired = qrisData && timeLeft === 0;
 
-  // ─── Generate QRIS ──────────────────────────────────────────────────────────
+  // ── DEBT state ───────────────────────────────────────────────────────────────
+  const [debtDueDate, setDebtDueDate] = useState("");
+  const [debtNote, setDebtNote] = useState("");
+  const [debtError, setDebtError] = useState("");
+  const [debtSubmitting, setDebtSubmitting] = useState(false);
+
+  // ── Success state ────────────────────────────────────────────────────────────
+  const [invoice, setInvoice] = useState(null);
+  const [changeAmount, setChangeAmount] = useState(null);
+
+  // ── Generate QRIS ────────────────────────────────────────────────────────────
   const handleGenerateQRIS = useCallback(async () => {
     setQrisLoading(true);
     setQrisError("");
     setQrisData(null);
-
     try {
-      const res = await fetch(`/api/orders/${currentOrder._id}/qris`, {
-        method: "POST",
-      });
+      const res = await fetch(`/api/orders/${currentOrder._id}/qris`, { method: "POST" });
       const result = await res.json();
-
-      if (!res.ok) {
-        setQrisError(result.error?.message || "Gagal membuat kode QRIS");
-        return;
-      }
-
+      if (!res.ok) { setQrisError(result.error?.message || "Gagal membuat kode QRIS"); return; }
       setQrisData(result.data);
-    } catch {
-      setQrisError("Gagal terhubung ke server");
-    } finally {
-      setQrisLoading(false);
-    }
+    } catch { setQrisError("Gagal terhubung ke server"); }
+    finally { setQrisLoading(false); }
   }, [currentOrder._id]);
 
-  // Auto-generate QRIS when switching to QRIS tab
   useEffect(() => {
-    if (activeTab === "QRIS" && !qrisData && !qrisLoading) {
-      handleGenerateQRIS();
-    }
+    if (activeTab === "QRIS" && !qrisData && !qrisLoading) handleGenerateQRIS();
   }, [activeTab, qrisData, qrisLoading, handleGenerateQRIS]);
 
-  // ─── Confirm Cash Payment ───────────────────────────────────────────────────
+  // ── Confirm Cash Payment ─────────────────────────────────────────────────────
   const handleCashPayment = () => {
     setCashError("");
-
     const amount = parseInt(cashReceived, 10);
-
     if (!cashReceived || isNaN(amount)) {
       setCashError("Masukkan jumlah uang yang diterima");
       return;
     }
-
-    if (amount < currentOrder.totalAmount) {
-      setCashError(
-        `Uang yang diterima kurang. Minimal ${formatRupiah(currentOrder.totalAmount)}`
-      );
+    if (amount < effectiveTotal) {
+      setCashError(`Uang yang diterima kurang. Minimal ${formatRupiah(effectiveTotal)}`);
       return;
     }
-
     startTransition(async () => {
       try {
         const res = await fetch(`/api/orders/${currentOrder._id}/payment`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cashReceived: amount }),
+          body: JSON.stringify({
+            cashReceived: amount,
+            itemDiscounts: buildItemDiscounts(),
+          }),
         });
-
         const result = await res.json();
-
-        if (!res.ok) {
-          setCashError(result.error?.message || "Pembayaran gagal");
-          return;
-        }
-
+        if (!res.ok) { setCashError(result.error?.message || "Pembayaran gagal"); return; }
         setInvoice(result.data.invoice);
         setChangeAmount(result.data.changeAmount);
-        // Mainkan suara pembayaran berhasil
         playNotificationSound("payment_success");
-      } catch {
-        setCashError("Gagal terhubung ke server");
-      }
+      } catch { setCashError("Gagal terhubung ke server"); }
     });
   };
 
-  // ─── Confirm Debt ───────────────────────────────────────────────────────────
+  // ── Confirm Debt ─────────────────────────────────────────────────────────────
   const handleDebtPayment = async () => {
     setDebtError("");
-
     if (!currentOrder.customerName?.trim()) {
-      setDebtError("Nama pelanggan wajib diisi sebelum mencatat utang. Kembali ke POS dan isi nama pelanggan.");
+      setDebtError("Nama pelanggan wajib diisi sebelum mencatat utang.");
       return;
     }
-
     setDebtSubmitting(true);
     try {
       const res = await fetch(`/api/orders/${currentOrder._id}/debt`, {
@@ -198,30 +183,25 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
         body: JSON.stringify({
           dueDate: debtDueDate || undefined,
           note: debtNote || undefined,
+          itemDiscounts: buildItemDiscounts(),
         }),
       });
-
       const result = await res.json();
-
-      if (!res.ok) {
-        setDebtError(result.error?.message || "Gagal mencatat utang");
-        return;
-      }
-
+      if (!res.ok) { setDebtError(result.error?.message || "Gagal mencatat utang"); return; }
       setInvoice(result.data.invoice);
       playNotificationSound("payment_success");
-    } catch {
-      setDebtError("Gagal terhubung ke server");
-    } finally {
-      setDebtSubmitting(false);
-    }
+    } catch { setDebtError("Gagal terhubung ke server"); }
+    finally { setDebtSubmitting(false); }
   };
 
-  // ─── Invoice Summary (success state) ───────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
+  // Invoice Summary (success state)
+  // ────────────────────────────────────────────────────────────────────────────
   if (invoice) {
+    const invoiceDiscountTotal = invoice.discountTotal ?? 0;
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-lg mx-auto">
-        {/* Success header */}
+        {/* Header */}
         <div className="flex flex-col items-center gap-3 mb-6">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl ${
             invoice.paymentMethod === "DEBT" ? "bg-orange-100" : "bg-green-100"
@@ -232,28 +212,28 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
             {invoice.paymentMethod === "DEBT" ? "Utang Dicatat!" : "Pembayaran Berhasil!"}
           </h2>
           <p className="text-sm text-gray-500">
-            {invoice.paymentMethod === "CASH" ? "Tunai" : invoice.paymentMethod === "QRIS" ? "QRIS" : "Utang — Belum Lunas"}
+            {invoice.paymentMethod === "CASH" ? "Tunai"
+              : invoice.paymentMethod === "QRIS" ? "QRIS"
+              : "Utang — Belum Lunas"}
           </p>
           {invoice.paymentMethod === "DEBT" && (
             <p className="text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 text-center">
-              Transaksi ini dicatat sebagai utang. Owner akan dikonfirmasi saat pelunasan.
+              Transaksi dicatat sebagai utang. Owner akan dikonfirmasi saat pelunasan.
             </p>
           )}
         </div>
 
-        {/* Invoice details */}
+        {/* Invoice detail */}
         <div className="border border-gray-200 rounded-lg p-4 space-y-3 mb-4">
-          {currentOrder.customerName && (
+          {invoice.customerName && (
             <div className="text-center pb-2 border-b border-gray-100">
-              <p className="font-bold text-gray-900 text-base">{currentOrder.customerName}</p>
+              <p className="font-bold text-gray-900 text-base">{invoice.customerName}</p>
               <p className="text-xs text-gray-400">Pelanggan</p>
             </div>
           )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">No. Invoice</span>
-            <span className="font-mono font-semibold text-blue-600">
-              {invoice.invoiceNumber}
-            </span>
+            <span className="font-mono font-semibold text-blue-600">{invoice.invoiceNumber}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Kasir</span>
@@ -261,28 +241,58 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Waktu</span>
-            <span className="font-medium">
-              {new Date(invoice.transactionAt).toLocaleString("id-ID")}
-            </span>
+            <span className="font-medium">{new Date(invoice.transactionAt).toLocaleString("id-ID")}</span>
           </div>
 
           {/* Items */}
-          <div className="border-t border-gray-100 pt-3 space-y-1">
+          <div className="border-t border-gray-100 pt-3 space-y-2">
             {invoice.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm">
-                <span className="text-gray-700">
-                  {item.productName}{" "}
-                  <span className="text-gray-400">×{item.quantity}</span>
-                </span>
-                <span className="font-medium">{formatRupiah(item.subtotal)}</span>
+              <div key={idx} className="text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-700">
+                    {item.productName} <span className="text-gray-400">×{item.quantity}</span>
+                  </span>
+                  <div className="text-right">
+                    {item.discountPercent > 0 ? (
+                      <>
+                        <p className="text-xs text-gray-400 line-through">
+                          {formatRupiah(item.unitPrice * item.quantity)}
+                        </p>
+                        <p className="font-medium text-green-700">{formatRupiah(item.subtotal)}</p>
+                      </>
+                    ) : (
+                      <p className="font-medium">{formatRupiah(item.subtotal)}</p>
+                    )}
+                  </div>
+                </div>
+                {item.discountPercent > 0 && (
+                  <p className="text-xs text-green-600 mt-0.5">
+                    Diskon {item.discountPercent}% — hemat {formatRupiah(item.discountAmount)}
+                  </p>
+                )}
               </div>
             ))}
           </div>
 
+          {/* Totals */}
           <div className="border-t border-gray-200 pt-3 space-y-1">
-            <div className="flex justify-between font-semibold">
-              <span>Total</span>
-              <span>{formatRupiah(invoice.totalAmount)}</span>
+            {invoiceDiscountTotal > 0 && (
+              <>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Subtotal</span>
+                  <span>{formatRupiah(invoice.totalAmount + invoiceDiscountTotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-green-600 font-medium">
+                  <span>Total Diskon</span>
+                  <span>− {formatRupiah(invoiceDiscountTotal)}</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between font-bold text-base">
+              <span>Total Bayar</span>
+              <span className={invoiceDiscountTotal > 0 ? "text-green-700" : ""}>
+                {formatRupiah(invoice.totalAmount)}
+              </span>
             </div>
             {invoice.paymentMethod === "CASH" && (
               <>
@@ -324,26 +334,26 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
     );
   }
 
-  // ─── Payment form ───────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
+  // Payment form
+  // ────────────────────────────────────────────────────────────────────────────
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-lg mx-auto">
       {/* Order summary */}
-      <div className="mb-6">
+      <div className="mb-4">
         {currentOrder.customerName && (
           <p className="text-center font-bold text-gray-900 text-lg mb-2">
             {currentOrder.customerName}
           </p>
         )}
-        <h2 className="text-lg font-bold text-gray-900 mb-1">
-          Konfirmasi Pembayaran
-        </h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-1">Konfirmasi Pembayaran</h2>
         <p className="text-sm text-gray-500">Invoice: {currentOrder.invoiceNumber}</p>
       </div>
 
-      {/* Order status banner — info saja, tidak memblokir pembayaran */}
+      {/* Status banner */}
       <div
         role="status"
-        className={`mb-6 rounded-lg px-4 py-3 flex items-center gap-3 ${
+        className={`mb-5 rounded-lg px-4 py-3 flex items-center gap-3 ${
           currentOrder.orderStatus === "ready" || currentOrder.orderStatus === "completed"
             ? "bg-green-50 border border-green-300"
             : "bg-blue-50 border border-blue-200"
@@ -361,22 +371,97 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
         </p>
       </div>
 
-      {/* Items summary */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
-        {currentOrder.items.map((item, idx) => (
-          <div key={idx} className="flex justify-between text-sm">
-            <span className="text-gray-700">
-              {item.productName}{" "}
-              <span className="text-gray-400">×{item.quantity}</span>
-            </span>
-            <span className="font-medium">
-              {formatRupiah(item.unitPrice * item.quantity)}
+      {/* ── Item list + input diskon ── */}
+      <div className="bg-gray-50 rounded-xl border border-gray-200 mb-5 overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-gray-200 flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Detail Item
+          </p>
+          <p className="text-xs text-gray-400">Ketik % diskon di kolom kanan</p>
+        </div>
+
+        <div className="divide-y divide-gray-100">
+          {itemsWithCalc.map((item) => (
+            <div key={item.productId} className="px-4 py-3">
+              {/* Baris nama + harga */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
+                  <p className="text-xs text-gray-400">
+                    {formatRupiah(item.unitPrice)} × {item.quantity}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Input diskon % */}
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={discounts[item.productId] === 0 ? "" : discounts[item.productId]}
+                      onChange={(e) => {
+                        const v = e.target.value === "" ? 0 : Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0));
+                        setDiscounts((prev) => ({ ...prev, [item.productId]: v }));
+                      }}
+                      placeholder="0"
+                      className="w-14 rounded-lg border border-gray-300 px-2 py-1.5 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label={`Diskon % untuk ${item.productName}`}
+                    />
+                    <span className="text-sm text-gray-500 font-medium">%</span>
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="text-right w-24">
+                    {item.pct > 0 ? (
+                      <>
+                        <p className="text-xs text-gray-400 line-through">
+                          {formatRupiah(item.originalSubtotal)}
+                        </p>
+                        <p className="text-sm font-semibold text-green-700">
+                          {formatRupiah(item.finalSubtotal)}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-semibold text-gray-900">
+                        {formatRupiah(item.originalSubtotal)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Badge hemat */}
+              {item.pct > 0 && (
+                <p className="mt-1 text-xs text-green-600">
+                  Hemat {formatRupiah(item.discountAmount)} ({item.pct}%)
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Footer total */}
+        <div className="px-4 py-3 bg-white border-t border-gray-200 space-y-1">
+          {hasDiscount && (
+            <>
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>Subtotal</span>
+                <span>{formatRupiah(currentOrder.totalAmount)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-medium text-green-600">
+                <span>Total Diskon</span>
+                <span>− {formatRupiah(discountTotal)}</span>
+              </div>
+            </>
+          )}
+          <div className="flex justify-between font-bold text-base">
+            <span>Total Bayar</span>
+            <span className={hasDiscount ? "text-green-700" : "text-blue-600"}>
+              {formatRupiah(effectiveTotal)}
             </span>
           </div>
-        ))}
-        <div className="border-t border-gray-200 pt-2 flex justify-between font-bold">
-          <span>Total</span>
-          <span className="text-blue-600">{formatRupiah(currentOrder.totalAmount)}</span>
         </div>
       </div>
 
@@ -385,9 +470,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
         <button
           onClick={() => setActiveTab("CASH")}
           className={`flex-1 py-2.5 text-sm font-semibold transition-colors focus:outline-none ${
-            activeTab === "CASH"
-              ? "bg-blue-600 text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50"
+            activeTab === "CASH" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
           }`}
         >
           💵 Tunai
@@ -395,9 +478,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
         <button
           onClick={() => setActiveTab("QRIS")}
           className={`flex-1 py-2.5 text-sm font-semibold transition-colors focus:outline-none ${
-            activeTab === "QRIS"
-              ? "bg-blue-600 text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50"
+            activeTab === "QRIS" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
           }`}
         >
           📱 QRIS
@@ -405,9 +486,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
         <button
           onClick={() => setActiveTab("DEBT")}
           className={`flex-1 py-2.5 text-sm font-semibold transition-colors focus:outline-none ${
-            activeTab === "DEBT"
-              ? "bg-orange-500 text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50"
+            activeTab === "DEBT" ? "bg-orange-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
           }`}
         >
           📋 Utang
@@ -418,36 +497,27 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
       {activeTab === "CASH" && (
         <div className="space-y-4">
           <div>
-            <label
-              htmlFor="cashReceived"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="cashReceived" className="block text-sm font-medium text-gray-700 mb-1">
               Jumlah Uang Diterima (Rp)
             </label>
             <input
               id="cashReceived"
               type="number"
-              min={currentOrder.totalAmount}
+              min={effectiveTotal}
               step={1000}
               value={cashReceived}
-              onChange={(e) => {
-                setCashReceived(e.target.value);
-                setCashError("");
-              }}
-              placeholder={`Min. ${formatRupiah(currentOrder.totalAmount)}`}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => { setCashReceived(e.target.value); setCashError(""); }}
+              placeholder={`Min. ${formatRupiah(effectiveTotal)}`}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* Real-time change display */}
           {cashReceivedNum > 0 && (
-            <div
-              className={`rounded-lg p-3 text-sm ${
-                computedChange !== null
-                  ? "bg-green-50 border border-green-200"
-                  : "bg-red-50 border border-red-200"
-              }`}
-            >
+            <div className={`rounded-lg p-3 text-sm ${
+              computedChange !== null
+                ? "bg-green-50 border border-green-200"
+                : "bg-red-50 border border-red-200"
+            }`}>
               {computedChange !== null ? (
                 <div className="flex justify-between font-semibold text-green-800">
                   <span>Kembalian</span>
@@ -455,17 +525,14 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
                 </div>
               ) : (
                 <p className="text-red-700">
-                  Kurang {formatRupiah(currentOrder.totalAmount - cashReceivedNum)}
+                  Kurang {formatRupiah(effectiveTotal - cashReceivedNum)}
                 </p>
               )}
             </div>
           )}
 
           {cashError && (
-            <div
-              role="alert"
-              className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
-            >
+            <div role="alert" className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
               {cashError}
             </div>
           )}
@@ -482,7 +549,8 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
       )}
 
       {/* ── QRIS tab ── */}
-      {activeTab === "QRIS" && (        <div className="space-y-4">
+      {activeTab === "QRIS" && (
+        <div className="space-y-4">
           {qrisLoading && (
             <div className="flex flex-col items-center gap-3 py-8 text-gray-500">
               <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -491,50 +559,35 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
           )}
 
           {qrisError && (
-            <div
-              role="alert"
-              className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
-            >
+            <div role="alert" className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
               {qrisError}
             </div>
           )}
 
           {qrisData && !qrisLoading && (
             <div className="flex flex-col items-center gap-4">
-              {/* QR Code — tampilkan sebagai teks kode karena tidak ada payment gateway sungguhan */}
-              <div
-                className={`w-full p-4 border-2 rounded-xl text-center ${
-                  isQrisExpired ? "border-red-300 opacity-50" : "border-gray-200"
-                }`}
-              >
+              <div className={`w-full p-4 border-2 rounded-xl text-center ${isQrisExpired ? "border-red-300 opacity-50" : "border-gray-200"}`}>
                 <p className="text-xs text-gray-400 mb-2">Kode Pembayaran QRIS</p>
-                <p className="font-mono text-sm font-bold text-gray-800 break-all">
-                  {qrisData.qrisCode}
-                </p>
-                <p className="text-xs text-gray-400 mt-2">
-                  (Dalam produksi, ini akan ditampilkan sebagai QR Code)
-                </p>
+                <p className="font-mono text-sm font-bold text-gray-800 break-all">{qrisData.qrisCode}</p>
+                {hasDiscount && (
+                  <p className="text-xs text-green-600 mt-2 font-medium">
+                    Total: {formatRupiah(effectiveTotal)}
+                    {" "}(hemat {formatRupiah(discountTotal)})
+                  </p>
+                )}
               </div>
 
-              {/* Countdown timer */}
-              <div
-                className={`text-center ${
-                  isQrisExpired ? "text-red-600" : timeLeft <= 60 ? "text-orange-600" : "text-gray-600"
-                }`}
-              >
+              <div className={`text-center ${isQrisExpired ? "text-red-600" : timeLeft <= 60 ? "text-orange-600" : "text-gray-600"}`}>
                 {isQrisExpired ? (
                   <p className="text-sm font-semibold">Kode QRIS sudah kedaluwarsa</p>
                 ) : (
                   <>
                     <p className="text-xs text-gray-500 mb-1">Berlaku selama</p>
-                    <p className="text-2xl font-mono font-bold">
-                      {formatTimeLeft(timeLeft)}
-                    </p>
+                    <p className="text-2xl font-mono font-bold">{formatTimeLeft(timeLeft)}</p>
                   </>
                 )}
               </div>
 
-              {/* Refresh button */}
               <button
                 onClick={handleGenerateQRIS}
                 disabled={qrisLoading}
@@ -545,7 +598,7 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
 
               {!isQrisExpired && (
                 <p className="text-xs text-gray-400 text-center">
-                  Tunjukkan kode ini kepada pelanggan. Pembayaran akan dikonfirmasi secara otomatis.
+                  Tunjukkan kode ini kepada pelanggan.
                 </p>
               )}
             </div>
@@ -556,17 +609,13 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
       {/* ── DEBT tab ── */}
       {activeTab === "DEBT" && (
         <div className="space-y-4">
-          {/* Warning: nama pelanggan wajib */}
           {!currentOrder.customerName?.trim() ? (
-            <div
-              role="alert"
-              className="rounded-lg bg-red-50 border border-red-300 px-4 py-3 flex items-start gap-3"
-            >
+            <div role="alert" className="rounded-lg bg-red-50 border border-red-300 px-4 py-3 flex items-start gap-3">
               <span className="text-xl flex-shrink-0">⚠️</span>
               <div>
                 <p className="text-sm font-semibold text-red-800">Nama Pelanggan Belum Diisi</p>
                 <p className="text-xs text-red-700 mt-0.5">
-                  Kembali ke halaman POS dan isi nama pelanggan terlebih dahulu sebelum mencatat utang.
+                  Kembali ke halaman POS dan isi nama pelanggan terlebih dahulu.
                 </p>
               </div>
             </div>
@@ -575,31 +624,18 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
               <span className="text-xl">📋</span>
               <div>
                 <p className="text-sm font-semibold text-orange-800">
-                  Catat sebagai Utang atas nama: {currentOrder.customerName}
+                  Utang atas nama: {currentOrder.customerName}
                 </p>
                 <p className="text-xs text-orange-700 mt-0.5">
-                  Barang diserahkan sekarang, pembayaran dilunasi nanti. Owner akan menerima notifikasi.
+                  Total: {formatRupiah(effectiveTotal)}
+                  {hasDiscount && ` (hemat ${formatRupiah(discountTotal)})`}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Info status pesanan — tidak memblokir */}
-          {currentOrder.orderStatus !== "ready" && currentOrder.orderStatus !== "completed" && (
-            <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 flex items-center gap-3">
-              <span className="text-xl">📦</span>
-              <p className="text-sm text-blue-800">
-                Gudang sedang menyiapkan pesanan. Kasir tetap bisa mencatat utang.
-              </p>
-            </div>
-          )}
-
-          {/* Jatuh tempo (opsional) */}
           <div>
-            <label
-              htmlFor="debtDueDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="debtDueDate" className="block text-sm font-medium text-gray-700 mb-1">
               Jatuh Tempo <span className="text-gray-400 font-normal">(opsional)</span>
             </label>
             <input
@@ -613,12 +649,8 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
             />
           </div>
 
-          {/* Catatan (opsional) */}
           <div>
-            <label
-              htmlFor="debtNote"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="debtNote" className="block text-sm font-medium text-gray-700 mb-1">
               Catatan <span className="text-gray-400 font-normal">(opsional)</span>
             </label>
             <textarea
@@ -633,20 +665,14 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
           </div>
 
           {debtError && (
-            <div
-              role="alert"
-              className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
-            >
+            <div role="alert" className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
               {debtError}
             </div>
           )}
 
           <button
             onClick={handleDebtPayment}
-            disabled={
-              debtSubmitting ||
-              !currentOrder.customerName?.trim()
-            }
+            disabled={debtSubmitting || !currentOrder.customerName?.trim()}
             className="w-full rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {debtSubmitting

@@ -6,6 +6,10 @@ const OrderItemSchema = new Schema({
   sku: { type: String, required: true },
   unitPrice: { type: Number, required: true }, // snapshot price at order creation
   quantity: { type: Number, required: true, min: 1 },
+  // Diskon per item — diisi saat proses pembayaran (opsional, default 0)
+  discountPercent: { type: Number, default: 0, min: 0, max: 100 }, // 0–100
+  discountAmount: { type: Number, default: 0, min: 0 },            // rupiah total potongan item ini
+  finalPrice: { type: Number, default: null },                      // (unitPrice * qty) - discountAmount
 });
 
 const OrderSchema = new Schema({
@@ -35,7 +39,8 @@ const OrderSchema = new Schema({
   // SSE token untuk koneksi publik pelanggan
   sseToken: { type: String, default: null }, // UUID token
   items: { type: [OrderItemSchema], required: true },
-  totalAmount: { type: Number, required: true, min: 0 }, // integer rupiah
+  totalAmount: { type: Number, required: true, min: 0 }, // integer rupiah — harga SETELAH diskon
+  discountTotal: { type: Number, default: 0, min: 0 },   // total potongan semua item (rupiah)
 
   orderStatus: {
     type: String,
