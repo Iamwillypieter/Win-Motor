@@ -33,15 +33,21 @@ export default function CartPanel() {
   const [successOrder, setSuccessOrder] = useState(null); // { invoiceNumber, orderId }
   const [customerName, setCustomerName] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   function handleCreateOrder() {
     setError("");
-    setSuccessOrder(null);
 
     if (items.length === 0) {
       setError("Keranjang belanja kosong");
       return;
     }
+
+    setShowConfirm(true);
+  }
+
+  function handleConfirmOrder() {
+    setShowConfirm(false);
 
     // Capture nilai sebelum masuk startTransition agar tidak stale
     const capturedCustomerName = customerName.trim() || null;
@@ -199,6 +205,83 @@ export default function CartPanel() {
           {isPending ? "Membuat Pesanan..." : "Buat Pesanan"}
         </button>
       </div>
+
+      {/* ── Modal Konfirmasi ── */}
+      {showConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-xl w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h3 className="font-semibold text-gray-900">Konfirmasi Pesanan</h3>
+            </div>
+
+            <div className="p-5 space-y-3">
+              {/* Ringkasan pelanggan */}
+              <div className="text-sm">
+                <span className="text-gray-500">Pelanggan: </span>
+                <span className="font-medium text-gray-900">
+                  {customerName.trim() || "Umum (tanpa nama)"}
+                </span>
+              </div>
+
+              {/* Ringkasan item */}
+              <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 space-y-1.5 max-h-40 overflow-y-auto">
+                {items.map((item) => (
+                  <div key={item.productId} className="flex justify-between text-sm">
+                    <span className="text-gray-700">
+                      {item.name}{" "}
+                      <span className="text-gray-400">×{item.quantity}</span>
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {formatRupiah(item.price * item.quantity)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between font-bold border-t border-gray-200 pt-2">
+                <span>Total</span>
+                <span className="text-blue-600">{formatRupiah(totalAmount)}</span>
+              </div>
+
+              <p className="text-xs text-gray-400 text-center pt-1">
+                Pesanan akan dikirim ke gudang untuk disiapkan.
+              </p>
+            </div>
+
+            {/* Tombol */}
+            <div className="flex gap-2 px-5 pb-5">
+              <button
+                onClick={handleConfirmOrder}
+                disabled={isPending}
+                className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {isPending ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Memproses...
+                  </span>
+                ) : (
+                  "Ya, Buat Pesanan"
+                )}
+              </button>
+              <button
+                onClick={() => setShowConfirm(false)}
+                disabled={isPending}
+                className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none disabled:opacity-50"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

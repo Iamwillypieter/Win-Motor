@@ -218,6 +218,130 @@ export async function getOrderById(orderId) {
 }
 
 /**
+ * Update items in an existing order (before payment).
+ * Recalculates totalAmount. Only allowed for orders with paymentStatus "pending"
+ * and orderStatus not "completed" or "cancelled".
+ *
+ * @param {string} orderId
+ * @param {Array<{productId: string, quantity: number}>} items - Full replacement item list
+ * @param {string} [customerName]
+ * @returns {Promise<Object>} Updated serialized order
+ * @throws {OrderError}
+ */
+export async function updateOrderItems(orderId, items, customerName) {
+  await connectDB();
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new OrderError(OrderErrorCode.ORDER_NOT_FOUND, "Pesanan tidak ditemukan");
+  }
+
+  if (order.paymentStatus === "paid") {
+    throw new OrderError(OrderErrorCode.INVALID_STATUS, "Pesanan sudah dibayar, tidak dapat diubah");
+  }
+
+  if (["completed", "cancelled"].includes(order.orderStatus)) {
+    throw new OrderError(OrderErrorCode.INVALID_STATUS, `Pesanan sudah ${order.orderStatus}, tidak dapat diubah`);
+  }
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    throw new OrderError(OrderErrorCode.EMPTY_CART, "Item pesanan tidak boleh kosong");
+  }
+
+  // Validate stock and build new item snapshots
+  const orderItems = [];
+  let totalAmount = 0;
+
+  for (const cartItem of items) {
+    const product = await Product.findById(cartItem.productId).lean();
+    if (!product || !product.isActive) {
+      throw new OrderError(OrderErrorCode.INSUFFICIENT_STOCK, `Produk tidak ditemukan atau tidak aktif`);
+    }
+    if (product.stock < cartItem.quantity) {
+      throw new OrderError(OrderErrorCode.INSUFFICIENT_STOCK, `Stok tidak mencukupi untuk produk: ${product.name}`);
+    }
+
+    orderItems.push({
+      productId: product._id,
+      productName: product.name,
+      sku: product.sku,
+      unitPrice: product.price,
+      quantity: cartItem.quantity,
+    });
+    totalAmount += product.price * cartItem.quantity;
+  }
+
+  order.items = orderItems;
+  order.totalAmount = totalAmount;
+  if (customerName !== undefined) {
+    order.customerName = customerName?.trim() || null;
+  }
+  order.updatedAt = new Date();
+  await order.save();
+
+  const updated = order.toObject();
+  return {
+    ...updated,
+    _id: updated._id.toString(),
+    cashierId: updated.cashierId?.toString() ?? null,
+    items: updated.items.map((item) => ({
+      ...item,
+      _id: item._id?.toString() ?? null,
+      productId: item.productId?.toString() ?? null,
+    })),
+    createdAt: updated.createdAt?.toISOString() ?? null,
+    updatedAt: updated.updatedAt?.toISOString() ?? null,
+  };
+}
+
+/**
+ * Cancel an order that has not been paid yet.
+ * Sets orderStatus to "cancelled". Only allowed for pending orders.
+ *
+ * @param {string} orderId
+ * @returns {Promise<Object>} Cancelled serialized order
+ * @throws {OrderError}
+ */
+export async function cancelOrder(orderId) {
+  await connectDB();
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new OrderError(OrderErrorCode.ORDER_NOT_FOUND, "Pesanan tidak ditemukan");
+  }
+
+  if (order.paymentStatus === "paid") {
+    throw new OrderError(OrderErrorCode.INVALID_STATUS, "Pesanan sudah dibayar, tidak dapat dibatalkan");
+  }
+
+  if (["completed", "cancelled"].includes(order.orderStatus)) {
+    throw new OrderError(OrderErrorCode.INVALID_STATUS, `Pesanan sudah ${order.orderStatus}`);
+  }
+
+  order.orderStatus = "cancelled";
+  order.updatedAt = new Date();
+  await order.save();
+
+  // Broadcast ke WAREHOUSE dan CASHIER
+  try {
+    sseManager.broadcastToRole(
+      { type: "order_status_updated", data: { orderId: orderId.toString(), orderStatus: "cancelled" } },
+      ["CASHIER", "WAREHOUSE"]
+    );
+  } catch (err) {
+    console.error("SSE broadcast error (cancel order):", err);
+  }
+
+  const updated = order.toObject();
+  return {
+    ...updated,
+    _id: updated._id.toString(),
+    createdAt: updated.createdAt?.toISOString() ?? null,
+    updatedAt: updated.updatedAt?.toISOString() ?? null,
+  };
+}
+
+/**
  * Create a new online order from a public customer.
  *
  * Business rules:

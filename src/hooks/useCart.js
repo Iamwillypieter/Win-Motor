@@ -1,115 +1,238 @@
+
+"use client";
+
 import { create } from "zustand";
+import { useCallback, useEffect } from "react";
 import useSSE from "@/hooks/useSSE";
 
+const CART_STORAGE_KEY = "pos-cart";
+
 /**
- * Compute total amount from items array.
- * @param {Array} items
- * @returns {number}
+ * Hitung total harga berdasarkan isi keranjang.
  */
 function computeTotalAmount(items) {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  return items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 }
 
 /**
- * Compute total item count from items array.
- * @param {Array} items
- * @returns {number}
+ * Hitung jumlah seluruh unit barang.
  */
 function computeTotalItems(items) {
-  return items.reduce((sum, item) => sum + item.quantity, 0);
+  return items.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 }
 
 /**
- * Zustand cart store for the Cashier POS interface.
+ * Validasi dan normalisasi satu item keranjang.
+ * Mengembalikan null jika data tidak valid.
+ */
+function normalizeCartItem(item) {
+  if (!item || typeof item !== "object" || Array.isArray(item)) {
+    return null;
+  }
+
+  const productId =
+    typeof item.productId === "string"
+      ? item.productId
+      : "";
+
+  const price = Number(item.price);
+  const quantity = Number(item.quantity);
+  const stock = Number(item.stock);
+
+  if (
+    !productId.trim() ||
+    typeof item.name !== "string" ||
+    !Number.isFinite(price) ||
+    price < 0 ||
+    !Number.isInteger(quantity) ||
+    quantity <= 0 ||
+    !Number.isFinite(stock) ||
+    stock < 0
+  ) {
+    return null;
+  }
+
+  return {
+    productId,
+    name: item.name,
+    price,
+    quantity,
+    stock: Math.floor(stock),
+    imageUrl:
+      typeof item.imageUrl === "string"
+        ? item.imageUrl
+        : null,
+  };
+}
+
+/**
+ * Baca keranjang dari localStorage.
+ * Tidak dipanggil saat render awal server.
+ */
+function loadCart() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const validItems = parsed
+      .map(normalizeCartItem)
+      .filter(Boolean);
+
+    // Hindari ID produk ganda dari data penyimpanan.
+    const uniqueItems = new Map();
+
+    for (const item of validItems) {
+      if (!uniqueItems.has(item.productId)) {
+        uniqueItems.set(item.productId, item);
+      }
+    }
+
+    return Array.from(uniqueItems.values());
+  } catch (error) {
+    console.error("Gagal membaca keranjang:", error);
+    return [];
+  }
+}
+
+/**
+ * Simpan keranjang dengan aman.
+ */
+function saveCart(items) {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    window.localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(items)
+    );
+
+    return true;
+  } catch (error) {
+    console.error("Gagal menyimpan keranjang:", error);
+    return false;
+  }
+}
+
+/**
+ * Buat peringatan untuk barang yang kuantitasnya
+ * melebihi stok terbaru.
+ */
+function computeStockWarnings(items) {
+  return new Set(
+    items
+      .filter((item) => item.quantity > item.stock)
+      .map((item) => item.productId)
+  );
+}
+
+/**
+ * Zustand store untuk keranjang POS kasir.
  *
- * CartItem shape:
- *   { productId, name, price, quantity, stock, imageUrl }
- *
- * All monetary values are integers (rupiah).
- *
- * totalAmount and totalItems are derived values kept in sync with items
- * on every state update.
- *
- * stockWarnings: Set of productIds whose cart quantity exceeds the latest
- * known stock (populated via SSE stock_updated events).
+ * Data awal selalu sama pada server dan browser.
+ * localStorage dibaca setelah komponen dimuat.
  */
 const useCart = create((set, get) => ({
-  /** @type {Array<{productId: string, name: string, price: number, quantity: number, stock: number, imageUrl: string|null}>} */
   items: [],
-
-  /** Total amount in rupiah (sum of price × quantity). Kept in sync with items. */
   totalAmount: 0,
-
-  /** Total number of items (sum of quantities). Kept in sync with items. */
   totalItems: 0,
-
-  /**
-   * Set of productIds that have a stock warning (newStock < quantity in cart).
-   * Updated by handleStockUpdated() when a stock_updated SSE event is received.
-   * @type {Set<string>}
-   */
   stockWarnings: new Set(),
+  hasHydrated: false,
 
   /**
-   * Add a product to the cart.
-   * If the product is already in the cart, increment quantity (up to stock limit).
-   * @param {{ _id: string, name: string, price: number, stock: number, imageUrl?: string }} product
+   * Tambah barang atau naikkan kuantitasnya.
    */
   addItem(product) {
-    const productId = product._id?.toString() ?? product.productId;
+    if (!product || typeof product !== "object") {
+      return;
+    }
+
+    const rawId = product._id ?? product.productId;
+    const productId =
+      rawId != null ? String(rawId) : "";
+
+    const price = Number(product.price);
+    const stock = Math.floor(Number(product.stock));
+
+    if (
+      !productId.trim() ||
+      !Number.isFinite(price) ||
+      price < 0 ||
+      !Number.isFinite(stock) ||
+      stock <= 0
+    ) {
+      return;
+    }
+
     set((state) => {
-      const existing = state.items.find((item) => item.productId === productId);
+      const existing = state.items.find(
+        (item) => item.productId === productId
+      );
 
       let newItems;
 
       if (existing) {
-        // Increment quantity, capped at stock
+        // Jangan tambah barang jika sudah melebihi stok.
         if (existing.quantity >= existing.stock) {
-          return state; // already at max stock
+          return state;
         }
+
         newItems = state.items.map((item) =>
           item.productId === productId
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: Math.min(
+                  item.quantity + 1,
+                  item.stock
+                ),
+              }
             : item
         );
       } else {
-        // New item — only add if stock > 0
-        if (product.stock <= 0) {
+        if (typeof product.name !== "string") {
           return state;
         }
+
         newItems = [
           ...state.items,
           {
             productId,
             name: product.name,
-            price: product.price,
+            price,
             quantity: 1,
-            stock: product.stock,
-            imageUrl: product.imageUrl ?? null,
+            stock,
+            imageUrl:
+              typeof product.imageUrl === "string"
+                ? product.imageUrl
+                : null,
           },
         ];
       }
 
-      return {
-        items: newItems,
-        totalAmount: computeTotalAmount(newItems),
-        totalItems: computeTotalItems(newItems),
-      };
-    });
-  },
+      saveCart(newItems);
 
-  /**
-   * Remove a product from the cart entirely.
-   * @param {string} productId
-   */
-  removeItem(productId) {
-    set((state) => {
-      const newItems = state.items.filter(
-        (item) => item.productId !== productId
-      );
-      // Clear any warning for this product
-      const newWarnings = new Set(state.stockWarnings);
-      newWarnings.delete(productId);
+      const newWarnings = computeStockWarnings(newItems);
+
       return {
         items: newItems,
         totalAmount: computeTotalAmount(newItems),
@@ -120,68 +243,157 @@ const useCart = create((set, get) => ({
   },
 
   /**
-   * Update the quantity of a cart item.
-   * Setting quantity to 0 or below removes the item.
-   * Quantity is capped at the item's stock.
-   * @param {string} productId
-   * @param {number} quantity
+   * Hapus satu barang dari keranjang.
+   */
+  removeItem(productId) {
+    const id = String(productId);
+
+    set((state) => {
+      const newItems = state.items.filter(
+        (item) => item.productId !== id
+      );
+
+      const newWarnings = new Set(state.stockWarnings);
+      newWarnings.delete(id);
+
+      saveCart(newItems);
+
+      return {
+        items: newItems,
+        totalAmount: computeTotalAmount(newItems),
+        totalItems: computeTotalItems(newItems),
+        stockWarnings: newWarnings,
+      };
+    });
+  },
+
+  /**
+   * Ubah kuantitas barang.
+   * Kuantitas dibatasi oleh stok yang diketahui.
    */
   updateQuantity(productId, quantity) {
-    if (quantity <= 0) {
-      get().removeItem(productId);
+    const id = String(productId);
+    const requestedQuantity = Number(quantity);
+
+    if (
+      !Number.isFinite(requestedQuantity) ||
+      requestedQuantity <= 0
+    ) {
+      get().removeItem(id);
       return;
     }
 
     set((state) => {
-      const newItems = state.items.map((item) => {
-        if (item.productId !== productId) return item;
-        const capped = Math.min(quantity, item.stock);
-        return { ...item, quantity: capped };
-      });
+      const existing = state.items.find(
+        (item) => item.productId === id
+      );
+
+      if (!existing) {
+        return state;
+      }
+
+      const cappedQuantity = Math.min(
+        Math.floor(requestedQuantity),
+        existing.stock
+      );
+
+      // Stok nol berarti barang tidak bisa dipertahankan
+      // melalui aksi perubahan kuantitas.
+      const newItems =
+        cappedQuantity <= 0
+          ? state.items.filter(
+              (item) => item.productId !== id
+            )
+          : state.items.map((item) =>
+              item.productId === id
+                ? { ...item, quantity: cappedQuantity }
+                : item
+            );
+
+      saveCart(newItems);
+
       return {
         items: newItems,
         totalAmount: computeTotalAmount(newItems),
         totalItems: computeTotalItems(newItems),
+        stockWarnings: computeStockWarnings(newItems),
       };
     });
   },
 
   /**
-   * Clear all items from the cart.
+   * Kosongkan keranjang.
    */
   clearCart() {
-    set({ items: [], totalAmount: 0, totalItems: 0, stockWarnings: new Set() });
+    saveCart([]);
+
+    set({
+      items: [],
+      totalAmount: 0,
+      totalItems: 0,
+      stockWarnings: new Set(),
+    });
   },
 
   /**
-   * Handle a stock_updated SSE event.
-   * Updates the stock value for the affected cart item and sets a warning
-   * if the new stock is less than the current quantity in the cart.
-   *
-   * @param {string} productId
-   * @param {number} newStock
+   * Muat keranjang setelah komponen dipasang.
+   */
+  hydrateFromStorage() {
+    // Mencegah pemuatan ulang berulang pada instance store.
+    if (get().hasHydrated) {
+      return;
+    }
+
+    const stored = loadCart();
+
+    set({
+      items: stored,
+      totalAmount: computeTotalAmount(stored),
+      totalItems: computeTotalItems(stored),
+      stockWarnings: computeStockWarnings(stored),
+      hasHydrated: true,
+    });
+  },
+
+  /**
+   * Proses pembaruan stok dari SSE.
    */
   handleStockUpdated(productId, newStock) {
-    set((state) => {
-      const item = state.items.find((i) => i.productId === productId);
-      if (!item) return state; // product not in cart — nothing to do
+    const id = String(productId);
+    const stock = Number(newStock);
 
-      // Update the stored stock value for the cart item
-      const newItems = state.items.map((i) =>
-        i.productId === productId ? { ...i, stock: newStock } : i
+    if (
+      !id.trim() ||
+      !Number.isFinite(stock) ||
+      stock < 0
+    ) {
+      return;
+    }
+
+    const normalizedStock = Math.floor(stock);
+
+    set((state) => {
+      const existing = state.items.find(
+        (item) => item.productId === id
       );
 
-      // Set or clear warning based on whether quantity exceeds new stock
-      const newWarnings = new Set(state.stockWarnings);
-      if (newStock < item.quantity) {
-        newWarnings.add(productId);
-      } else {
-        newWarnings.delete(productId);
+      if (!existing || existing.stock === normalizedStock) {
+        return state;
       }
+
+      const newItems = state.items.map((item) =>
+        item.productId === id
+          ? { ...item, stock: normalizedStock }
+          : item
+      );
+
+      saveCart(newItems);
 
       return {
         items: newItems,
-        stockWarnings: newWarnings,
+        totalAmount: computeTotalAmount(newItems),
+        totalItems: computeTotalItems(newItems),
+        stockWarnings: computeStockWarnings(newItems),
       };
     });
   },
@@ -190,22 +402,43 @@ const useCart = create((set, get) => ({
 export default useCart;
 
 /**
- * useCartSSE — subscribes to SSE events relevant to the cart.
- * Call this hook once inside a client component that wraps the cart
- * (e.g. CartPanel or the cashier layout).
- *
- * Handles:
- *   - stock_updated: updates cart item stock and sets warnings
+ * Pasang hook ini sekali pada komponen induk kasir.
+ * Menangani pemuatan keranjang dan event SSE.
  */
 export function useCartSSE() {
-  const handleStockUpdated = useCart((state) => state.handleStockUpdated);
+  const hydrateFromStorage = useCart(
+    (state) => state.hydrateFromStorage
+  );
 
-  useSSE((event) => {
-    if (event.type === "stock_updated") {
-      const { productId, newStock } = event.data ?? {};
-      if (productId !== undefined && newStock !== undefined) {
-        handleStockUpdated(productId, newStock);
+  const handleStockUpdated = useCart(
+    (state) => state.handleStockUpdated
+  );
+
+  useEffect(() => {
+    hydrateFromStorage();
+  }, [hydrateFromStorage]);
+
+  const onSSEEvent = useCallback(
+    (event) => {
+      if (event?.type !== "stock_updated") {
+        return;
       }
-    }
-  });
+
+      const productId = event.data?.productId;
+      const newStock = event.data?.newStock;
+
+      if (
+        productId == null ||
+        newStock == null ||
+        String(productId).trim() === ""
+      ) {
+        return;
+      }
+
+      handleStockUpdated(productId, newStock);
+    },
+    [handleStockUpdated]
+  );
+
+  useSSE(onSSEEvent);
 }

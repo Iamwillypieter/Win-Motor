@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import useSSE from "@/hooks/useSSE";
 import { formatRupiah } from "@/lib/utils";
+import EditOrderModal from "./EditOrderModal";
 
 /** Human-readable labels and colours for each order status */
 const STATUS_CONFIG = {
@@ -139,6 +140,38 @@ export default function CashierOrderList({ cashierId }) {
   }, [cashierId]);
 
   useSSE(handleEvent);
+
+  // Edit & cancel state
+  const [editingOrder, setEditingOrder] = useState(null);
+
+  async function handleCancelOrder(orderId) {
+    if (!window.confirm("Batalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.")) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => o._id === orderId ? { ...o, orderStatus: "cancelled" } : o)
+        );
+      } else {
+        alert(json.error?.message || "Gagal membatalkan pesanan");
+      }
+    } catch {
+      alert("Gagal terhubung ke server");
+    }
+  }
+
+  function handleEditSuccess(updatedOrder) {
+    setOrders((prev) =>
+      prev.map((o) => o._id === updatedOrder._id ? {
+        ...o,
+        items: updatedOrder.items,
+        totalAmount: updatedOrder.totalAmount,
+        customerName: updatedOrder.customerName,
+      } : o)
+    );
+    setEditingOrder(null);
+  }
 
   if (isLoading) {
     return (
@@ -288,6 +321,7 @@ export default function CashierOrderList({ cashierId }) {
             const isActive = ["waiting_preparation", "preparing", "ready"].includes(order.orderStatus);
             // Kasir bisa bayar kapanpun selama pesanan belum selesai/dibatalkan
             const canPay = isActive && order.paymentStatus === "pending";
+            const canCancel = ["waiting_preparation", "preparing"].includes(order.orderStatus) && order.paymentStatus === "pending";
 
             return (
               <div key={order._id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -333,12 +367,28 @@ export default function CashierOrderList({ cashierId }) {
                 </div>
 
                 {canPay && (
-                  <Link
-                    href={`/cashier/payment/${order._id}`}
-                    className="block w-full rounded-lg bg-green-600 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-green-700 transition-colors"
-                  >
-                    💳 Proses Pembayaran
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/cashier/payment/${order._id}`}
+                      className="flex-1 block rounded-lg bg-green-600 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+                    >
+                      💳 Bayar
+                    </Link>
+                    <button
+                      onClick={() => setEditingOrder(order)}
+                      className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      ✏️ Edit
+                    </button>
+                    {canCancel && (
+                      <button
+                        onClick={() => handleCancelOrder(order._id)}
+                        className="rounded-lg border border-red-300 px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        ✕ Batal
+                      </button>
+                    )}
+                  </div>
                 )}
                 {order.orderStatus === "completed" && (
                   <div className="flex items-center justify-between">
@@ -355,6 +405,15 @@ export default function CashierOrderList({ cashierId }) {
             );
           })}
         </div>
+      )}
+
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <EditOrderModal
+          order={editingOrder}
+          onSuccess={handleEditSuccess}
+          onClose={() => setEditingOrder(null)}
+        />
       )}
     </div>
   );

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { formatRupiah } from "@/lib/utils";
 import useCart from "@/hooks/useCart";
 import useSSE from "@/hooks/useSSE";
 
+const PRODUCTS_PER_PAGE = 24;
+
 /**
  * ProductCatalog — displays active products in a grid with search and SKU filter.
+ * Uses "load more" pagination to avoid rendering all products at once.
  *
  * @param {{ products: Object[] }} props
  */
@@ -16,6 +19,12 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
   const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
   const [skuFilter, setSkuFilter] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+
+  // Reset visible count when filter changes
+  useEffect(() => {
+    setVisibleCount(PRODUCTS_PER_PAGE);
+  }, [search, skuFilter]);
 
   // Filter produk berdasarkan search (nama, merk, alias) dan SKU
   const filtered = useMemo(() => {
@@ -32,6 +41,29 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
       return (matchName || matchBrand || matchAlias) && matchSku;
     });
   }, [products, search, skuFilter]);
+
+  // Slice for pagination
+  const visibleProducts = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visibleCount;
+
+  // Infinite scroll via IntersectionObserver
+  const sentinelRef = useRef(null);
+  useEffect(() => {
+    if (!hasMore) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((c) => c + PRODUCTS_PER_PAGE);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore]);
 
   const handleSSEEvent = useCallback((event) => {
     if (event.type === "product_updated") {
@@ -164,8 +196,9 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
 
       {/* Product grid */}
       {hasResults && (
+        <>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((product) => {
+          {visibleProducts.map((product) => {
             const outOfStock = product.stock === 0;
 
             return (
@@ -232,6 +265,24 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
             );
           })}
         </div>
+
+        {/* Sentinel untuk infinite scroll */}
+        {hasMore && (
+          <div ref={sentinelRef} className="flex flex-col items-center gap-2 py-6">
+            <span className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-gray-400">
+              Menampilkan {visibleCount} dari {filtered.length} produk...
+            </p>
+          </div>
+        )}
+
+        {/* Info jika semua sudah ditampilkan */}
+        {!hasMore && filtered.length > PRODUCTS_PER_PAGE && (
+          <p className="text-center text-xs text-gray-400 py-4">
+            Semua {filtered.length} produk telah ditampilkan
+          </p>
+        )}
+        </>
       )}
     </div>
   );
