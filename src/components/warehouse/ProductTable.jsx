@@ -5,6 +5,7 @@ import { formatRupiah } from "@/lib/utils";
 import { deleteProductAction } from "@/server/actions/product.actions";
 import ProductFormModal from "./ProductFormModal";
 import BarcodeLabel from "./BarcodeLabel";
+import ImportExcelModal from "./ImportExcelModal";
 
 /**
  * ProductTable — displays the product inventory with search, SKU filter,
@@ -26,10 +27,11 @@ export default function ProductTable({ initialProducts = [] }) {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const [barcodeProduct, setBarcodeProduct] = useState(null);
+  const [importExcelOpen, setImportExcelOpen] = useState(false);
 
   // --- Stock-in modal state ---
   const [stockInOpen, setStockInOpen] = useState(false);
-  const [stockInMode, setStockInMode] = useState("scan"); // "scan" | "manual"
+  const [stockInMode, setStockInMode] = useState("scan"); // "scan" | "manual" | "bulk"
   const [stockInProduct, setStockInProduct] = useState(null);
   const [stockInQty, setStockInQty] = useState(1);
   const [stockInSearch, setStockInSearch] = useState("");
@@ -40,6 +42,16 @@ export default function ProductTable({ initialProducts = [] }) {
   const [cameraError, setCameraError] = useState("");
   const scannerRef = useRef(null);
   const isProcessingRef = useRef(false);
+
+  // --- Bulk stock-in state ---
+  // bulkItems: Array<{ productId, sku, name, imageUrl, currentStock, quantity }>
+  const [bulkItems, setBulkItems] = useState([]);
+  const [bulkScanning, setBulkScanning] = useState(false);
+  const [bulkScannerRef] = useState({ current: null });
+  const bulkProcessingRef = useRef(false);
+  const [bulkCameraError, setBulkCameraError] = useState("");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null); // hasil setelah submit
 
   // Derived: filter products for manual search inside stock-in modal
   const stockInSearchResults = stockInSearch.trim()
@@ -240,11 +252,159 @@ export default function ProductTable({ initialProducts = [] }) {
     setStockInSuccess("");
     setCameraError("");
     isProcessingRef.current = false;
+    // Reset bulk state juga
+    stopBulkScanner();
+    setBulkItems([]);
+    setBulkResult(null);
+    setBulkCameraError("");
+    bulkProcessingRef.current = false;
   }
 
   // ------------------------------------------------------------------
-  // Inventory CRUD helpers (unchanged)
+  // Bulk stock-in helpers
   // ------------------------------------------------------------------
+
+  const stopBulkScanner = useCallback(async () => {
+    const instance = bulkScannerRef.current;
+    if (!instance) return;
+    try { await instance.stop(); instance.clear(); } catch (_) {}
+    bulkScannerRef.current = null;
+    setBulkScanning(false);
+  }, [bulkScannerRef]);
+
+  const handleBulkScanResult = useCallback(async (decodedText) => {
+    if (bulkProcessingRef.current) return;
+    bulkProcessingRef.current = true;
+
+    try {
+      const res = await fetch(`/api/products?sku=${encodeURIComponent(decodedText)}`);
+      const json = await res.json();
+
+      if (json.data && json.data.length > 0) {
+        const found = json.data[0];
+        setBulkItems((prev) => {
+          const existing = prev.find((i) => i.productId === found._id.toString());
+          if (existing) {
+            // Produk sudah ada di antrian → qty +1
+            return prev.map((i) =>
+              i.productId === found._id.toString()
+                ? { ...i, quantity: i.quantity + 1 }
+                : i
+            );
+          }
+          // Produk baru → tambah ke antrian
+          return [
+            ...prev,
+            {
+              productId: found._id.toString(),
+              sku: found.sku,
+              name: found.name,
+              imageUrl: found.imageUrl ?? null,
+              currentStock: found.stock,
+              quantity: 1,
+            },
+          ];
+        });
+      } else {
+        setBulkCameraError(`SKU "${decodedText}" tidak ditemukan. Scan ulang.`);
+        setTimeout(() => setBulkCameraError(""), 2000);
+      }
+    } catch {
+      setBulkCameraError("Gagal mencari produk. Coba lagi.");
+      setTimeout(() => setBulkCameraError(""), 2000);
+    } finally {
+      setTimeout(() => { bulkProcessingRef.current = false; }, 800);
+    }
+  }, []);
+
+  const startBulkScanner = useCallback(async () => {
+    if (bulkScannerRef.current) return;
+    setBulkCameraError("");
+    try {
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+      const instance = new Html5Qrcode("bulk-stock-in-reader", {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+        ],
+        verbose: false,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+      });
+      bulkScannerRef.current = instance;
+      await instance.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 260, height: 100 } },
+        (text) => handleBulkScanResult(text),
+        () => {}
+      );
+      setBulkScanning(true);
+    } catch {
+      setBulkCameraError("Tidak dapat mengakses kamera. Tambah produk manual via tombol +.");
+      bulkScannerRef.current = null;
+    }
+  }, [handleBulkScanResult, bulkScannerRef]);
+
+  // Stop bulk scanner saat pindah mode atau tutup modal
+  useEffect(() => {
+    if (stockInMode !== "bulk" || !stockInOpen) {
+      stopBulkScanner();
+      bulkProcessingRef.current = false;
+    }
+  }, [stockInMode, stockInOpen, stopBulkScanner]);
+
+  function handleBulkQtyChange(productId, value) {
+    const qty = parseInt(value, 10);
+    if (isNaN(qty) || qty < 1) return;
+    setBulkItems((prev) =>
+      prev.map((i) => i.productId === productId ? { ...i, quantity: qty } : i)
+    );
+  }
+
+  function handleBulkRemove(productId) {
+    setBulkItems((prev) => prev.filter((i) => i.productId !== productId));
+  }
+
+  async function handleBulkSubmit() {
+    if (bulkItems.length === 0) return;
+    setBulkSubmitting(true);
+    setBulkResult(null);
+
+    try {
+      await stopBulkScanner();
+      const res = await fetch("/api/products/batch-stock-in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: bulkItems }),
+      });
+      const json = await res.json();
+
+      if (res.ok) {
+        const { results } = json.data;
+        // Update stok di tabel lokal untuk semua yang sukses
+        results
+          .filter((r) => r.status === "success")
+          .forEach((r) => {
+            setProducts((prev) =>
+              prev.map((p) =>
+                p._id.toString() === r.productId
+                  ? { ...p, stock: r.newStock }
+                  : p
+              )
+            );
+          });
+        setBulkResult(json.data);
+      } else {
+        setBulkCameraError(json.error?.message || "Gagal memproses stok masuk.");
+      }
+    } catch {
+      setBulkCameraError("Gagal terhubung ke server. Coba lagi.");
+    } finally {
+      setBulkSubmitting(false);
+    }
+  }
 
   const refreshProducts = useCallback(async () => {
     try {
@@ -350,6 +510,12 @@ export default function ProductTable({ initialProducts = [] }) {
             className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
           >
             Scan Barang Masuk
+          </button>
+          <button
+            onClick={() => setImportExcelOpen(true)}
+            className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 whitespace-nowrap"
+          >
+            Import Excel
           </button>
           <button
             onClick={handleAddProduct}
@@ -557,6 +723,16 @@ export default function ProductTable({ initialProducts = [] }) {
                 >
                   Manual
                 </button>
+                <button
+                  onClick={() => { setStockInMode("bulk"); setStockInProduct(null); setBulkResult(null); }}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                    stockInMode === "bulk"
+                      ? "bg-green-600 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Massal
+                </button>
               </div>
 
               {/* ---- SCAN MODE ---- */}
@@ -745,6 +921,141 @@ export default function ProductTable({ initialProducts = [] }) {
                   </div>
                 </div>
               )}
+
+              {/* ---- BULK MODE ---- */}
+              {stockInMode === "bulk" && (
+                <div className="space-y-3">
+                  {/* Hasil submit */}
+                  {bulkResult ? (
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <div className="flex-1 rounded-lg bg-green-50 border border-green-200 p-3 text-center">
+                          <p className="text-xl font-bold text-green-700">{bulkResult.success}</p>
+                          <p className="text-xs text-green-600">Berhasil</p>
+                        </div>
+                        <div className="flex-1 rounded-lg bg-red-50 border border-red-200 p-3 text-center">
+                          <p className="text-xl font-bold text-red-700">{bulkResult.failed}</p>
+                          <p className="text-xs text-red-600">Gagal</p>
+                        </div>
+                      </div>
+                      {bulkResult.failed > 0 && (
+                        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs space-y-1">
+                          {bulkResult.results.filter(r => r.status === "failed").map((r, i) => (
+                            <p key={i} className="text-red-700"><span className="font-mono">{r.sku}</span> — {r.error}</p>
+                          ))}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => { setBulkItems([]); setBulkResult(null); }}
+                        className="w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700"
+                      >
+                        Sesi Baru
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Kamera scan */}
+                      <div
+                        id="bulk-stock-in-reader"
+                        className="w-full rounded-lg overflow-hidden bg-gray-900 min-h-[120px] flex items-center justify-center"
+                      >
+                        {!bulkScanning && (
+                          <p className="text-gray-400 text-xs text-center px-4 py-8">
+                            Tekan &ldquo;Mulai Scan&rdquo; lalu arahkan kamera ke barcode
+                          </p>
+                        )}
+                      </div>
+
+                      {bulkCameraError && (
+                        <p className="text-xs text-red-600 text-center">{bulkCameraError}</p>
+                      )}
+
+                      <div className="flex gap-2">
+                        {!bulkScanning ? (
+                          <button
+                            onClick={startBulkScanner}
+                            className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                          >
+                            Mulai Scan
+                          </button>
+                        ) : (
+                          <button
+                            onClick={stopBulkScanner}
+                            className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                          >
+                            Pause Scan
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Antrian item */}
+                      {bulkItems.length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Antrian ({bulkItems.length} produk)
+                          </p>
+                          <div className="space-y-1.5 max-h-52 overflow-y-auto">
+                            {bulkItems.map((item) => (
+                              <div
+                                key={item.productId}
+                                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2"
+                              >
+                                {item.imageUrl ? (
+                                  <img src={item.imageUrl} alt={item.name} className="h-8 w-8 rounded object-cover border border-gray-200 flex-shrink-0" />
+                                ) : (
+                                  <div className="h-8 w-8 rounded bg-gray-200 flex-shrink-0" />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-gray-900 truncate">{item.name}</p>
+                                  <p className="text-xs text-gray-400 font-mono">{item.sku}</p>
+                                </div>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <button
+                                    onClick={() => handleBulkQtyChange(item.productId, item.quantity - 1)}
+                                    disabled={item.quantity <= 1}
+                                    className="w-6 h-6 rounded border border-gray-300 text-xs font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-30"
+                                  >−</button>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={item.quantity}
+                                    onChange={(e) => handleBulkQtyChange(item.productId, e.target.value)}
+                                    className="w-12 text-center text-xs rounded border border-gray-300 py-1 focus:outline-none focus:ring-1 focus:ring-green-500"
+                                  />
+                                  <button
+                                    onClick={() => handleBulkQtyChange(item.productId, item.quantity + 1)}
+                                    className="w-6 h-6 rounded border border-gray-300 text-xs font-bold text-gray-600 hover:bg-gray-100"
+                                  >+</button>
+                                  <button
+                                    onClick={() => handleBulkRemove(item.productId)}
+                                    className="ml-1 text-red-400 hover:text-red-600 text-xs"
+                                    aria-label="Hapus dari antrian"
+                                  >✕</button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <button
+                            onClick={handleBulkSubmit}
+                            disabled={bulkSubmitting}
+                            className="w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                          >
+                            {bulkSubmitting && (
+                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            )}
+                            {bulkSubmitting ? "Menyimpan..." : `Simpan Semua (${bulkItems.length} produk)`}
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400 text-center py-2">
+                          Belum ada produk. Scan barcode untuk menambahkan ke antrian.
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -764,6 +1075,17 @@ export default function ProductTable({ initialProducts = [] }) {
         <BarcodeLabel
           product={barcodeProduct}
           onClose={() => setBarcodeProduct(null)}
+        />
+      )}
+
+      {/* Import Excel Modal */}
+      {importExcelOpen && (
+        <ImportExcelModal
+          onSuccess={(count) => {
+            // Refresh daftar produk setelah import berhasil
+            refreshProducts();
+          }}
+          onClose={() => setImportExcelOpen(false)}
         />
       )}
     </div>
