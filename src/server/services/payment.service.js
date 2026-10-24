@@ -6,6 +6,7 @@ import User from "@/models/User";
 import Invoice from "@/models/Invoice";
 import sseManager from "@/lib/sse";
 import { notifyOrderConfirmed } from "@/lib/whatsapp";
+import { recordStockOutMovements } from "@/server/services/product.service";
 
 /**
  * Custom error class for payment operations.
@@ -164,6 +165,25 @@ export async function completePayment(orderId, paymentData) {
     }
 
     stockDecrementDone = true;
+
+    // Catat stock movement "out" untuk setiap item (non-blocking)
+    User.findById(order.cashierId).select("name").lean().then((cashier) => {
+      recordStockOutMovements(
+        order.items.map((item) => ({
+          productId: item.productId,
+          productName: item.productName,
+          sku: item.sku,
+          quantity: item.quantity,
+        })),
+        {
+          orderId: order._id,
+          invoiceNumber: order.invoiceNumber,
+          userId: order.cashierId,
+          userName: cashier?.name ?? null,
+        }
+      );
+    }).catch((err) => console.error("completePayment: recordStockOut failed", err));
+
   } catch (err) {
     // Roll back step 1
     await Order.updateOne(
@@ -466,6 +486,23 @@ export async function completeDebtOrder(orderId, debtData = {}) {
     }
 
     stockDecrementDone = true;
+
+    // Catat stock movement "out" (non-blocking)
+    recordStockOutMovements(
+      order.items.map((item) => ({
+        productId: item.productId,
+        productName: item.productName,
+        sku: item.sku,
+        quantity: item.quantity,
+      })),
+      {
+        orderId: order._id,
+        invoiceNumber: order.invoiceNumber,
+        userId: order.cashierId,
+        userName: null,
+      }
+    ).catch((err) => console.error("completeDebtOrder: recordStockOut failed", err));
+
   } catch (err) {
     // Roll back step 1
     await Order.updateOne(

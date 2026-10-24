@@ -377,6 +377,7 @@ export default function ProductTable({ initialProducts = [] }) {
             <tr>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Gambar</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Nama Produk</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-600">Kategori</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Merk</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">SKU</th>
               <th className="px-4 py-3 text-right font-medium text-gray-600">Harga</th>
@@ -387,7 +388,7 @@ export default function ProductTable({ initialProducts = [] }) {
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
                   {products.length === 0
                     ? "Belum ada produk. Klik \"+ Tambah Produk\" untuk memulai."
                     : "Tidak ada produk yang cocok dengan filter."}
@@ -418,6 +419,10 @@ export default function ProductTable({ initialProducts = [] }) {
                         Alias: {product.aliases.join(", ")}
                       </p>
                     )}
+                  </td>
+                  {/* Kategori */}
+                  <td className="px-4 py-3 text-gray-600 text-sm">
+                    {product.category || <span className="text-gray-300">—</span>}
                   </td>
                   {/* Brand */}
                   <td className="px-4 py-3 text-gray-600 text-sm">

@@ -1,5 +1,7 @@
 import connectDB from "@/lib/db";
+import mongoose from "mongoose";
 import Product from "@/models/Product";
+import StockMovement from "@/models/StockMovement";
 import sseManager from "@/lib/sse";
 import {
   ProductErrorCode,
@@ -35,7 +37,7 @@ export class ProductError extends Error {
  * @returns {Promise<Object>} Created product document (lean)
  * @throws {ProductError} DUPLICATE_SKU if SKU already exists
  */
-export async function createProduct({ name, sku, price, stock, imageUrl, brand, aliases, createdBy }) {
+export async function createProduct({ name, sku, price, stock, imageUrl, brand, aliases, category, createdBy }) {
   await connectDB();
 
   const normalizedSku = sku.toUpperCase().trim();
@@ -53,6 +55,7 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
   const product = await Product.create({
     name: name.trim(),
     sku: normalizedSku,
+    category: category?.trim() || null,
     brand: brand?.trim() || null,
     aliases: normalizedAliases,
     price,
@@ -60,6 +63,28 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
     imageUrl: imageUrl || null,
     createdBy,
   });
+
+  // Catat stok awal sebagai stock movement
+  if (stock > 0) {
+    try {
+      // Cari nama user untuk snapshot
+      const user = await mongoose.model("User").findById(createdBy).select("name").lean();
+      await StockMovement.create({
+        productId: product._id,
+        productName: product.name,
+        sku: product.sku,
+        type: "create",
+        quantity: stock,
+        previousStock: 0,
+        newStock: stock,
+        reason: "Stok awal saat produk dibuat",
+        userId: createdBy,
+        userName: user?.name ?? null,
+      });
+    } catch (err) {
+      console.error("createProduct: failed to record stock movement", err);
+    }
+  }
 
   return product.toObject();
 }
@@ -75,15 +100,14 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
  * @returns {Promise<Object>} Updated product document (lean)
  * @throws {ProductError} PRODUCT_NOT_FOUND if product does not exist
  */
-export async function updateProduct(id, updates) {
+export async function updateProduct(id, updates, userId = null) {
   await connectDB();
 
-  const allowedFields = ["name", "price", "stock", "imageUrl", "brand", "aliases"];
+  const allowedFields = ["name", "price", "stock", "imageUrl", "brand", "aliases", "category"];
   const sanitized = {};
   for (const field of allowedFields) {
     if (updates[field] !== undefined) {
       if (field === "aliases") {
-        // Normalisasi array alias
         sanitized.aliases = Array.isArray(updates.aliases)
           ? [...new Set(updates.aliases.map((a) => a.trim()).filter(Boolean))]
           : [];
@@ -91,14 +115,22 @@ export async function updateProduct(id, updates) {
         sanitized[field] = typeof updates[field] === "string"
           ? updates[field].trim()
           : updates[field];
-        // brand boleh null/empty string → simpan sebagai null
-        if (field === "brand" && !sanitized.brand) sanitized.brand = null;
+        if ((field === "brand" || field === "category") && !sanitized[field]) {
+          sanitized[field] = null;
+        }
       }
     }
   }
   sanitized.updatedAt = new Date();
 
   const stockUpdated = updates.stock !== undefined;
+
+  // Ambil stok sebelum update jika stok berubah
+  let previousStock = null;
+  if (stockUpdated) {
+    const before = await Product.findById(id).select("stock").lean();
+    previousStock = before?.stock ?? 0;
+  }
 
   const product = await Product.findByIdAndUpdate(
     id,
@@ -108,6 +140,30 @@ export async function updateProduct(id, updates) {
 
   if (!product) {
     throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND);
+  }
+
+  // Catat mutasi stok kalau stok berubah
+  if (stockUpdated && previousStock !== null && previousStock !== product.stock) {
+    try {
+      const user = userId
+        ? await mongoose.model("User").findById(userId).select("name").lean()
+        : null;
+      const diff = product.stock - previousStock;
+      await StockMovement.create({
+        productId: product._id,
+        productName: product.name,
+        sku: product.sku,
+        type: "adjustment",
+        quantity: diff,
+        previousStock,
+        newStock: product.stock,
+        reason: "Koreksi stok manual",
+        userId: userId ?? null,
+        userName: user?.name ?? null,
+      });
+    } catch (err) {
+      console.error("updateProduct: failed to record stock movement", err);
+    }
   }
 
   // Broadcast product_updated to all CASHIER clients
@@ -246,8 +302,15 @@ export async function getProductById(id) {
  * @returns {Promise<Object>} Updated product document (lean)
  * @throws {ProductError} PRODUCT_NOT_FOUND if product does not exist
  */
-export async function addStock(id, quantity) {
+export async function addStock(id, quantity, userId = null) {
   await connectDB();
+
+  // Ambil stok sebelum update untuk catatan mutasi
+  const before = await Product.findById(id).select("stock name sku").lean();
+  if (!before) {
+    throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND);
+  }
+  const previousStock = before.stock;
 
   const product = await Product.findByIdAndUpdate(
     id,
@@ -257,6 +320,27 @@ export async function addStock(id, quantity) {
 
   if (!product) {
     throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND);
+  }
+
+  // Catat mutasi stok
+  try {
+    const user = userId
+      ? await mongoose.model("User").findById(userId).select("name").lean()
+      : null;
+    await StockMovement.create({
+      productId: product._id,
+      productName: product.name,
+      sku: product.sku,
+      type: "in",
+      quantity,
+      previousStock,
+      newStock: product.stock,
+      reason: "Barang masuk",
+      userId: userId ?? null,
+      userName: user?.name ?? null,
+    });
+  } catch (err) {
+    console.error("addStock: failed to record stock movement", err);
   }
 
   // Broadcast stock update to all CASHIER clients
@@ -287,5 +371,51 @@ export function validateImageFile(mimeType, sizeBytes) {
   }
   if (sizeBytes > MAX_IMAGE_SIZE_BYTES) {
     throw new ProductError(ProductErrorCode.IMAGE_TOO_LARGE);
+  }
+}
+
+/**
+ * Catat stock movement "out" untuk setiap item yang terjual.
+ * Dipanggil dari payment.service setelah stok berhasil dikurangi.
+ *
+ * @param {Array<{productId, productName, sku, quantity}>} items
+ * @param {Object} [meta] - { orderId, invoiceNumber, userId, userName }
+ */
+export async function recordStockOutMovements(items, meta = {}) {
+  await connectDB();
+
+  const movements = await Promise.all(
+    items.map(async (item) => {
+      try {
+        // Ambil stok terkini setelah decrement
+        const product = await Product.findById(item.productId).select("stock").lean();
+        const newStock = product?.stock ?? 0;
+        const previousStock = newStock + item.quantity;
+
+        return {
+          productId: item.productId,
+          productName: item.productName,
+          sku: item.sku,
+          type: "out",
+          quantity: -item.quantity,
+          previousStock,
+          newStock,
+          reason: "Terjual",
+          orderId: meta.orderId ?? null,
+          invoiceNumber: meta.invoiceNumber ?? null,
+          userId: meta.userId ?? null,
+          userName: meta.userName ?? null,
+        };
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  const valid = movements.filter(Boolean);
+  if (valid.length > 0) {
+    await StockMovement.insertMany(valid).catch((err) =>
+      console.error("recordStockOutMovements: insertMany failed", err)
+    );
   }
 }

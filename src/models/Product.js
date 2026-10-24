@@ -9,6 +9,7 @@ const ProductSchema = new Schema({
     uppercase: true,
     trim: true,
   },
+  category: { type: String, default: null, trim: true }, // kategori produk, opsional
   brand: { type: String, default: null, trim: true },   // merk produk, opsional
   aliases: { type: [String], default: [] },              // nama alternatif/sebutan pelanggan
   price: { type: Number, required: true, min: 0 }, // integer rupiah

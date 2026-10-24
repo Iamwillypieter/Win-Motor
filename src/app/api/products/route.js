@@ -69,7 +69,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { name, sku, price, stock, imageUrl, brand, aliases } = body;
+    const { name, sku, price, stock, imageUrl, brand, aliases, category } = body;
 
     if (!name || !sku || price === undefined || stock === undefined) {
       return NextResponse.json(
@@ -122,6 +122,7 @@ export async function POST(request) {
       stock,
       imageUrl,
       brand: brand || null,
+      category: category || null,
       aliases: aliases || [],
       createdBy: session.user.id,
     });

@@ -93,6 +93,7 @@ export const config = {
     "/api/products/:path*",
     "/api/reports/:path*",
     "/api/sse",
+    "/api/stock-movements/:path*",
     "/api/users/:path*",
   ],
 };

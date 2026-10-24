@@ -7,40 +7,42 @@ import useSSE from "@/hooks/useSSE";
 
 const PRODUCTS_PER_PAGE = 24;
 
-/**
- * ProductCatalog — displays active products in a grid with search and SKU filter.
- * Uses "load more" pagination to avoid rendering all products at once.
- *
- * @param {{ products: Object[] }} props
- */
 export default function ProductCatalog({ products: initialProducts = [] }) {
   const addItem = useCart((state) => state.addItem);
 
   const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
   const [skuFilter, setSkuFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState(""); // filter kategori
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+
+  // Kumpulkan kategori unik dari semua produk
+  const categories = useMemo(() => {
+    const cats = new Set(products.map((p) => p.category).filter(Boolean));
+    return Array.from(cats).sort();
+  }, [products]);
 
   // Reset visible count when filter changes
   useEffect(() => {
     setVisibleCount(PRODUCTS_PER_PAGE);
-  }, [search, skuFilter]);
+  }, [search, skuFilter, categoryFilter]);
 
-  // Filter produk berdasarkan search (nama, merk, alias) dan SKU
+  // Filter produk berdasarkan search (nama, merk, alias), SKU, dan kategori
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const sku = skuFilter.trim().toLowerCase();
     return products.filter((p) => {
       const matchSku = !sku || p.sku.toLowerCase().includes(sku);
-      if (!q) return matchSku;
+      const matchCategory = !categoryFilter || p.category === categoryFilter;
+      if (!q) return matchSku && matchCategory;
 
       const matchName = p.name.toLowerCase().includes(q);
       const matchBrand = p.brand?.toLowerCase().includes(q);
       const matchAlias = p.aliases?.some((a) => a.toLowerCase().includes(q));
 
-      return (matchName || matchBrand || matchAlias) && matchSku;
+      return (matchName || matchBrand || matchAlias) && matchSku && matchCategory;
     });
-  }, [products, search, skuFilter]);
+  }, [products, search, skuFilter, categoryFilter]);
 
   // Slice for pagination
   const visibleProducts = filtered.slice(0, visibleCount);
@@ -98,10 +100,39 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
 
   const hasProducts = products.length > 0;
   const hasResults = filtered.length > 0;
-  const isFiltering = search.trim() !== "" || skuFilter.trim() !== "";
+  const isFiltering = search.trim() !== "" || skuFilter.trim() !== "" || categoryFilter !== "";
 
   return (
     <div className="space-y-4">
+      {/* Filter kategori — horizontal scroll */}
+      {categories.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <button
+            onClick={() => setCategoryFilter("")}
+            className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none ${
+              categoryFilter === ""
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Semua
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat === categoryFilter ? "" : cat)}
+              className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none ${
+                categoryFilter === cat
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Search & filter bar */}
       <div className="flex flex-col sm:flex-row gap-2">
         {/* Search nama */}
@@ -162,7 +193,7 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
               : "Tidak ada produk yang cocok"}
           </span>
           <button
-            onClick={() => { setSearch(""); setSkuFilter(""); }}
+            onClick={() => { setSearch(""); setSkuFilter(""); setCategoryFilter(""); }}
             className="text-blue-600 hover:text-blue-800 font-medium"
           >
             Reset filter
@@ -185,7 +216,7 @@ export default function ProductCatalog({ products: initialProducts = [] }) {
           <p className="text-xs text-center">
             Coba ubah kata kunci atau{" "}
             <button
-              onClick={() => { setSearch(""); setSkuFilter(""); }}
+              onClick={() => { setSearch(""); setSkuFilter(""); setCategoryFilter(""); }}
               className="text-blue-600 hover:underline"
             >
               reset filter

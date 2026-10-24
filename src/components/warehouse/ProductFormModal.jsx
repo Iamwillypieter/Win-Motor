@@ -22,7 +22,8 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
     price: product?.price !== undefined ? String(product.price) : "",
     stock: product?.stock !== undefined ? String(product.stock) : "",
     brand: product?.brand || "",
-    aliasInput: "",  // input sementara sebelum ditambahkan ke array
+    category: product?.category || "",
+    aliasInput: "",
   });
   const [aliases, setAliases] = useState(
     Array.isArray(product?.aliases) ? product.aliases : []
@@ -211,6 +212,7 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
             price: Number(form.price),
             stock: Number(form.stock),
             brand: form.brand.trim() || null,
+            category: form.category.trim() || null,
             aliases,
           }),
         });
@@ -231,6 +233,7 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
           price: Number(form.price),
           stock: Number(form.stock),
           brand: form.brand.trim() || null,
+          category: form.category.trim() || null,
           aliases,
         };
 
@@ -461,6 +464,39 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               placeholder="Contoh: Honda, Yamaha, AHM"
             />
+          </div>
+
+          {/* Kategori */}
+          <div>
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Kategori <span className="text-gray-400 font-normal">(opsional)</span>
+            </label>
+            <input
+              id="category"
+              name="category"
+              type="text"
+              list="category-suggestions"
+              value={form.category}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              placeholder="Contoh: Oli & Pelumas, Filter, Busi"
+            />
+            <datalist id="category-suggestions">
+              <option value="Oli & Pelumas" />
+              <option value="Filter" />
+              <option value="Busi" />
+              <option value="Kampas Rem" />
+              <option value="Rantai & Gear" />
+              <option value="Ban" />
+              <option value="Aki" />
+              <option value="Seal & Packing" />
+              <option value="Lampu" />
+              <option value="Lain-lain" />
+            </datalist>
           </div>
 
           {/* Aliases */}
