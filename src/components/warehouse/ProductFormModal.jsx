@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MAX_IMAGE_SIZE_MB, ALLOWED_IMAGE_EXTENSIONS } from "@/types/product.types";
+import { MAX_IMAGE_SIZE_MB } from "@/types/product.types";
 
 /**
  * ProductFormModal — modal form for creating or editing a product.
- * Handles text fields and image upload with client-side validation.
+ * Handles text fields, image upload, and supplier/purchase info.
  *
  * @param {{
  *   product: Object|null,
@@ -24,10 +24,18 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
     brand: product?.brand || "",
     category: product?.category || "",
     aliasInput: "",
+    purchasePrice: "",
   });
   const [aliases, setAliases] = useState(
     Array.isArray(product?.aliases) ? product.aliases : []
   );
+
+  // Supplier state
+  const [suppliers, setSuppliers] = useState([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(true);
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const [manualSupplierName, setManualSupplierName] = useState("");
+
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(product?.imageUrl || null);
   const [imageConverting, setImageConverting] = useState(false);
@@ -38,6 +46,15 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
 
   const fileInputRef = useRef(null);
   const firstInputRef = useRef(null);
+
+  // Fetch daftar supplier saat modal dibuka
+  useEffect(() => {
+    fetch("/api/suppliers")
+      .then((r) => r.json())
+      .then((json) => { if (json.data) setSuppliers(json.data); })
+      .catch(() => {})
+      .finally(() => setSuppliersLoading(false));
+  }, []);
 
   // Focus first input on open
   useEffect(() => {
@@ -202,6 +219,14 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
       let savedProduct;
 
       if (isNew) {
+        // Resolusi supplier: dropdown → manual → kosong
+        const resolvedSupplierId = selectedSupplierId || null;
+        const resolvedSupplierName = selectedSupplierId
+          ? (suppliers.find((s) => s._id === selectedSupplierId)?.name ?? null)
+          : manualSupplierName.trim() || null;
+        const resolvedPurchasePrice =
+          form.purchasePrice !== "" ? parseInt(form.purchasePrice, 10) || null : null;
+
         // Create product
         const res = await fetch("/api/products", {
           method: "POST",
@@ -214,6 +239,9 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
             brand: form.brand.trim() || null,
             category: form.category.trim() || null,
             aliases,
+            supplierId: resolvedSupplierId,
+            supplierName: resolvedSupplierName,
+            purchasePrice: resolvedPurchasePrice,
           }),
         });
 
@@ -499,9 +527,89 @@ export default function ProductFormModal({ product, onSuccess, onClose }) {
             </datalist>
           </div>
 
+          {/* ── Asal Barang (hanya relevan saat tambah produk baru) ── */}
+          {isNew && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
+              <p className="text-sm font-medium text-gray-700">
+                Asal Barang{" "}
+                <span className="text-gray-400 font-normal">(opsional)</span>
+              </p>
+
+              {/* Dropdown supplier */}
+              <div>
+                <label htmlFor="supplierId" className="block text-xs font-medium text-gray-600 mb-1">
+                  Supplier / Pemasok
+                </label>
+                {suppliersLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                    <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                    Memuat daftar supplier...
+                  </div>
+                ) : (
+                  <select
+                    id="supplierId"
+                    value={selectedSupplierId}
+                    onChange={(e) => {
+                      setSelectedSupplierId(e.target.value);
+                      if (e.target.value) setManualSupplierName("");
+                    }}
+                    disabled={isLoading}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:opacity-50"
+                  >
+                    <option value="">— Pilih supplier —</option>
+                    {suppliers.map((s) => (
+                      <option key={s._id} value={s._id}>
+                        {s.name}{s.contactName ? ` (${s.contactName})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Nama manual — muncul kalau tidak pilih dari dropdown */}
+              {!selectedSupplierId && (
+                <div>
+                  <label htmlFor="manualSupplier" className="block text-xs font-medium text-gray-600 mb-1">
+                    Atau ketik nama supplier
+                  </label>
+                  <input
+                    id="manualSupplier"
+                    type="text"
+                    value={manualSupplierName}
+                    onChange={(e) => setManualSupplierName(e.target.value)}
+                    disabled={isLoading}
+                    placeholder="Contoh: Toko Indoparts"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  />
+                </div>
+              )}
+
+              {/* Harga beli per satuan */}
+              <div>
+                <label htmlFor="purchasePrice" className="block text-xs font-medium text-gray-600 mb-1">
+                  Harga Beli per Satuan (Rp)
+                </label>
+                <input
+                  id="purchasePrice"
+                  name="purchasePrice"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.purchasePrice}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  placeholder="Contoh: 15000"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  Dicatat di riwayat stok sebagai referensi harga modal
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Aliases */}
-          <div>
-            <label
+          <div>            <label
               htmlFor="aliasInput"
               className="block text-sm font-medium text-gray-700 mb-1"
             >

@@ -34,6 +34,15 @@ const StockMovementSchema = new Schema({
     default: null,
   },
   invoiceNumber: { type: String, default: null },     // snapshot invoice number
+  // Referensi supplier — diisi hanya untuk perubahan type "in"
+  supplierId: {
+    type: Schema.Types.ObjectId,
+    ref: "Supplier",
+    default: null,
+  },
+  supplierName: { type: String, default: null },     // snapshot nama supplier
+  purchasePrice: { type: Number, default: null },    // harga beli per satuan (rupiah, integer)
+
   // Siapa yang melakukan perubahan
   userId: {
     type: Schema.Types.ObjectId,

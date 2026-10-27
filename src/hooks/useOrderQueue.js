@@ -24,6 +24,7 @@ export default function useOrderQueue(onNewOrder) {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState("oldest"); // "oldest" | "newest" | "status"
 
   /** Fetch the current queue from the API */
   const fetchQueue = useCallback(async () => {
@@ -85,6 +86,30 @@ export default function useOrderQueue(onNewOrder) {
 
   useSSE(handleEvent);
 
+  // Urutan prioritas status untuk sort "status"
+  const STATUS_ORDER = {
+    waiting_preparation: 0,
+    preparing: 1,
+    ready: 2,
+    shipping: 3,
+  };
+
+  /** Sorted orders sesuai pilihan sortBy */
+  const sortedOrders = [...orders].sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+    if (sortBy === "status") {
+      const sa = STATUS_ORDER[a.orderStatus] ?? 99;
+      const sb = STATUS_ORDER[b.orderStatus] ?? 99;
+      if (sa !== sb) return sa - sb;
+      // Tie-break: oldest first
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    }
+    // Default "oldest"
+    return new Date(a.createdAt) - new Date(b.createdAt);
+  });
+
   /**
    * Mark an order as ready (PATCH /api/orders/:id/status).
    * Updates status in place — order tetap di queue sampai selesai/dikirim.
@@ -115,5 +140,5 @@ export default function useOrderQueue(onNewOrder) {
     }
   }, [fetchQueue]);
 
-  return { orders, isLoading, error, markReady, refresh: fetchQueue };
+  return { orders: sortedOrders, isLoading, error, markReady, refresh: fetchQueue, sortBy, setSortBy };
 }

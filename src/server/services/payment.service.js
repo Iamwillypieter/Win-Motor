@@ -52,14 +52,21 @@ export const PaymentErrorCode = {
 /**
  * Complete a payment for an order.
  *
- * Performs three sequential operations (no MongoDB transaction required —
- * compatible with standalone MongoDB instances used in local development):
- *  1. Update Order: paymentStatus → "paid", orderStatus → "completed"
- *  2. Product.bulkWrite() — decrement stock
- *  3. Invoice.create() — full snapshot
+ * Atomicity strategy (tanpa MongoDB replica set / multi-document transaction):
  *
- * If step 2 or 3 fails, attempts to roll back step 1 manually.
- * After success: broadcasts SSE "order_completed" event.
+ *  Step 0 — Idempotency lock (atomic test-and-set):
+ *    findOneAndUpdate dengan filter { _id, paymentStatus: "pending" }.
+ *    Hanya satu request yang berhasil mengubah status → "processing".
+ *    Request kedua yang datang bersamaan akan gagal di sini (null result)
+ *    dan mendapat error ALREADY_PAID / PAYMENT_IN_PROGRESS.
+ *    Ini menutup race condition double-payment tanpa replica set.
+ *
+ *  Step 1 — Decrement stock (bulkWrite dengan guard $gte quantity).
+ *  Step 2 — Create Invoice.
+ *  Step 3 — Finalize Order: set paymentStatus → "paid" / "processing" → status akhir.
+ *
+ *  Rollback manual dilakukan jika Step 1 atau Step 2 gagal, termasuk
+ *  mengembalikan paymentStatus → "pending" agar retry bisa dilakukan.
  *
  * @param {string} orderId - Order ObjectId string
  * @param {{ method: "CASH"|"QRIS", cashReceived?: number, changeAmount?: number, itemDiscounts?: Array<{productId: string, discountPercent: number}> }} paymentData
@@ -69,26 +76,9 @@ export const PaymentErrorCode = {
 export async function completePayment(orderId, paymentData) {
   await connectDB();
 
-  // ── Step 0: Fetch and validate order ────────────────────────────────────────
-  const order = await Order.findById(orderId).lean();
-
-  if (!order) {
-    throw new PaymentError(PaymentErrorCode.ORDER_NOT_FOUND, "Pesanan tidak ditemukan");
-  }
-
-  if (order.paymentStatus === "paid") {
-    throw new PaymentError(PaymentErrorCode.ALREADY_PAID, "Pesanan sudah dibayar");
-  }
-
-  if (order.paymentStatus === "expired") {
-    throw new PaymentError(PaymentErrorCode.QRIS_EXPIRED, "Kode QRIS sudah kedaluwarsa");
-  }
-
   const now = new Date();
 
   // ── Hitung diskon per item ───────────────────────────────────────────────────
-  // itemDiscounts: [{ productId: string, discountPercent: 0–100 }]
-  // Jika tidak ada → semua discountPercent = 0 (harga normal)
   const discountMap = {};
   if (Array.isArray(paymentData.itemDiscounts)) {
     for (const d of paymentData.itemDiscounts) {
@@ -98,6 +88,39 @@ export async function completePayment(orderId, paymentData) {
     }
   }
 
+  // ── Step 0: Idempotency lock — atomic test-and-set ──────────────────────────
+  // findOneAndUpdate hanya berhasil jika paymentStatus masih "pending".
+  // Jika dua request tiba bersamaan, hanya satu yang menang; yang lain
+  // mendapat null dan langsung ditolak — tanpa perlu replica set.
+  const lockedOrder = await Order.findOneAndUpdate(
+    { _id: orderId, paymentStatus: "pending" },
+    { $set: { paymentStatus: "processing", updatedAt: now } },
+    { new: false } // kembalikan dokumen SEBELUM update (versi lama)
+  ).lean();
+
+  if (!lockedOrder) {
+    // Cek apakah pesanan memang tidak ada atau sudah diproses
+    const existing = await Order.findById(orderId).select("paymentStatus").lean();
+    if (!existing) {
+      throw new PaymentError(PaymentErrorCode.ORDER_NOT_FOUND, "Pesanan tidak ditemukan");
+    }
+    if (existing.paymentStatus === "paid") {
+      throw new PaymentError(PaymentErrorCode.ALREADY_PAID, "Pesanan sudah dibayar");
+    }
+    if (existing.paymentStatus === "expired") {
+      throw new PaymentError(PaymentErrorCode.QRIS_EXPIRED, "Kode QRIS sudah kedaluwarsa");
+    }
+    // paymentStatus === "processing" → ada request lain sedang berjalan
+    throw new PaymentError(
+      PaymentErrorCode.TRANSACTION_FAILED,
+      "Pembayaran sedang diproses, mohon tunggu sebentar"
+    );
+  }
+
+  // lockedOrder = snapshot order sebelum kita set "processing"
+  const order = lockedOrder;
+
+  // ── Kalkulasi diskon dan total akhir ─────────────────────────────────────────
   let discountTotal = 0;
   const itemsWithDiscount = order.items.map((item) => {
     const pid = item.productId.toString();
@@ -113,39 +136,36 @@ export async function completePayment(orderId, paymentData) {
 
   const isDigitalOnlinePayment =
     order.orderType === "ONLINE" &&
-    order.paymentMethod !== "CASH" &&
-    order.paymentMethod !== "BANK_TRANSFER";
+    paymentData.method !== "CASH" &&
+    paymentData.method !== "BANK_TRANSFER";
 
   const newOrderStatus =
     isDigitalOnlinePayment && order.orderStatus !== "ready"
       ? "preparing"
       : "completed";
 
-  // ── Step 1: Update Order status + diskon ────────────────────────────────────
-  try {
+  // Helper: batalkan lock — kembalikan paymentStatus ke "pending" agar bisa retry
+  const releaseLock = async (reason) => {
     await Order.updateOne(
       { _id: orderId },
       {
         $set: {
-          paymentStatus: "paid",
-          orderStatus: newOrderStatus,
-          paymentMethod: paymentData.method,
-          cashReceived: paymentData.cashReceived ?? null,
-          changeAmount: paymentData.changeAmount ?? null,
-          totalAmount: finalTotalAmount,
-          discountTotal,
-          items: itemsWithDiscount,
-          completedAt: newOrderStatus === "completed" ? now : null,
+          paymentStatus: "pending",
+          orderStatus: order.orderStatus,
+          paymentMethod: order.paymentMethod ?? null,
+          cashReceived: null,
+          changeAmount: null,
+          totalAmount: order.totalAmount,
+          discountTotal: order.discountTotal ?? 0,
+          items: order.items,
+          completedAt: null,
           updatedAt: now,
         },
       }
-    );
-  } catch (err) {
-    console.error("completePayment: step 1 (order update) failed", err);
-    throw new PaymentError(PaymentErrorCode.TRANSACTION_FAILED, "Gagal memperbarui status pesanan");
-  }
+    ).catch((e) => console.error(`completePayment: releaseLock failed (${reason})`, e));
+  };
 
-  // ── Step 2: Decrement stock ──────────────────────────────────────────────────
+  // ── Step 1: Decrement stock ──────────────────────────────────────────────────
   let stockDecrementDone = false;
   try {
     const stockUpdates = order.items.map((item) => ({
@@ -166,51 +186,35 @@ export async function completePayment(orderId, paymentData) {
 
     stockDecrementDone = true;
 
-    // Catat stock movement "out" untuk setiap item (non-blocking)
-    User.findById(order.cashierId).select("name").lean().then((cashier) => {
-      recordStockOutMovements(
-        order.items.map((item) => ({
-          productId: item.productId,
-          productName: item.productName,
-          sku: item.sku,
-          quantity: item.quantity,
-        })),
-        {
-          orderId: order._id,
-          invoiceNumber: order.invoiceNumber,
-          userId: order.cashierId,
-          userName: cashier?.name ?? null,
-        }
-      );
-    }).catch((err) => console.error("completePayment: recordStockOut failed", err));
-
+    // Catat stock movement "out" (non-blocking)
+    User.findById(order.cashierId)
+      .select("name")
+      .lean()
+      .then((cashier) => {
+        recordStockOutMovements(
+          order.items.map((item) => ({
+            productId: item.productId,
+            productName: item.productName,
+            sku: item.sku,
+            quantity: item.quantity,
+          })),
+          {
+            orderId: order._id,
+            invoiceNumber: order.invoiceNumber,
+            userId: order.cashierId,
+            userName: cashier?.name ?? null,
+          }
+        );
+      })
+      .catch((err) => console.error("completePayment: recordStockOut failed", err));
   } catch (err) {
-    // Roll back step 1
-    await Order.updateOne(
-      { _id: orderId },
-      {
-        $set: {
-          paymentStatus: "pending",
-          orderStatus: order.orderStatus,
-          paymentMethod: order.paymentMethod ?? null,
-          cashReceived: null,
-          changeAmount: null,
-          totalAmount: order.totalAmount,
-          discountTotal: order.discountTotal ?? 0,
-          completedAt: null,
-          updatedAt: now,
-        },
-      }
-    ).catch((rollbackErr) =>
-      console.error("completePayment: rollback step 1 failed", rollbackErr)
-    );
-
+    await releaseLock("step 1 stock decrement");
     if (err instanceof PaymentError) throw err;
-    console.error("completePayment: step 2 (stock decrement) failed", err);
+    console.error("completePayment: step 1 (stock decrement) failed", err);
     throw new PaymentError(PaymentErrorCode.TRANSACTION_FAILED, "Gagal mengurangi stok");
   }
 
-  // ── Step 3: Create Invoice ───────────────────────────────────────────────────
+  // ── Step 2: Create Invoice ───────────────────────────────────────────────────
   let invoice;
   try {
     const cashier = await User.findById(order.cashierId).select("name").lean();
@@ -222,12 +226,14 @@ export async function completePayment(orderId, paymentData) {
       unitPrice: item.unitPrice,
       quantity: item.quantity,
       discountPercent: discountMap[item.productId.toString()] ?? 0,
-      discountAmount: itemsWithDiscount.find(
-        (i) => i.productId.toString() === item.productId.toString()
-      )?.discountAmount ?? 0,
-      subtotal: itemsWithDiscount.find(
-        (i) => i.productId.toString() === item.productId.toString()
-      )?.finalPrice ?? item.unitPrice * item.quantity,
+      discountAmount:
+        itemsWithDiscount.find(
+          (i) => i.productId.toString() === item.productId.toString()
+        )?.discountAmount ?? 0,
+      subtotal:
+        itemsWithDiscount.find(
+          (i) => i.productId.toString() === item.productId.toString()
+        )?.finalPrice ?? item.unitPrice * item.quantity,
     }));
 
     const created = await Invoice.create({
@@ -246,24 +252,7 @@ export async function completePayment(orderId, paymentData) {
 
     invoice = created.toObject();
   } catch (err) {
-    // Roll back step 1 and step 2
-    await Order.updateOne(
-      { _id: orderId },
-      {
-        $set: {
-          paymentStatus: "pending",
-          orderStatus: order.orderStatus,
-          paymentMethod: order.paymentMethod ?? null,
-          cashReceived: null,
-          changeAmount: null,
-          totalAmount: order.totalAmount,
-          discountTotal: order.discountTotal ?? 0,
-          completedAt: null,
-          updatedAt: now,
-        },
-      }
-    ).catch((e) => console.error("completePayment: rollback step 1 failed", e));
-
+    // Kembalikan stok yang sudah dikurangi
     if (stockDecrementDone) {
       const stockRestore = order.items.map((item) => ({
         updateOne: {
@@ -272,12 +261,44 @@ export async function completePayment(orderId, paymentData) {
         },
       }));
       await Product.bulkWrite(stockRestore).catch((e) =>
-        console.error("completePayment: rollback step 2 failed", e)
+        console.error("completePayment: rollback stock failed", e)
       );
     }
-
-    console.error("completePayment: step 3 (invoice create) failed", err);
+    await releaseLock("step 2 invoice create");
+    console.error("completePayment: step 2 (invoice create) failed", err);
     throw new PaymentError(PaymentErrorCode.TRANSACTION_FAILED, "Gagal membuat invoice");
+  }
+
+  // ── Step 3: Finalize Order — ubah dari "processing" ke status akhir ──────────
+  try {
+    await Order.updateOne(
+      { _id: orderId },
+      {
+        $set: {
+          paymentStatus: "paid",
+          orderStatus: newOrderStatus,
+          paymentMethod: paymentData.method,
+          cashReceived: paymentData.cashReceived ?? null,
+          changeAmount: paymentData.changeAmount ?? null,
+          totalAmount: finalTotalAmount,
+          discountTotal,
+          items: itemsWithDiscount,
+          completedAt: newOrderStatus === "completed" ? now : null,
+          updatedAt: now,
+        },
+      }
+    );
+  } catch (err) {
+    // Invoice sudah dibuat dan stok sudah dikurangi.
+    // Log error kritis — state tidak konsisten tapi tetap lanjutkan agar
+    // invoice yang sudah dibuat bisa dikembalikan ke caller.
+    // Operator harus memeriksa dan memperbaiki status order secara manual.
+    console.error(
+      "completePayment: CRITICAL — step 3 (order finalize) failed after invoice was created.",
+      "Order ID:", orderId,
+      "Invoice:", invoice.invoiceNumber,
+      err
+    );
   }
 
   // ── Broadcast SSE ────────────────────────────────────────────────────────────

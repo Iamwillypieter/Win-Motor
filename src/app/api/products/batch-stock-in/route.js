@@ -9,7 +9,16 @@ import { ProductErrorCode } from "@/types/product.types";
  * Accessible by WAREHOUSE dan OWNER.
  *
  * Body: {
- *   items: Array<{ productId: string, quantity: number }>
+ *   supplierId?:    string   — opsional, berlaku untuk semua item dalam batch ini
+ *   supplierName?:  string   — opsional, nama supplier (snapshot)
+ *   purchasePrice?: number   — opsional, harga beli default per satuan untuk semua item
+ *   items: Array<{
+ *     productId:     string
+ *     quantity:      number
+ *     sku?:          string
+ *     name?:         string
+ *     purchasePrice?: number — opsional, override harga beli per item
+ *   }>
  * }
  *
  * Response 200: {
@@ -17,13 +26,7 @@ import { ProductErrorCode } from "@/types/product.types";
  *     success: number,
  *     failed: number,
  *     results: Array<{
- *       productId,
- *       sku,
- *       name,
- *       quantity,
- *       newStock?,
- *       status: "success" | "failed",
- *       error?: string
+ *       productId, sku, name, quantity, newStock?, status: "success"|"failed", error?
  *     }>
  *   }
  * }
@@ -55,7 +58,7 @@ export async function POST(request) {
     );
   }
 
-  const { items } = body;
+  const { items, supplierId, supplierName, purchasePrice: defaultPurchasePrice } = body;
 
   if (!Array.isArray(items) || items.length === 0) {
     return NextResponse.json(
@@ -71,17 +74,47 @@ export async function POST(request) {
     );
   }
 
+  // Validasi supplierId level batch jika diberikan
+  let safeBatchSupplierId = null;
+  if (supplierId) {
+    safeBatchSupplierId = String(supplierId).replace(/[^a-fA-F0-9]/g, "");
+    if (safeBatchSupplierId.length !== 24) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: "ID supplier tidak valid" } },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Validasi defaultPurchasePrice level batch jika diberikan
+  if (defaultPurchasePrice !== undefined && defaultPurchasePrice !== null) {
+    if (
+      typeof defaultPurchasePrice !== "number" ||
+      !Number.isInteger(defaultPurchasePrice) ||
+      defaultPurchasePrice < 0
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Harga beli default harus berupa bilangan bulat non-negatif (rupiah)",
+          },
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   const results = [];
   let successCount = 0;
   let failedCount = 0;
 
   for (const item of items) {
-    const { productId, sku, name, quantity } = item;
+    const { productId, sku, name, quantity, purchasePrice: itemPurchasePrice } = item;
 
     // Sanitasi productId — hanya karakter hex MongoDB ObjectId
-    const safeId = typeof productId === "string"
-      ? productId.replace(/[^a-fA-F0-9]/g, "")
-      : "";
+    const safeId =
+      typeof productId === "string" ? productId.replace(/[^a-fA-F0-9]/g, "") : "";
 
     if (!safeId || safeId.length !== 24) {
       results.push({
@@ -109,7 +142,7 @@ export async function POST(request) {
       continue;
     }
 
-    if (quantity > 100000) {
+    if (quantity > 100_000) {
       results.push({
         productId,
         sku: sku ?? "-",
@@ -122,8 +155,20 @@ export async function POST(request) {
       continue;
     }
 
+    // Resolusi harga beli: item-level override > batch-level default
+    const resolvedPurchasePrice =
+      itemPurchasePrice !== undefined && itemPurchasePrice !== null
+        ? itemPurchasePrice
+        : defaultPurchasePrice ?? null;
+
+    const supplierInfo = {
+      supplierId: safeBatchSupplierId,
+      supplierName: supplierName?.trim() ?? null,
+      purchasePrice: resolvedPurchasePrice,
+    };
+
     try {
-      const updated = await addStock(safeId, quantity, session.user.id);
+      const updated = await addStock(safeId, quantity, session.user.id, supplierInfo);
       results.push({
         productId,
         sku: updated.sku,

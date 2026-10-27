@@ -34,10 +34,14 @@ export class ProductError extends Error {
  * @param {number} data.stock
  * @param {string} [data.imageUrl]
  * @param {string} data.createdBy - User ObjectId string
+ * @param {Object} [data.supplierInfo] - Asal barang opsional
+ * @param {string|null} [data.supplierInfo.supplierId]
+ * @param {string|null} [data.supplierInfo.supplierName]
+ * @param {number|null} [data.supplierInfo.purchasePrice]
  * @returns {Promise<Object>} Created product document (lean)
  * @throws {ProductError} DUPLICATE_SKU if SKU already exists
  */
-export async function createProduct({ name, sku, price, stock, imageUrl, brand, aliases, category, createdBy }) {
+export async function createProduct({ name, sku, price, stock, imageUrl, brand, aliases, category, createdBy, supplierInfo = {} }) {
   await connectDB();
 
   const normalizedSku = sku.toUpperCase().trim();
@@ -67,8 +71,8 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
   // Catat stok awal sebagai stock movement
   if (stock > 0) {
     try {
-      // Cari nama user untuk snapshot
       const user = await mongoose.model("User").findById(createdBy).select("name").lean();
+      const { supplierId = null, supplierName = null, purchasePrice = null } = supplierInfo;
       await StockMovement.create({
         productId: product._id,
         productName: product.name,
@@ -78,6 +82,9 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
         previousStock: 0,
         newStock: stock,
         reason: "Stok awal saat produk dibuat",
+        supplierId: supplierId ?? null,
+        supplierName: supplierName ?? null,
+        purchasePrice: purchasePrice ?? null,
         userId: createdBy,
         userName: user?.name ?? null,
       });
@@ -299,10 +306,15 @@ export async function getProductById(id) {
  *
  * @param {string} id - Product ObjectId string
  * @param {number} quantity - Positive integer to add to stock
+ * @param {string|null} [userId] - ID user yang melakukan stock-in
+ * @param {Object} [supplierInfo] - Info supplier opsional
+ * @param {string|null} [supplierInfo.supplierId] - Supplier ObjectId string
+ * @param {string|null} [supplierInfo.supplierName] - Snapshot nama supplier
+ * @param {number|null} [supplierInfo.purchasePrice] - Harga beli per satuan (rupiah)
  * @returns {Promise<Object>} Updated product document (lean)
  * @throws {ProductError} PRODUCT_NOT_FOUND if product does not exist
  */
-export async function addStock(id, quantity, userId = null) {
+export async function addStock(id, quantity, userId = null, supplierInfo = {}) {
   await connectDB();
 
   // Ambil stok sebelum update untuk catatan mutasi
@@ -327,6 +339,9 @@ export async function addStock(id, quantity, userId = null) {
     const user = userId
       ? await mongoose.model("User").findById(userId).select("name").lean()
       : null;
+
+    const { supplierId = null, supplierName = null, purchasePrice = null } = supplierInfo;
+
     await StockMovement.create({
       productId: product._id,
       productName: product.name,
@@ -336,6 +351,9 @@ export async function addStock(id, quantity, userId = null) {
       previousStock,
       newStock: product.stock,
       reason: "Barang masuk",
+      supplierId: supplierId ?? null,
+      supplierName: supplierName ?? null,
+      purchasePrice: purchasePrice ?? null,
       userId: userId ?? null,
       userName: user?.name ?? null,
     });

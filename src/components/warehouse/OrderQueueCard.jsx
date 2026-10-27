@@ -127,6 +127,7 @@ export default function OrderQueueCard({
   onConfirmCOD,
   onConfirmTransfer,
   onMarkShipping,
+  onCancelOrder,
 }) {
   const [isConfirmingCOD, setIsConfirmingCOD] = useState(false);
   const [codError, setCodError] = useState(null);
@@ -136,6 +137,9 @@ export default function OrderQueueCard({
   const [ewalletError, setEwalletError] = useState(null);
   const [isMarkingShipping, setIsMarkingShipping] = useState(false);
   const [shippingError, setShippingError] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const statusStyle =
     STATUS_STYLES[order.orderStatus] || "bg-gray-100 text-gray-700 border-gray-200";
@@ -176,6 +180,35 @@ export default function OrderQueueCard({
     order.orderType === "ONLINE" &&
     order.paymentStatus === "paid" &&
     ["preparing", "ready"].includes(order.orderStatus);
+
+  /**
+   * Gudang bisa batalkan pesanan yang belum disiapkan (waiting_preparation/preparing + pending).
+   */
+  const showCancelButton =
+    ["waiting_preparation", "preparing"].includes(order.orderStatus) &&
+    order.paymentStatus === "pending";
+
+  async function handleCancel() {
+    const orderId = order._id?.toString();
+    if (!orderId) return;
+    setCancelError(null);
+    setIsCancelling(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok) {
+        setCancelError(json?.error?.message || "Gagal membatalkan pesanan.");
+        setShowCancelConfirm(false);
+        return;
+      }
+      if (typeof onCancelOrder === "function") onCancelOrder(orderId);
+    } catch {
+      setCancelError("Terjadi kesalahan jaringan. Silakan coba lagi.");
+    } finally {
+      setIsCancelling(false);
+      setShowCancelConfirm(false);
+    }
+  }
 
   /**
    * Handle COD confirmation — calls PATCH /api/orders/[id]/status with { orderStatus: "completed" }.
@@ -542,6 +575,52 @@ export default function OrderQueueCard({
             <p className="text-xs text-red-600 text-right max-w-[180px]" role="alert">
               {shippingError}
             </p>
+          )}
+
+          {/* "Batalkan Pesanan" — hanya untuk order yang belum disiapkan */}
+          {showCancelButton && (
+            <>
+              {!showCancelConfirm ? (
+                <button
+                  onClick={() => setShowCancelConfirm(true)}
+                  disabled={isProcessing || isCancelling}
+                  aria-label={`Batalkan pesanan ${order.invoiceNumber}`}
+                  className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400 disabled:opacity-50 transition-colors"
+                >
+                  ✕ Batalkan
+                </button>
+              ) : (
+                <div className="flex flex-col items-end gap-1.5">
+                  <p className="text-xs text-red-700 font-medium text-right">
+                    Yakin batalkan pesanan ini?
+                  </p>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => setShowCancelConfirm(false)}
+                      disabled={isCancelling}
+                      className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Tidak
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      disabled={isCancelling}
+                      className="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {isCancelling && (
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      )}
+                      Ya, Batalkan
+                    </button>
+                  </div>
+                </div>
+              )}
+              {cancelError && (
+                <p className="text-xs text-red-600 text-right max-w-[180px]" role="alert">
+                  {cancelError}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -43,6 +43,13 @@ export default function ProductTable({ initialProducts = [] }) {
   const scannerRef = useRef(null);
   const isProcessingRef = useRef(false);
 
+  // --- Supplier state (dipakai oleh semua mode stock-in) ---
+  const [suppliers, setSuppliers] = useState([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(false);
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const [manualSupplierName, setManualSupplierName] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+
   // --- Bulk stock-in state ---
   // bulkItems: Array<{ productId, sku, name, imageUrl, currentStock, quantity }>
   const [bulkItems, setBulkItems] = useState([]);
@@ -63,6 +70,22 @@ export default function ProductTable({ initialProducts = [] }) {
         )
         .slice(0, 15)
     : [];
+
+  // ------------------------------------------------------------------
+  // Fetch suppliers saat modal stock-in dibuka
+  // ------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!stockInOpen) return;
+    setSuppliersLoading(true);
+    fetch("/api/suppliers")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data) setSuppliers(json.data);
+      })
+      .catch(() => {})
+      .finally(() => setSuppliersLoading(false));
+  }, [stockInOpen]);
 
   // ------------------------------------------------------------------
   // Scanner helpers
@@ -186,13 +209,25 @@ export default function ProductTable({ initialProducts = [] }) {
     setStockInSubmitting(true);
     setStockInError("");
 
+    // Resolusi supplier: pilih dari dropdown (id) atau ketik manual (nama)
+    const resolvedSupplierId = selectedSupplierId || null;
+    const resolvedSupplierName = selectedSupplierId
+      ? suppliers.find((s) => s._id === selectedSupplierId)?.name ?? null
+      : manualSupplierName.trim() || null;
+    const resolvedPurchasePrice = purchasePrice !== "" ? parseInt(purchasePrice, 10) || null : null;
+
     try {
       const res = await fetch(
         `/api/products/${stockInProduct._id}/stock-in`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: stockInQty }),
+          body: JSON.stringify({
+            quantity: stockInQty,
+            supplierId: resolvedSupplierId,
+            supplierName: resolvedSupplierName,
+            purchasePrice: resolvedPurchasePrice,
+          }),
         }
       );
       const json = await res.json();
@@ -252,6 +287,10 @@ export default function ProductTable({ initialProducts = [] }) {
     setStockInSuccess("");
     setCameraError("");
     isProcessingRef.current = false;
+    // Reset supplier state
+    setSelectedSupplierId("");
+    setManualSupplierName("");
+    setPurchasePrice("");
     // Reset bulk state juga
     stopBulkScanner();
     setBulkItems([]);
@@ -372,12 +411,23 @@ export default function ProductTable({ initialProducts = [] }) {
     setBulkSubmitting(true);
     setBulkResult(null);
 
+    const resolvedSupplierId = selectedSupplierId || null;
+    const resolvedSupplierName = selectedSupplierId
+      ? suppliers.find((s) => s._id === selectedSupplierId)?.name ?? null
+      : manualSupplierName.trim() || null;
+    const resolvedPurchasePrice = purchasePrice !== "" ? parseInt(purchasePrice, 10) || null : null;
+
     try {
       await stopBulkScanner();
       const res = await fetch("/api/products/batch-stock-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: bulkItems }),
+        body: JSON.stringify({
+          items: bulkItems,
+          supplierId: resolvedSupplierId,
+          supplierName: resolvedSupplierName,
+          purchasePrice: resolvedPurchasePrice,
+        }),
       });
       const json = await res.json();
 
@@ -733,6 +783,76 @@ export default function ProductTable({ initialProducts = [] }) {
                 >
                   Massal
                 </button>
+              </div>
+
+              {/* ---- INFO SUPPLIER & HARGA BELI (berlaku semua mode) ---- */}
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Info Pembelian <span className="font-normal normal-case text-gray-400">(opsional)</span>
+                </p>
+
+                {/* Dropdown supplier */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Supplier
+                  </label>
+                  {suppliersLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-gray-400 py-1">
+                      <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                      Memuat daftar supplier...
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedSupplierId}
+                      onChange={(e) => {
+                        setSelectedSupplierId(e.target.value);
+                        // Bersihkan nama manual jika pilih dari dropdown
+                        if (e.target.value) setManualSupplierName("");
+                      }}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="">— Pilih Supplier —</option>
+                      {suppliers.map((s) => (
+                        <option key={s._id} value={s._id}>
+                          {s.name}{s.contactName ? ` (${s.contactName})` : ""}
+                        </option>
+                      ))}
+                      <option value="__manual__" disabled>── atau ketik nama di bawah ──</option>
+                    </select>
+                  )}
+                </div>
+
+                {/* Input nama manual (jika tidak ada di daftar) */}
+                {!selectedSupplierId && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Nama Supplier (jika tidak ada di daftar)
+                    </label>
+                    <input
+                      type="text"
+                      value={manualSupplierName}
+                      onChange={(e) => setManualSupplierName(e.target.value)}
+                      placeholder="Ketik nama supplier..."
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+
+                {/* Harga beli */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Harga Beli per Satuan (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={purchasePrice}
+                    onChange={(e) => setPurchasePrice(e.target.value)}
+                    placeholder="Contoh: 15000"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
 
               {/* ---- SCAN MODE ---- */}

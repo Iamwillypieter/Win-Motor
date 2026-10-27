@@ -5,11 +5,15 @@ import { ProductErrorCode } from "@/types/product.types";
 
 /**
  * POST /api/products/:id/stock-in
- * Add stock to a product (barang masuk). Accessible by WAREHOUSE only.
+ * Add stock to a product (barang masuk). Accessible by WAREHOUSE and OWNER.
  *
- * Body: { quantity: number } — positive integer, amount to add
+ * Body:
+ *   quantity      {number}  — wajib, bilangan bulat positif, jumlah yang ditambah
+ *   supplierId    {string}  — opsional, ObjectId supplier
+ *   supplierName  {string}  — opsional, nama supplier (digunakan jika supplierId tidak ada)
+ *   purchasePrice {number}  — opsional, harga beli per satuan (rupiah)
  *
- * Response 200: { data: { product: updatedProduct, addedQuantity: number } }
+ * Response 200: { data: { product, addedQuantity } }
  * Response 400: { error: { code, message } }
  * Response 404: { error: { code: "PRODUCT_NOT_FOUND" } }
  */
@@ -41,7 +45,7 @@ export async function POST(request, { params }) {
 
   try {
     const body = await request.json();
-    const { quantity } = body;
+    const { quantity, supplierId, supplierName, purchasePrice } = body;
 
     if (!Number.isInteger(quantity) || quantity <= 0) {
       return NextResponse.json(
@@ -55,8 +59,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Batas maksimal per input untuk mencegah kesalahan input ekstrem
-    if (quantity > 100000) {
+    if (quantity > 100_000) {
       return NextResponse.json(
         {
           error: {
@@ -68,7 +71,39 @@ export async function POST(request, { params }) {
       );
     }
 
-    const product = await addStock(safeId, quantity);
+    // Validasi supplierId jika diberikan
+    if (supplierId !== undefined && supplierId !== null) {
+      const safeSupplierId = String(supplierId).replace(/[^a-fA-F0-9]/g, "");
+      if (safeSupplierId.length !== 24) {
+        return NextResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "ID supplier tidak valid" } },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validasi purchasePrice jika diberikan
+    if (purchasePrice !== undefined && purchasePrice !== null) {
+      if (typeof purchasePrice !== "number" || !Number.isInteger(purchasePrice) || purchasePrice < 0) {
+        return NextResponse.json(
+          {
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Harga beli harus berupa bilangan bulat non-negatif (rupiah)",
+            },
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    const supplierInfo = {
+      supplierId: supplierId ?? null,
+      supplierName: supplierName?.trim() ?? null,
+      purchasePrice: purchasePrice ?? null,
+    };
+
+    const product = await addStock(safeId, quantity, session.user.id, supplierInfo);
 
     return NextResponse.json({
       data: {

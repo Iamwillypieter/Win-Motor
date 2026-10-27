@@ -14,6 +14,13 @@ const FILTER_OPTIONS = [
   { value: "OFFLINE", label: "Hanya Kasir" },
 ];
 
+/** Opsi urutan antrian */
+const SORT_OPTIONS = [
+  { value: "oldest", label: "Terlama (FIFO)" },
+  { value: "newest", label: "Terbaru" },
+  { value: "status", label: "Urut Status" },
+];
+
 /**
  * OrderQueueList — real-time order queue for the Warehouse page.
  * Menampilkan notifikasi + suara saat pesanan baru masuk dari kasir.
@@ -37,7 +44,7 @@ export default function OrderQueueList() {
     );
   }, [notify]);
 
-  const { orders, isLoading, error, markReady, refresh } = useOrderQueue(handleNewOrder);
+  const { orders, isLoading, error, markReady, refresh, sortBy, setSortBy } = useOrderQueue(handleNewOrder);
 
   /** Filter pesanan berdasarkan orderType yang dipilih */
   const filteredOrders =
@@ -90,6 +97,24 @@ export default function OrderQueueList() {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          {/* Sort dropdown */}
+          <label htmlFor="order-sort" className="sr-only">
+            Urutkan pesanan
+          </label>
+          <select
+            id="order-sort"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+            aria-label="Urutkan berdasarkan"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
           {/* Filter dropdown */}
           <label htmlFor="order-type-filter" className="sr-only">
             Filter pesanan
@@ -158,6 +183,7 @@ export default function OrderQueueList() {
               onConfirmCOD={refresh}
               onConfirmTransfer={refresh}
               onMarkShipping={refresh}
+              onCancelOrder={refresh}
             />
           ))}
         </div>

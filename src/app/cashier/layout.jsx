@@ -27,7 +27,6 @@ export default async function CashierLayout({ children }) {
         links={navLinks}
       />
       {children}
-      {/* SSE-powered toast notifications for order_ready events */}
       <OrderReadyNotification />
     </>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import RevenueChart from "@/components/owner/RevenueChart";
 import DateRangePicker from "@/components/owner/DateRangePicker";
 import CashierRanking from "@/components/owner/CashierRanking";
@@ -9,7 +9,17 @@ import LowStockAlert from "@/components/owner/LowStockAlert";
 import SummaryMetrics from "@/components/owner/SummaryMetrics";
 import MetricCards from "@/components/owner/MetricCards";
 
-const AUTO_REFRESH_INTERVAL = 30_000; // 30 detik
+// Events SSE yang memicu refresh analytics
+const SSE_REFRESH_EVENTS = new Set([
+  "order_completed",
+  "order_status_updated",
+  "debt_settled",
+  "stock_updated",
+  "product_updated",
+]);
+
+// Debounce SSE refresh agar tidak fetch berulang kali saat banyak event sekaligus
+const SSE_DEBOUNCE_MS = 2_000;
 
 export default function OwnerDashboardPage() {
   const [range, setRange] = useState("monthly");
@@ -21,6 +31,14 @@ export default function OwnerDashboardPage() {
   const [exporting, setExporting] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(Date.now()); // trigger untuk child components
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Ref untuk debounce SSE-triggered refresh
+  const sseDebounceRef = useRef(null);
+  // Ref stabil untuk range/month agar tidak perlu dependency di SSE handler
+  const rangeRef = useRef(range);
+  const monthRef = useRef(selectedMonth);
+  useEffect(() => { rangeRef.current = range; }, [range]);
+  useEffect(() => { monthRef.current = selectedMonth; }, [selectedMonth]);
 
   const fetchData = useCallback(async (currentRange, currentMonth, silent = false) => {
     if (!silent) setLoading(true);
@@ -56,13 +74,37 @@ export default function OwnerDashboardPage() {
     fetchData(range, selectedMonth);
   }, [range, selectedMonth, fetchData]);
 
-  // Auto-refresh setiap 30 detik (silent — tidak tampilkan loading penuh)
+  // SSE — subscribe ke event transaksi dan refresh analytics secara real-time
+  // Menggantikan polling 30 detik agar data selalu segar tanpa request sia-sia
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchData(range, selectedMonth, true);
-    }, AUTO_REFRESH_INTERVAL);
-    return () => clearInterval(interval);
-  }, [range, selectedMonth, fetchData]);
+    if (typeof EventSource === "undefined") return;
+
+    const es = new EventSource("/api/sse");
+
+    es.onmessage = (event) => {
+      try {
+        const parsed = JSON.parse(event.data);
+        if (!SSE_REFRESH_EVENTS.has(parsed.type)) return;
+
+        // Debounce: batalkan timer sebelumnya, set yang baru
+        if (sseDebounceRef.current) clearTimeout(sseDebounceRef.current);
+        sseDebounceRef.current = setTimeout(() => {
+          fetchData(rangeRef.current, monthRef.current, true);
+        }, SSE_DEBOUNCE_MS);
+      } catch {
+        // ignore parse errors
+      }
+    };
+
+    es.onerror = () => {
+      // EventSource akan reconnect sendiri — tidak perlu action manual
+    };
+
+    return () => {
+      es.close();
+      if (sseDebounceRef.current) clearTimeout(sseDebounceRef.current);
+    };
+  }, [fetchData]);
 
   const handleRangeChange = (newRange, newMonth) => {
     setRange(newRange);

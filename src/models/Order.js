@@ -56,7 +56,8 @@ const OrderSchema = new Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ["pending", "paid", "expired"],
+    // "processing" = idempotency lock sedang aktif (request pembayaran sedang berjalan)
+    enum: ["pending", "processing", "paid", "expired"],
     default: "pending",
   },
   paymentMethod: {

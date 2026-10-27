@@ -69,7 +69,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { name, sku, price, stock, imageUrl, brand, aliases, category } = body;
+    const { name, sku, price, stock, imageUrl, brand, aliases, category, supplierId, supplierName, purchasePrice } = body;
 
     if (!name || !sku || price === undefined || stock === undefined) {
       return NextResponse.json(
@@ -115,6 +115,27 @@ export async function POST(request) {
       );
     }
 
+    // Validasi supplierId jika diberikan
+    if (supplierId) {
+      const safe = String(supplierId).replace(/[^a-fA-F0-9]/g, "");
+      if (safe.length !== 24) {
+        return NextResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "ID supplier tidak valid" } },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validasi purchasePrice jika diberikan
+    if (purchasePrice !== undefined && purchasePrice !== null) {
+      if (typeof purchasePrice !== "number" || !Number.isInteger(purchasePrice) || purchasePrice < 0) {
+        return NextResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "Harga beli harus berupa bilangan bulat non-negatif" } },
+          { status: 400 }
+        );
+      }
+    }
+
     const product = await createProduct({
       name,
       sku,
@@ -125,6 +146,11 @@ export async function POST(request) {
       category: category || null,
       aliases: aliases || [],
       createdBy: session.user.id,
+      supplierInfo: {
+        supplierId: supplierId ?? null,
+        supplierName: supplierName?.trim() ?? null,
+        purchasePrice: purchasePrice ?? null,
+      },
     });
 
     return NextResponse.json({ data: product }, { status: 201 });
