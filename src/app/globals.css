@@ -40,15 +40,13 @@
 }
 
 /* ── Print styles ─────────────────────────────────────────────────────────── */
-/* ── @page rules: ukuran kertas thermal printer ────────────────────────── */
-/* Default: 80mm (diubah oleh JS saat kasir memilih 58mm) */
+/* ── Print styles ─────────────────────────────────────────────────────────── */
+/* Default @page untuk thermal printer 80mm.
+   Ukuran 58mm di-override saat runtime oleh PrintButton.jsx
+   yang inject <style id="thermal-print-style"> sebelum window.print(). */
 @page {
   margin: 0;
   size: 80mm auto; /* lebar 80mm, tinggi menyesuaikan isi */
-}
-
-@page :is([data-paper="58mm"]) {
-  size: 58mm auto;
 }
 
 @media print {

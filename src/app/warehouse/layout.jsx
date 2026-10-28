@@ -15,6 +15,7 @@ export default async function WarehouseLayout({ children }) {
 
   const navLinks = [
     { href: "/warehouse/queue", label: "Antrean" },
+    { href: "/warehouse/history", label: "Riwayat Pesanan" },
     { href: "/warehouse/inventory", label: "Inventori" },
   ];
 

@@ -200,6 +200,178 @@ export async function getOrders({ status, cashierId, orderType } = {}) {
 }
 
 /**
+ * Get a paginated, filtered history of orders (typically terminal-status orders).
+ * Includes summary aggregates computed over the full filtered set.
+ *
+ * @param {Object} [filters]
+ * @param {string|string[]} [filters.status]  — orderStatus filter (comma-separated or array).
+ *                                               Defaults to ["completed", "cancelled"].
+ * @param {string} [filters.orderType]        — "ONLINE" | "OFFLINE"
+ * @param {string} [filters.from]            — start date (YYYY-MM-DD), matched on createdAt
+ * @param {string} [filters.to]              — end date (YYYY-MM-DD), matched on createdAt
+ * @param {string} [filters.search]           — free text: invoice / customer / cashier name
+ * @param {number} [filters.page=1]           — page number (1-based)
+ * @param {number} [filters.limit=20]         — page size (max 200)
+ * @returns {Promise<{ data: Object[], total: number, page: number, totalPages: number, summary: Object }>}
+ * @throws {OrderError} INVALID_STATUS if a status value is not in the enum
+ */
+export async function getOrderHistory({
+  status,
+  orderType,
+  from,
+  to,
+  search,
+  page = 1,
+  limit = 20,
+} = {}) {
+  await connectDB();
+
+  const query = {};
+
+  // ── Status filter ────────────────────────────────────────────────
+  const VALID_STATUSES = [
+    "waiting_preparation",
+    "preparing",
+    "ready",
+    "shipping",
+    "completed",
+    "cancelled",
+  ];
+
+  if (status) {
+    const statuses = Array.isArray(status)
+      ? status
+      : status.split(",").map((s) => s.trim()).filter(Boolean);
+
+    const invalid = statuses.filter((s) => !VALID_STATUSES.includes(s));
+    if (invalid.length) {
+      throw new OrderError(
+        OrderErrorCode.INVALID_STATUS,
+        `status tidak valid: ${invalid.join(", ")}`
+      );
+    }
+
+    if (statuses.length === 1) {
+      query.orderStatus = statuses[0];
+    } else if (statuses.length > 1) {
+      query.orderStatus = { $in: statuses };
+    }
+  } else {
+    // Default history set = terminal statuses only
+    query.orderStatus = { $in: ["completed", "cancelled"] };
+  }
+
+  // ── Order type filter ────────────────────────────────────────────
+  if (orderType) {
+    query.orderType = orderType;
+  }
+
+  // ── Date range filter (based on createdAt) ────────────────────────
+  if (from || to) {
+    query.createdAt = {};
+    if (from) {
+      const fromDate = new Date(from);
+      if (!isNaN(fromDate.getTime())) {
+        fromDate.setHours(0, 0, 0, 0);
+        query.createdAt.$gte = fromDate;
+      }
+    }
+    if (to) {
+      const toDate = new Date(to);
+      if (!isNaN(toDate.getTime())) {
+        toDate.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = toDate;
+      }
+    }
+    // Hapus key kosong bila kedua tanggal invalid
+    if (Object.keys(query.createdAt).length === 0) delete query.createdAt;
+  }
+
+  // ── Free-text search (invoice / customer / cashier) ──────────────
+  if (search && search.trim()) {
+    const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(escaped, "i");
+    const orClauses = [{ invoiceNumber: re }, { customerName: re }];
+
+    // Cari nama kasir yang cocok → tambahkan ke klausa $or via cashierId
+    try {
+      const matchingCashiers = await User.find({ name: re })
+        .select("_id")
+        .lean();
+      if (matchingCashiers.length) {
+        orClauses.push({ cashierId: { $in: matchingCashiers.map((u) => u._id) } });
+      }
+    } catch (err) {
+      console.error("getOrderHistory: cashier lookup failed", err);
+    }
+
+    query.$or = orClauses;
+  }
+
+  // ── Pagination ───────────────────────────────────────────────────
+  const safeLimit = Math.min(Math.max(1, limit), 200);
+  const safePage = Math.max(1, page);
+  const skip = (safePage - 1) * safeLimit;
+
+  // ── Jalankan data halaman, total count, dan ringkasan status paralel ──
+  const [orders, total, statusAgg] = await Promise.all([
+    Order.find(query)
+      .populate("cashierId", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .lean({ virtuals: false }),
+    Order.countDocuments(query),
+    Order.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: "$orderStatus",
+          count: { $sum: 1 },
+          revenue: { $sum: "$totalAmount" },
+        },
+      },
+    ]),
+  ]);
+
+  // ── Bangun ringkasan dari aggregate ───────────────────────────────
+  const summary = { completed: 0, cancelled: 0, totalRevenue: 0 };
+  for (const grp of statusAgg) {
+    if (grp._id === "completed") {
+      summary.completed = grp.count;
+      summary.totalRevenue = grp.revenue || 0;
+    } else if (grp._id === "cancelled") {
+      summary.cancelled = grp.count;
+    }
+  }
+
+  // ── Serialize ─────────────────────────────────────────────────────
+  const data = orders.map((order) => ({
+    ...order,
+    _id: order._id?.toString(),
+    cashierName: order.cashierId?.name ?? "Kasir",
+    cashierId: order.cashierId?._id?.toString() ?? order.cashierId?.toString() ?? null,
+    customerName: order.customerName || null,
+    createdAt: order.createdAt?.toISOString() ?? null,
+    updatedAt: order.updatedAt?.toISOString() ?? null,
+    completedAt: order.completedAt?.toISOString() ?? null,
+    items: (order.items || []).map((item) => ({
+      ...item,
+      _id: item._id?.toString() ?? null,
+      productId: item.productId?.toString() ?? null,
+    })),
+  }));
+
+  return {
+    data,
+    total,
+    page: safePage,
+    totalPages: Math.ceil(total / safeLimit),
+    summary,
+  };
+}
+
+/**
  * Get a single order by ID.
  * @param {string} orderId - Order ObjectId string
  * @returns {Promise<Object>} Order document (lean)

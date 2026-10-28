@@ -306,7 +306,7 @@ export async function completePayment(orderId, paymentData) {
     const eventType = newOrderStatus === "completed" ? "order_completed" : "order_status_updated";
     sseManager.broadcastToRole(
       { type: eventType, data: { orderId: orderId.toString(), orderStatus: newOrderStatus } },
-      ["CASHIER", "WAREHOUSE"]
+      ["CASHIER", "WAREHOUSE", "OWNER"]
     );
   } catch (err) {
     console.error("SSE broadcast error (order_completed):", err);
