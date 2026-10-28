@@ -3,8 +3,7 @@ import { auth } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import Invoice from "@/models/Invoice";
 import Order from "@/models/Order";
-import InvoicePrint from "@/components/shared/InvoicePrint";
-import PrintButton from "@/components/shared/PrintButton";
+import InvoicePageClient from "@/components/shared/InvoicePageClient";
 import Link from "next/link";
 
 export const metadata = {
@@ -13,7 +12,7 @@ export const metadata = {
 
 /**
  * InvoicePage — halaman invoice yang bisa dicetak.
- * Dapat diakses dari halaman pesanan aktif setelah transaksi selesai.
+ * Data di-fetch server-side; rendering dan print dihandle client component.
  */
 export default async function InvoicePage({ params }) {
   await auth();
@@ -26,14 +25,15 @@ export default async function InvoicePage({ params }) {
 
     if (!doc) notFound();
 
-    // Ambil customerName dari Order karena Invoice tidak menyimpannya
-    const order = await Order.findById(params.orderId).select("customerName").lean();
+    const order = await Order.findById(params.orderId)
+      .select("customerName")
+      .lean();
 
     invoice = {
       ...doc,
       _id: doc._id.toString(),
       orderId: doc.orderId.toString(),
-      customerName: order?.customerName ?? null,
+      customerName: order?.customerName ?? doc.customerName ?? null,
       transactionAt: doc.transactionAt?.toISOString() ?? null,
       createdAt: doc.createdAt?.toISOString() ?? null,
       items: doc.items.map((item) => ({
@@ -55,18 +55,13 @@ export default async function InvoicePage({ params }) {
         >
           ← Kembali ke Pesanan
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 font-mono">
-            {invoice.invoiceNumber}
-          </span>
-          <PrintButton />
-        </div>
+        <span className="text-sm text-gray-500 font-mono">
+          {invoice.invoiceNumber}
+        </span>
       </div>
 
-      {/* Invoice content */}
-      <div className="min-h-screen bg-gray-100 py-8 print:bg-white print:py-0">
-        <InvoicePrint invoice={invoice} />
-      </div>
+      {/* Invoice content — client component untuk sync paper size */}
+      <InvoicePageClient invoice={invoice} />
     </>
   );
 }

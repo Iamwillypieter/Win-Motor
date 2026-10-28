@@ -36,6 +36,9 @@ yarn-error.log*
 # file lokal di public/uploads/ tidak boleh masuk repo
 /public/uploads/
 
+# backup files — jangan commit ke repo, simpan di cloud/USB terpisah
+/backups/
+
 # vercel
 .vercel
 

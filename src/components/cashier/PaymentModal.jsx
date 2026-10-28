@@ -312,16 +312,10 @@ export default function PaymentModal({ order: initialOrder, cashierName }) {
         {/* Actions */}
         <div className="flex gap-3">
           <button
-            onClick={() => window.print()}
+            onClick={() => router.push(`/cashier/invoice/${invoice.orderId}`)}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
           >
-            🖨️ Cetak Invoice
-          </button>
-          <button
-            onClick={() => router.push(`/cashier/invoice/${invoice.orderId}`)}
-            className="flex-1 rounded-lg border border-blue-300 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          >
-            📄 Lihat Invoice
+            🖨️ Cetak / Lihat Invoice
           </button>
           <button
             onClick={() => router.push("/cashier")}

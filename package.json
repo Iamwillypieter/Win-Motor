@@ -12,7 +12,9 @@
     "test:unit": "vitest --run tests/unit",
     "test:property": "vitest --run tests/property",
     "test:integration": "vitest --run tests/integration",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "db:backup": "node scripts/backup.mjs",
+    "db:restore": "node scripts/restore.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

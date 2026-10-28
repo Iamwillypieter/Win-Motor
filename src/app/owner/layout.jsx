@@ -20,6 +20,7 @@ export default async function OwnerLayout({ children }) {
     { href: "/owner/users", label: "Karyawan" },
     { href: "/owner/debts", label: "Piutang" },
     { href: "/owner/stock-history", label: "Riwayat Stok" },
+    { href: "/owner/backup", label: "Backup" },
   ];
 
   return (

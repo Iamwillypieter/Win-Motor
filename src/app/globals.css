@@ -40,34 +40,70 @@
 }
 
 /* ── Print styles ─────────────────────────────────────────────────────────── */
+/* ── @page rules: ukuran kertas thermal printer ────────────────────────── */
+/* Default: 80mm (diubah oleh JS saat kasir memilih 58mm) */
+@page {
+  margin: 0;
+  size: 80mm auto; /* lebar 80mm, tinggi menyesuaikan isi */
+}
+
+@page :is([data-paper="58mm"]) {
+  size: 58mm auto;
+}
+
 @media print {
-  /* Sembunyikan elemen yang tidak perlu dicetak */
+  /* Sembunyikan toolbar dan navigasi */
   .no-print,
   header,
   nav {
     display: none !important;
   }
 
-  /* Reset background untuk cetak */
+  /* Reset background */
   body,
   html {
     background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* Invoice mengambil seluruh halaman */
+  /* Struk thermal mengisi kertas sepenuhnya */
+  .thermal-receipt {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 2mm 2mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-after: always;
+  }
+
+  /* Ukuran kertas 58mm: font sedikit lebih kecil */
+  .thermal-receipt[data-paper="58mm"] {
+    font-size: 10px !important;
+    padding: 2mm 1.5mm !important;
+  }
+
+  /* Ukuran kertas 80mm */
+  .thermal-receipt[data-paper="80mm"] {
+    font-size: 11px !important;
+    padding: 2mm 2mm !important;
+  }
+
+  /* Pastikan semua teks hitam */
+  * {
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Legacy class — tetap support halaman lama */
   .invoice-print {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
-  }
-
-  /* Pastikan teks hitam saat dicetak */
-  * {
-    color: black !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 }
 
