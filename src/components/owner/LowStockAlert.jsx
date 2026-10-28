@@ -105,6 +105,7 @@ export default function LowStockAlert({ refreshKey }) {
       {!collapsed && (
         <div className="px-5 pb-4">
           <div className="rounded-lg overflow-hidden border border-white/60">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr
@@ -155,6 +156,7 @@ export default function LowStockAlert({ refreshKey }) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           <p className="text-xs text-gray-500 mt-2">

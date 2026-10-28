@@ -79,6 +79,79 @@ npm run seed         # Seed database dengan data awal
 
 ---
 
+## Akses dari Perangkat di LAN (Wi-Fi)
+
+Aplikasi sudah di-bind ke semua interface (`--hostname 0.0.0.0`) dan NextAuth
+menggunakan `trustHost: true`, sehingga **login & session berfungsi di IP mana
+pun** tanpa harus meng-hardcode IP. Cocok untuk dipakai Kasir, Gudang, dan
+Owner dari HP, tablet, atau laptop lain di jaringan yang sama.
+
+### Cara mengakses
+
+1. Di laptop yang menjalankan server, cek IP lokal:
+   ```powershell
+   ipconfig | findstr /i "IPv4"
+   ```
+   Catat alamat IPv4, mis. `192.168.1.93`.
+2. Dari perangkat lain (HP/tablet/laptop) yang terhubung ke Wi-Fi/LAN yang sama,
+   buka browser ke:
+   ```
+   http://192.168.1.93:3000
+   ```
+3. Login seperti biasa. Real-time (antrean, notifikasi, stok) ikut jalan karena
+   semua koneksi memakai URL relatif.
+
+> Bila perangkat lain tidak bisa membuka halaman, kemungkinan Windows Firewall
+> memblokir port 3000. Buka sebagai admin sekali:
+> ```powershell
+> New-NetFirewallRule -DisplayName "POS System (port 3000)" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Private
+> ```
+
+---
+
+## Auto-start saat Laptop Dinyalakan
+
+Agar aplikasi (dan koneksi ke database) jalan otomatis tanpa mengetik
+`npm run dev` setiap kali laptop dinyalakan, gunakan tiga script di `scripts/`:
+
+| Script | Fungsi |
+|---|---|
+| `scripts\start-pos.ps1` | Launcher: tunggu MongoDB → jalankan `npm run dev` → restart otomatis bila crash → catat log ke `logs\pos.log` |
+| `scripts\setup-autostart.ps1` | Daftarkan tugas terjadwal "POS-System-AutoStart" yang menjalankan launcher (tersembunyi) setiap **log on** |
+| `scripts\remove-autostart.ps1` | Hapus auto-start dan hentikan server project ini |
+
+### Setup (jalankan sekali)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup-autostart.ps1
+```
+
+Setelah itu, setiap kali Anda log on, aplikasi otomatis berjalan di latar
+belakang. Mulai segera tanpa logon ulang:
+
+```powershell
+Start-ScheduledTask -TaskName 'POS-System-AutoStart'
+```
+
+### Prasyarat & catatan
+
+- **MongoDB** harus terinstall sebagai Windows service dengan startup
+  *Automatic* (default installer MongoDB). Cek:
+  ```powershell
+  Get-Service MongoDB
+  ```
+  Launcher juga menunggu port 27017 hingga 60 detik sebelum start server.
+- **Log aplikasi**: `logs\pos.log` — periksa di sini bila perlu melihat output server.
+- Launcher memakai `npm run dev` (sama seperti sebelumnya) agar tidak perlu
+  build ulang setiap ada perubahan kode. Untuk pemakaian produksi yang lebih
+  ringan, jalankan `npm run build` lalu ubah perintah di `start-pos.ps1`
+  menjadi `npm run start`.
+- Bila ingin benar-benar start saat **boot** (sebelum login), ubah trigger di
+  `setup-autostart.ps1` dari `-AtLogon` ke `-AtStartup` (butuh akun dengan
+  hak simpan password di Task Scheduler).
+
+---
+
 ## Deploy ke Vercel
 
 ### Langkah 1 — Siapkan Database MongoDB Atlas
@@ -166,7 +239,7 @@ Tidak ada konflik antara local dan production karena:
 Local Development (.env.local)          Production (Vercel Dashboard)
 ─────────────────────────────           ──────────────────────────────
 MONGODB_URI=localhost:27017/pos-dev     MONGODB_URI=atlas.../pos-prod
-NEXTAUTH_URL=http://localhost:3000      NEXTAUTH_URL=https://app.vercel.app
+NEXTAUTH_URL=— (tidak di-set, trustHost)  NEXTAUTH_URL=https://app.vercel.app
 NEXTAUTH_SECRET=local-secret            NEXTAUTH_SECRET=strong-random-secret
 ```
 

@@ -81,6 +81,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/login",
   },
 
+  // trustHost: true — gunakan host dari setiap request (mis. IP LAN) sebagai
+  // URL kanonik NextAuth, sehingga cookie session tetap valid saat aplikasi
+  // diakses dari perangkat lain di jaringan LAN (http://<IP-LAPTOP>:3000).
+  // Karena ini, NEXTAUTH_URL sengaja TIDAK di-set di .env.local — host request
+  // (yang bisa berubah karena DHCP) yang dipakai, bukan host tetap localhost.
+  trustHost: true,
+
   secret: process.env.NEXTAUTH_SECRET,
 });
 

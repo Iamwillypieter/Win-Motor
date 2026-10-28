@@ -1,8 +1,7 @@
 import { auth } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
-import ProductCatalog from "@/components/cashier/ProductCatalog";
-import CartPanel from "@/components/cashier/CartPanel";
+import CashierPOSLayout from "@/components/cashier/CashierPOSLayout";
 
 export const metadata = {
   title: "POS — Kasir",
@@ -10,7 +9,9 @@ export const metadata = {
 
 /**
  * CashierPage — main POS page (Server Component).
- * Fetches active products server-side and renders the catalog + cart layout.
+ * Fetches active products server-side, lalu menyerahkan rendering ke
+ * CashierPOSLayout (client) agar layout bisa responsif (cart inline di
+ * desktop, drawer di mobile).
  */
 export default async function CashierPage() {
   const session = await auth();
@@ -35,28 +36,5 @@ export default async function CashierPage() {
     console.error("CashierPage: failed to fetch products", err);
   }
 
-  return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Main layout: catalog (left, wider) + cart panel (right) */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="flex gap-6 items-start">
-          {/* Product catalog — takes up most of the width */}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">
-              Katalog Produk
-            </h2>
-            <ProductCatalog products={products} />
-          </div>
-
-          {/* Cart panel — fixed width on the right */}
-          <div className="w-80 flex-shrink-0 sticky top-6">
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">
-              Keranjang
-            </h2>
-            <CartPanel />
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+  return <CashierPOSLayout products={products} />;
 }

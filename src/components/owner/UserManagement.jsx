@@ -139,6 +139,7 @@ export default function UserManagement({ currentUserId }) {
             Belum ada karyawan
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>
@@ -227,6 +228,7 @@ export default function UserManagement({ currentUserId }) {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
