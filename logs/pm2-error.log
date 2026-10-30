@@ -1,0 +1,270 @@
+2026-10-30 15:03:08: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:08: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:08:           ^^^^^^^
+2026-10-30 15:03:08: 
+2026-10-30 15:03:08: SyntaxError: missing ) after argument list
+2026-10-30 15:03:08:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:08:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:08:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:08:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:08:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:08:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:08:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:08:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:08:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:08:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:08: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:08: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:08:           ^^^^^^^
+2026-10-30 15:03:08: 
+2026-10-30 15:03:08: SyntaxError: missing ) after argument list
+2026-10-30 15:03:08:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:08:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:08:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:08:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:08:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:08:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:08:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:08:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:08:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:08:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:08: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:08: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:08:           ^^^^^^^
+2026-10-30 15:03:08: 
+2026-10-30 15:03:08: SyntaxError: missing ) after argument list
+2026-10-30 15:03:08:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:08:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:08:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:08:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:08:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:08:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:08:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:08:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:08:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:08:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:09: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:09:           ^^^^^^^
+2026-10-30 15:03:09: 
+2026-10-30 15:03:09: SyntaxError: missing ) after argument list
+2026-10-30 15:03:09:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:09: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:09:           ^^^^^^^
+2026-10-30 15:03:09: 
+2026-10-30 15:03:09: SyntaxError: missing ) after argument list
+2026-10-30 15:03:09:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:09: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:09:           ^^^^^^^
+2026-10-30 15:03:09: 
+2026-10-30 15:03:09: SyntaxError: missing ) after argument list
+2026-10-30 15:03:09:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:09: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:09:           ^^^^^^^
+2026-10-30 15:03:09: 
+2026-10-30 15:03:09: SyntaxError: missing ) after argument list
+2026-10-30 15:03:09:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:09: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:09:           ^^^^^^^
+2026-10-30 15:03:09: 
+2026-10-30 15:03:09: SyntaxError: missing ) after argument list
+2026-10-30 15:03:09:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:09: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:09:           ^^^^^^^
+2026-10-30 15:03:09: 
+2026-10-30 15:03:09: SyntaxError: missing ) after argument list
+2026-10-30 15:03:09:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09: d:\Project Kiro\node_modules\.bin\next:2
+2026-10-30 15:03:09: basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+2026-10-30 15:03:09:           ^^^^^^^
+2026-10-30 15:03:09: 
+2026-10-30 15:03:09: SyntaxError: missing ) after argument list
+2026-10-30 15:03:09:     at wrapSafe (node:internal/modules/cjs/loader:1692:18)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1735:20)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:03:09:     at Object.<anonymous> (C:\Users\willy\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+2026-10-30 15:03:09:     at Module._compile (node:internal/modules/cjs/loader:1761:14)
+2026-10-30 15:03:09:     at Object..js (node:internal/modules/cjs/loader:1893:10)
+2026-10-30 15:03:09:     at Module.load (node:internal/modules/cjs/loader:1481:32)
+2026-10-30 15:03:09:     at Module._load (node:internal/modules/cjs/loader:1300:12)
+2026-10-30 15:04:17:  ⨯ Failed to start server
+2026-10-30 15:04:17: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:17:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:17:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:17:     at node:net:2206:7
+2026-10-30 15:04:17:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:17:   code: 'EADDRINUSE',
+2026-10-30 15:04:17:   errno: -4091,
+2026-10-30 15:04:17:   syscall: 'listen',
+2026-10-30 15:04:17:   address: '0.0.0.0',
+2026-10-30 15:04:17:   port: 3000
+2026-10-30 15:04:17: }
+2026-10-30 15:04:18:  ⨯ Failed to start server
+2026-10-30 15:04:18: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:18:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:18:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:18:     at node:net:2206:7
+2026-10-30 15:04:18:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:18:   code: 'EADDRINUSE',
+2026-10-30 15:04:18:   errno: -4091,
+2026-10-30 15:04:18:   syscall: 'listen',
+2026-10-30 15:04:18:   address: '0.0.0.0',
+2026-10-30 15:04:18:   port: 3000
+2026-10-30 15:04:18: }
+2026-10-30 15:04:18:  ⨯ Failed to start server
+2026-10-30 15:04:18: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:18:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:18:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:18:     at node:net:2206:7
+2026-10-30 15:04:18:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:18:   code: 'EADDRINUSE',
+2026-10-30 15:04:18:   errno: -4091,
+2026-10-30 15:04:18:   syscall: 'listen',
+2026-10-30 15:04:18:   address: '0.0.0.0',
+2026-10-30 15:04:18:   port: 3000
+2026-10-30 15:04:18: }
+2026-10-30 15:04:18:  ⨯ Failed to start server
+2026-10-30 15:04:18: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:18:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:18:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:18:     at node:net:2206:7
+2026-10-30 15:04:18:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:18:   code: 'EADDRINUSE',
+2026-10-30 15:04:18:   errno: -4091,
+2026-10-30 15:04:18:   syscall: 'listen',
+2026-10-30 15:04:18:   address: '0.0.0.0',
+2026-10-30 15:04:18:   port: 3000
+2026-10-30 15:04:18: }
+2026-10-30 15:04:19:  ⨯ Failed to start server
+2026-10-30 15:04:19: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:19:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:19:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:19:     at node:net:2206:7
+2026-10-30 15:04:19:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:19:   code: 'EADDRINUSE',
+2026-10-30 15:04:19:   errno: -4091,
+2026-10-30 15:04:19:   syscall: 'listen',
+2026-10-30 15:04:19:   address: '0.0.0.0',
+2026-10-30 15:04:19:   port: 3000
+2026-10-30 15:04:19: }
+2026-10-30 15:04:19:  ⨯ Failed to start server
+2026-10-30 15:04:19: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:19:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:19:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:19:     at node:net:2206:7
+2026-10-30 15:04:19:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:19:   code: 'EADDRINUSE',
+2026-10-30 15:04:19:   errno: -4091,
+2026-10-30 15:04:19:   syscall: 'listen',
+2026-10-30 15:04:19:   address: '0.0.0.0',
+2026-10-30 15:04:19:   port: 3000
+2026-10-30 15:04:19: }
+2026-10-30 15:04:19:  ⨯ Failed to start server
+2026-10-30 15:04:19: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:19:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:19:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:19:     at node:net:2206:7
+2026-10-30 15:04:19:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:19:   code: 'EADDRINUSE',
+2026-10-30 15:04:19:   errno: -4091,
+2026-10-30 15:04:19:   syscall: 'listen',
+2026-10-30 15:04:19:   address: '0.0.0.0',
+2026-10-30 15:04:19:   port: 3000
+2026-10-30 15:04:19: }
+2026-10-30 15:04:20:  ⨯ Failed to start server
+2026-10-30 15:04:20: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:20:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:20:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:20:     at node:net:2206:7
+2026-10-30 15:04:20:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:20:   code: 'EADDRINUSE',
+2026-10-30 15:04:20:   errno: -4091,
+2026-10-30 15:04:20:   syscall: 'listen',
+2026-10-30 15:04:20:   address: '0.0.0.0',
+2026-10-30 15:04:20:   port: 3000
+2026-10-30 15:04:20: }
+2026-10-30 15:04:20:  ⨯ Failed to start server
+2026-10-30 15:04:20: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:20:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:20:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:20:     at node:net:2206:7
+2026-10-30 15:04:20:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:20:   code: 'EADDRINUSE',
+2026-10-30 15:04:20:   errno: -4091,
+2026-10-30 15:04:20:   syscall: 'listen',
+2026-10-30 15:04:20:   address: '0.0.0.0',
+2026-10-30 15:04:20:   port: 3000
+2026-10-30 15:04:20: }
+2026-10-30 15:04:20:  ⨯ Failed to start server
+2026-10-30 15:04:20: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+2026-10-30 15:04:20:     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+2026-10-30 15:04:20:     at listenInCluster (node:net:1997:12)
+2026-10-30 15:04:20:     at node:net:2206:7
+2026-10-30 15:04:20:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+2026-10-30 15:04:20:   code: 'EADDRINUSE',
+2026-10-30 15:04:20:   errno: -4091,
+2026-10-30 15:04:20:   syscall: 'listen',
+2026-10-30 15:04:20:   address: '0.0.0.0',
+2026-10-30 15:04:20:   port: 3000
+2026-10-30 15:04:20: }

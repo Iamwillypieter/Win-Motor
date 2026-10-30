@@ -42,3 +42,121 @@
 [11:52:18]  G£ô Starting...
 [11:52:54]  G£ô Compiled in 14.9s
 [11:52:57]  G£ô Ready in 38.5s
+[2026-10-30 14:13:49] ===== POS launcher dimulai =====
+[2026-10-30 14:13:49] Project root : D:\Project Kiro
+[2026-10-30 14:13:49] Log file     : D:\Project Kiro\logs\pos.log
+[2026-10-30 14:13:49] MongoDB siap di 127.0.0.1:27017.
+[2026-10-30 14:13:49] [1] Menjalankan: npm run dev
+[14:13:50] 
+[14:13:50] > pos-system@0.1.0 predev
+[14:13:50] > node scripts/generate-https-cert.mjs
+[14:13:50] 
+[14:13:50] 
+[14:13:50] > pos-system@0.1.0 dev
+[14:13:50] > next dev --turbo --hostname 0.0.0.0 --experimental-https --experimental-https-key .cert/key.pem --experimental-https-cert .cert/cert.pem
+[14:13:50] 
+[14:13:50]  GÜá Self-signed certificates are currently an experimental feature, use with caution.
+[14:13:50]   Gû¦ Next.js 14.2.35 (turbo)
+[14:13:50]   - Local:        https://localhost:3000
+[14:13:50]   - Network:      http://0.0.0.0:3000
+[14:13:50]   - Environments: .env.local
+[14:13:50] 
+[14:13:50]  G£ô Starting...
+[14:13:51]  G£ô Compiled in 426ms
+[14:13:51]  G£ô Ready in 1178ms
+[14:16:03]  Gùï Compiling / ...
+[14:16:04]  G£ô Compiled / in 1281ms
+[14:16:04]  GET / 307 in 1650ms
+[14:16:05]  HEAD / 307 in 115ms
+[2026-10-30 14:35:34] ===== POS launcher dimulai =====
+[2026-10-30 14:35:34] Project root : D:\Project Kiro
+[2026-10-30 14:35:34] Log file     : D:\Project Kiro\logs\pos.log
+[2026-10-30 14:35:34] MongoDB siap di 127.0.0.1:27017.
+[2026-10-30 14:35:34] [1] Menjalankan: npm run dev + https-proxy
+[14:35:35] [proxy] [proxy] Menunggu dev server HTTP di port 3000...
+[14:35:35] 
+[14:35:35] > pos-system@0.1.0 predev
+[14:35:35] > node scripts/generate-https-cert.mjs
+[14:35:35] 
+[14:35:35] 
+[14:35:35] > pos-system@0.1.0 dev
+[14:35:35] > next dev --turbo --hostname 0.0.0.0
+[14:35:35] 
+[14:35:36]   Gû¦ Next.js 14.2.35 (turbo)
+[14:35:36]   - Local:        http://localhost:3000
+[14:35:36]   - Network:      http://0.0.0.0:3000
+[14:35:36]   - Environments: .env.local
+[14:35:36] 
+[14:35:36]  G£ô Starting...
+[14:35:36]  G£ô Compiled in 403ms
+[14:35:37]  G£ô Ready in 1131ms
+[14:36:36] [proxy] [proxy] Dev server HTTP tidak siap setelah 60 detik. Proxy dibatalkan.
+[14:37:48]  Gùï Compiling /owner/products ...
+[14:37:56]  G£ô Compiled /owner/products in 7.9s
+[14:37:56] MongoDB connected successfully
+[14:37:56]  GET /owner/products 200 in 8589ms
+[14:37:57]  GÜá Cross origin request detected from 192.168.3.77 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[14:37:57] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[14:37:57]  GET /favicon.ico?favicon.45db1c09.ico 200 in 244ms
+[14:37:57] [SSEManager] New instance created
+[14:37:57]  G£ô Compiled /api/auth/[...nextauth] in 462ms
+[14:37:58]  GET /api/auth/session 200 in 921ms
+[14:37:58]  GET /api/auth/session 200 in 41ms
+[14:37:58]  GET /api/auth/session 200 in 48ms
+[14:37:58]  GET /api/auth/session 200 in 38ms
+[14:38:15]  G£ô Compiled / in 269ms
+[14:38:15]  HEAD / 307 in 408ms
+[14:38:54]  HEAD / 307 in 154ms
+[14:40:22]  GET / 307 in 112ms
+[14:40:22]  GET / 307 in 182ms
+[14:40:48]  HEAD / 307 in 77ms
+[2026-10-30 14:41:51] ===== POS launcher dimulai =====
+[2026-10-30 14:41:51] Project root : D:\Project Kiro
+[2026-10-30 14:41:51] Log file     : D:\Project Kiro\logs\pos.log
+[2026-10-30 14:41:51] MongoDB siap di 127.0.0.1:27017.
+[2026-10-30 14:41:51] [1] Menjalankan: npm run dev + https-proxy
+[14:41:52] [proxy] [proxy] Menunggu dev server di port 3000...
+[14:41:52] 
+[14:41:52] > pos-system@0.1.0 predev
+[14:41:52] > node scripts/generate-https-cert.mjs
+[14:41:52] 
+[14:41:52] 
+[14:41:52] > pos-system@0.1.0 dev
+[14:41:52] > next dev --turbo --hostname 0.0.0.0
+[14:41:52] 
+[14:41:52]   Gû¦ Next.js 14.2.35 (turbo)
+[14:41:52]   - Local:        http://localhost:3000
+[14:41:52]   - Network:      http://0.0.0.0:3000
+[14:41:52]   - Environments: .env.local
+[14:41:52] 
+[14:41:52]  G£ô Starting...
+[14:41:53]  G£ô Compiled in 432ms
+[14:41:53]  G£ô Ready in 1194ms
+[14:41:54]  Gùï Compiling / ...
+[14:41:55]  G£ô Compiled / in 1234ms
+[14:41:55]  HEAD / 307 in 195ms
+[14:41:55] [proxy] [proxy] Dev server siap.
+[14:41:55] [proxy] [proxy] HTTPS proxy aktif: https://localhost:3443
+[14:41:55] [proxy] [proxy] Akses dari HP   : https://192.168.3.77:3443
+[14:41:55] [proxy] [proxy] (Buka di browser HP GåÆ terima peringatan sertifikat sekali)
+[14:43:34]  GET / 307 in 112ms
+[14:43:34]  GET / 307 in 154ms
+[14:43:34]  HEAD / 307 in 137ms
+[14:44:46]  G£ô Compiled /api/auth/[...nextauth] in 324ms
+[14:44:46]  GET /api/auth/session 200 in 870ms
+[14:44:46]  GET /api/auth/session 200 in 75ms
+[14:44:47]  G£ô Compiled /api/sse in 91ms
+[14:44:47] [SSEManager] New instance created
+[14:44:48]  Gùï Compiling /owner/products ...
+[14:44:50]  G£ô Compiled /owner/products in 3s
+[14:44:50] MongoDB connected successfully
+[14:44:50]  GET /api/sse 200 in 3499ms
+[14:44:50]  GET /owner/products 200 in 3297ms
+[14:44:50]  GÜá Cross origin request detected from 192.168.3.77 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[14:44:50] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[14:44:51]  G£ô Compiled /favicon.ico in 204ms
+[14:44:51]  GET /api/auth/session 200 in 272ms
+[14:44:51]  GET /favicon.ico?favicon.45db1c09.ico 200 in 322ms
+[14:44:51]  GET /api/auth/session 200 in 121ms
+[14:44:51]  GET /api/auth/session 200 in 67ms
+[14:44:51]  GET /api/auth/session 200 in 69ms

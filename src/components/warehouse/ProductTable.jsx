@@ -25,6 +25,7 @@ export default function ProductTable({ initialProducts = [] }) {
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [barcodeProduct, setBarcodeProduct] = useState(null);
   const [importExcelOpen, setImportExcelOpen] = useState(false);
@@ -178,8 +179,11 @@ export default function ProductTable({ initialProducts = [] }) {
       setIsScanning(true);
     } catch (err) {
       console.error("Scanner start error:", err);
+      const notSecure = typeof navigator !== "undefined" && !navigator.mediaDevices;
       setCameraError(
-        "Tidak dapat mengakses kamera. Pastikan izin kamera diberikan, atau gunakan mode Manual."
+        notSecure
+          ? "Kamera butuh HTTPS. Buka via https://... lalu beri izin kamera."
+          : "Tidak dapat mengakses kamera. Beri izin kamera di browser, atau gunakan mode Manual."
       );
       scannerRef.current = null;
     }
@@ -421,7 +425,12 @@ export default function ProductTable({ initialProducts = [] }) {
       );
       setBulkScanning(true);
     } catch {
-      setBulkCameraError("Tidak dapat mengakses kamera. Tambah produk manual via tombol +.");
+      const notSecure = typeof navigator !== "undefined" && !navigator.mediaDevices;
+      setBulkCameraError(
+        notSecure
+          ? "Kamera butuh HTTPS. Buka via https://... lalu beri izin kamera."
+          : "Tidak dapat mengakses kamera. Tambah produk manual via tombol +."
+      );
       bulkScannerRef.current = null;
     }
   }, [handleBulkScanResult, bulkScannerRef]);
@@ -497,6 +506,7 @@ export default function ProductTable({ initialProducts = [] }) {
   }
 
   const refreshProducts = useCallback(async () => {
+    setIsRefreshing(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
@@ -506,6 +516,8 @@ export default function ProductTable({ initialProducts = [] }) {
       if (json.data) setProducts(json.data);
     } catch (err) {
       console.error("Failed to refresh products:", err);
+    } finally {
+      setIsRefreshing(false);
     }
   }, [search, skuFilter]);
 
@@ -595,7 +607,16 @@ export default function ProductTable({ initialProducts = [] }) {
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* Refresh */}
+          <button
+            onClick={refreshProducts}
+            disabled={isRefreshing}
+            className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 whitespace-nowrap"
+          >
+            <span className={isRefreshing ? "animate-spin inline-block" : "inline-block"}>🔄</span>
+            {isRefreshing ? "Memuat..." : "Refresh"}
+          </button>
           {/* Scan / Barang Masuk button */}
           <button
             onClick={openStockIn}

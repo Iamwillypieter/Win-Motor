@@ -134,7 +134,12 @@ export default function OwnerProductList({ initialProducts = [] }) {
       setIsScanning(true);
     } catch (err) {
       console.error("Scanner error:", err);
-      setCameraError("Tidak dapat mengakses kamera. Gunakan mode Manual.");
+      const notSecure = typeof navigator !== "undefined" && !navigator.mediaDevices;
+      setCameraError(
+        notSecure
+          ? "Kamera butuh HTTPS. Buka via https://... lalu beri izin kamera."
+          : "Tidak dapat mengakses kamera. Beri izin kamera di browser, atau gunakan mode Manual."
+      );
       scannerRef.current = null;
     }
   }, [handleScanResult]);
@@ -273,7 +278,12 @@ export default function OwnerProductList({ initialProducts = [] }) {
       );
       setBulkScanning(true);
     } catch {
-      setBulkCameraError("Tidak dapat mengakses kamera.");
+      const notSecure = typeof navigator !== "undefined" && !navigator.mediaDevices;
+      setBulkCameraError(
+        notSecure
+          ? "Kamera butuh HTTPS. Buka via https://... lalu beri izin kamera."
+          : "Tidak dapat mengakses kamera. Beri izin kamera di browser."
+      );
       bulkScannerRef.current = null;
     }
   }, [handleBulkScanResult, bulkScannerRef]);
@@ -477,54 +487,58 @@ export default function OwnerProductList({ initialProducts = [] }) {
       {/* Toolbar + tabel */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {/* Toolbar */}
-        <div className="p-4 border-b border-gray-200 flex flex-wrap gap-3 items-center">
-          {/* Search */}
-          <div className="relative flex-1 min-w-40">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">🔍</span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari nama, merk, atau alias..."
-              className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="p-4 border-b border-gray-200 flex flex-col gap-3">
+          {/* Baris 1: filter pencarian */}
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Search */}
+            <div className="relative flex-1 min-w-40">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">🔍</span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari nama, merk, atau alias..."
+                className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* Filter SKU */}
-          <div className="relative w-36">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none font-mono">SKU</span>
-            <input
-              type="text"
-              value={skuFilter}
-              onChange={(e) => setSkuFilter(e.target.value.toUpperCase())}
-              placeholder="Filter SKU..."
-              className="w-full rounded-lg border border-gray-300 pl-10 pr-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Filter SKU */}
+            <div className="relative w-36">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none font-mono">SKU</span>
+              <input
+                type="text"
+                value={skuFilter}
+                onChange={(e) => setSkuFilter(e.target.value.toUpperCase())}
+                placeholder="Filter SKU..."
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* Filter stok */}
-          <select
-            value={stockFilter}
-            onChange={(e) => setStockFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Semua Stok</option>
-            <option value="out">Stok Habis</option>
-            <option value="low">Hampir Habis</option>
-            <option value="ok">Stok Aman</option>
-          </select>
-
-          {(search || skuFilter || stockFilter !== "all") && (
-            <button
-              onClick={() => { setSearch(""); setSkuFilter(""); setStockFilter("all"); }}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            {/* Filter stok */}
+            <select
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Reset
-            </button>
-          )}
+              <option value="all">Semua Stok</option>
+              <option value="out">Stok Habis</option>
+              <option value="low">Hampir Habis</option>
+              <option value="ok">Stok Aman</option>
+            </select>
 
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-xs text-gray-400">{filtered.length} / {products.length}</span>
+            {(search || skuFilter || stockFilter !== "all") && (
+              <button
+                onClick={() => { setSearch(""); setSkuFilter(""); setStockFilter("all"); }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          {/* Baris 2: jumlah produk + tombol aksi */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-gray-400 mr-auto">{filtered.length} / {products.length}</span>
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}

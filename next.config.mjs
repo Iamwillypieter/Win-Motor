@@ -20,8 +20,10 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           // Nonaktifkan fitur browser yang tidak digunakan aplikasi ini
           {
+            // camera=(self) diperlukan untuk fitur scan barcode (html5-qrcode).
+            // microphone & geolocation tetap dimatikan karena tidak dipakai.
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+            value: "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
           },
           // Paksa HTTPS untuk semua koneksi selama 1 tahun (aktif di production)
           {

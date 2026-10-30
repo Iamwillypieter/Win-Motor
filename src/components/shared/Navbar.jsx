@@ -4,8 +4,9 @@ import NavLinks from "./NavLinks";
 /**
  * Navbar — top navigation bar yang konsisten di semua halaman.
  *
- * - Desktop (>= sm): navigasi horizontal di tengah header.
- * - Mobile (< sm): tombol hamburger yang membuka dropdown (lihat NavLinks).
+ * - Desktop (>= sm): navigasi horizontal di tengah header + tombol Keluar di kanan.
+ * - Mobile (< sm): tombol hamburger yang membuka dropdown (lihat NavLinks),
+ *   tombol Keluar ada di dalam dropdown — tidak ada di header.
  *
  * Props:
  * - userName: string — nama user yang sedang login
@@ -42,12 +43,12 @@ export default function Navbar({ userName, role, links = [] }) {
           </span>
         </div>
 
-        {/* Center: navigation (desktop horizontal + mobile hamburger) */}
-        <NavLinks links={links} />
+        {/* Center: navigation (desktop horizontal + mobile hamburger+logout dropdown) */}
+        <NavLinks links={links} userName={userName} />
 
-        {/* Right: user name + logout */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span className="hidden sm:block text-sm text-gray-500 max-w-[12rem] truncate">
+        {/* Right: user name + logout — hanya tampil di desktop */}
+        <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+          <span className="text-sm text-gray-500 max-w-[12rem] truncate">
             {userName}
           </span>
           <LogoutButton />

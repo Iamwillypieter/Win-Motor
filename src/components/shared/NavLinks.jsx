@@ -3,22 +3,22 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 /**
  * NavLinks — navigasi yang dipakai bersama semua role staf.
  *
  * - Desktop (>= sm): daftar link horizontal di tengah header.
- * - Mobile (< sm): tombol hamburger yang membuka dropdown panel.
- *
- * Komponen ini sengaja dipisah dari Navbar (Server Component) karena butuh
- * state interaktif (toggle menu) dan usePathname() untuk highlight aktif.
+ * - Mobile (< sm): tombol hamburger yang membuka dropdown panel + tombol Keluar.
  *
  * Props:
  * - links: Array<{ href: string, label: string }>
+ * - userName: string — nama user, ditampilkan di dropdown mobile
  */
-export default function NavLinks({ links = [] }) {
+export default function NavLinks({ links = [], userName = "" }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Tutup menu otomatis saat route berubah (tap link / back/forward).
   useEffect(() => {
@@ -37,6 +37,12 @@ export default function NavLinks({ links = [] }) {
         ? "bg-gray-100 text-gray-900"
         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
     ].join(" ");
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    signOut({ callbackUrl: "/login", redirect: false });
+    window.location.href = "/login";
+  }
 
   return (
     <>
@@ -97,6 +103,19 @@ export default function NavLinks({ links = [] }) {
                 {link.label}
               </Link>
             ))}
+            {/* Divider + info user + tombol Keluar */}
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              {userName && (
+                <p className="px-3 py-1 text-xs text-gray-400 truncate">{userName}</p>
+              )}
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="w-full text-left rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+              >
+                {isLoggingOut ? "Keluar..." : "Keluar"}
+              </button>
+            </div>
           </nav>
         </div>
       )}

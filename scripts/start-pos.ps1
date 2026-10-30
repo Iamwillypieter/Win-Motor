@@ -63,7 +63,21 @@ $iteration = 0
 while ($true) {
     $iteration++
     $start = Get-Date
-    Write-Log "[$iteration] Menjalankan: npm run dev"
+    Write-Log "[$iteration] Menjalankan: npm run dev + https-proxy"
+
+    # Generate sertifikat HTTPS (skip bila sudah ada & valid)
+    & node scripts/generate-https-cert.mjs 2>&1 | ForEach-Object {
+        Add-Content -Path $LogFile -Value "[$(Get-Date -Format 'HH:mm:ss')] [cert] $_"
+    }
+
+    # Jalankan HTTPS proxy di background (port 3443 → 3000)
+    $proxyJob = Start-Job -ScriptBlock {
+        param($root, $logFile)
+        Set-Location $root
+        & node scripts/https-proxy.mjs 2>&1 | ForEach-Object {
+            Add-Content -Path $logFile -Value "[$(Get-Date -Format 'HH:mm:ss')] [proxy] $_"
+        }
+    } -ArgumentList $ProjectRoot, $LogFile
 
     try {
         # 2>&1 menggabungkan stderr ke stdout lalu dicatat baris demi baris.
@@ -72,6 +86,10 @@ while ($true) {
         }
     } catch {
         Write-Log "[$iteration] Exception: $($_.Exception.Message)"
+    } finally {
+        # Matikan proxy job saat dev server berhenti
+        Stop-Job -Job $proxyJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $proxyJob -ErrorAction SilentlyContinue
     }
 
     $dur = (Get-Date) - $start

@@ -82,8 +82,9 @@ export default function OrderQueueList() {
 
       <div>
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* Kiri: jumlah pesanan + Live */}
+        <div className="flex items-center gap-2 mr-auto">
           <span className="text-sm font-medium text-gray-700">
             {filteredOrders.length} pesanan aktif
           </span>
@@ -96,7 +97,8 @@ export default function OrderQueueList() {
             Live
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        {/* Kanan: filter + refresh — wrap ke baris baru di layar sempit */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Sort dropdown */}
           <label htmlFor="order-sort" className="sr-only">
             Urutkan pesanan

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/generate-https-cert.mjs",
     "dev": "next dev --turbo --hostname 0.0.0.0",
+    "dev:proxy": "node scripts/https-proxy.mjs",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
     "lint": "next lint",
@@ -14,7 +16,12 @@
     "test:integration": "vitest --run tests/integration",
     "seed": "node scripts/seed.mjs",
     "db:backup": "node scripts/backup.mjs",
-    "db:restore": "node scripts/restore.mjs"
+    "db:restore": "node scripts/restore.mjs",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop pos-system",
+    "pm2:restart": "pm2 restart pos-system",
+    "pm2:logs": "pm2 logs pos-system",
+    "pm2:status": "pm2 list"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -46,6 +53,7 @@
     "fast-check": "^4.7.0",
     "jsdom": "^29.1.1",
     "postcss": "^8",
+    "selfsigned": "^2.4.1",
     "tailwindcss": "^3.4.1",
     "vitest": "^4.1.5"
   }
