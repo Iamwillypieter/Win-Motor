@@ -1,0 +1,44 @@
+[2026-10-29 08:59:25] ===== POS launcher dimulai =====
+[2026-10-29 08:59:25] Project root : D:\Project Kiro
+[2026-10-29 08:59:25] Log file     : D:\Project Kiro\logs\pos.log
+[2026-10-29 08:59:25] MongoDB siap di 127.0.0.1:27017.
+[2026-10-29 08:59:25] [1] Menjalankan: npm run dev
+[08:59:28] 
+[08:59:28] > pos-system@0.1.0 dev
+[08:59:28] > next dev --turbo --hostname 0.0.0.0
+[08:59:28] 
+[08:59:39]   Gû¦ Next.js 14.2.35 (turbo)
+[08:59:39]   - Local:        http://localhost:3000
+[08:59:39]   - Network:      http://0.0.0.0:3000
+[08:59:39]   - Environments: .env.local
+[08:59:39] 
+[08:59:39]  G£ô Starting...
+[09:00:21]  G£ô Compiled in 14.9s
+[09:00:24]  G£ô Ready in 45.8s
+[2026-10-30 08:05:38] ===== POS launcher dimulai =====
+[2026-10-30 08:05:38] Project root : D:\Project Kiro
+[2026-10-30 08:05:38] Log file     : D:\Project Kiro\logs\pos.log
+[2026-10-30 08:05:39] MongoDB siap di 127.0.0.1:27017.
+[2026-10-30 08:05:39] [1] Menjalankan: npm run dev
+[08:05:43] 
+[08:05:43] > pos-system@0.1.0 dev
+[08:05:43] > next dev --turbo --hostname 0.0.0.0
+[08:05:43] 
+[08:05:49] ^C
+[2026-10-30 11:51:58] ===== POS launcher dimulai =====
+[2026-10-30 11:51:58] Project root : D:\Project Kiro
+[2026-10-30 11:51:58] Log file     : D:\Project Kiro\logs\pos.log
+[2026-10-30 11:51:58] MongoDB siap di 127.0.0.1:27017.
+[2026-10-30 11:51:58] [1] Menjalankan: npm run dev
+[11:52:11] 
+[11:52:11] > pos-system@0.1.0 dev
+[11:52:11] > next dev --turbo --hostname 0.0.0.0
+[11:52:11] 
+[11:52:18]   Gû¦ Next.js 14.2.35 (turbo)
+[11:52:18]   - Local:        http://localhost:3000
+[11:52:18]   - Network:      http://0.0.0.0:3000
+[11:52:18]   - Environments: .env.local
+[11:52:18] 
+[11:52:18]  G£ô Starting...
+[11:52:54]  G£ô Compiled in 14.9s
+[11:52:57]  G£ô Ready in 38.5s

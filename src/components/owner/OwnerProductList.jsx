@@ -996,6 +996,7 @@ export default function OwnerProductList({ initialProducts = [] }) {
       {/* Import Excel Modal */}
       {importExcelOpen && (
         <ImportExcelModal
+          existingSkus={products.map((p) => p.sku)}
           onSuccess={() => handleRefresh()}
           onClose={() => setImportExcelOpen(false)}
         />

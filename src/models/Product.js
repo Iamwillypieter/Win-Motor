@@ -15,6 +15,11 @@ const ProductSchema = new Schema({
   price: { type: Number, required: true, min: 0 }, // integer rupiah
   stock: { type: Number, required: true, min: 0, default: 0 },
   imageUrl: { type: String, default: null },
+  // Info pengadaan terakhir — denormalisasi dari StockMovement type "in"/"create".
+  // Diperbarui atomik saat barang masuk, agar tampilan scan/gudang tidak perlu
+  // query tambahan untuk menampilkan Asal Barang & Harga Beli terakhir.
+  lastSupplierName: { type: String, default: null, trim: true }, // Asal Barang terakhir
+  lastPurchasePrice: { type: Number, default: null, min: 0 }, // Harga beli satuan terakhir (rupiah)
   isActive: { type: Boolean, default: true }, // soft delete flag
   createdBy: {
     type: Schema.Types.ObjectId,

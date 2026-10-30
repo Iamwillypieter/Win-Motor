@@ -29,10 +29,35 @@ function thirtyDaysAgoStr() {
 }
 
 /**
+ * Bangun map state produk (harga jual & status aktif) dari daftar mutasi.
+ * Struktur: { [productId]: { price, active, input, saving, toggling, error } }
+ */
+function buildProductState(movements) {
+  const map = {};
+  for (const m of movements) {
+    const id = m.productId;
+    if (!id || map[id]) continue;
+    map[id] = {
+      price: m.productPrice ?? 0,
+      active: m.productActive ?? true,
+      input: m.productPrice != null ? String(m.productPrice) : "",
+      saving: false,
+      toggling: false,
+      error: "",
+    };
+  }
+  return map;
+}
+
+/**
  * StockHistory — halaman histori mutasi stok untuk Owner.
  *
  * Filter: produk, tipe mutasi, rentang tanggal, teks bebas.
  * Pagination server-side via /api/stock-movements.
+ *
+ * Selain riwayat, tabel juga menampilkan Asal Barang & Harga Beli Satuan per
+ * mutasi, serta Harga Jual produk yang bisa diedit inline, dan tombol untuk
+ * menonaktifkan/mengaktifkan produk (mencegah penjualan saat harga naik/rugi).
  *
  * @param {{ products: Array<{_id, name, sku, category}> }} props
  */
@@ -46,6 +71,8 @@ export default function StockHistory({ products = [] }) {
 
   // Data state
   const [movements, setMovements] = useState([]);
+  // State produk per-mutasi: harga jual (editable) & status aktif (toggle)
+  const [productState, setProductState] = useState({});
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -77,6 +104,7 @@ export default function StockHistory({ products = [] }) {
       }
 
       setMovements(json.data);
+      setProductState(buildProductState(json.data));
       setTotal(json.total);
       setPage(json.page);
       setTotalPages(json.totalPages);
@@ -100,8 +128,125 @@ export default function StockHistory({ products = [] }) {
     setFrom(thirtyDaysAgoStr());
     setTo(todayStr());
     setMovements([]);
+    setProductState({});
     setTotal(0);
     setHasLoaded(false);
+  }
+
+  // ── Edit harga jual (inline) ──────────────────────────────────────────────
+
+  function updatePriceDraft(id, value) {
+    setProductState((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], input: value, error: "" },
+    }));
+  }
+
+  async function savePrice(id) {
+    const ps = productState[id];
+    if (!ps) return;
+
+    const num = parseInt(ps.input, 10);
+    if (isNaN(num) || num < 0) {
+      setProductState((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], error: "Harga tidak valid" },
+      }));
+      return;
+    }
+    // Tidak ada perubahan → kembalikan input ke nilai tersimpan
+    if (num === ps.price) {
+      setProductState((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], input: String(ps.price), error: "" },
+      }));
+      return;
+    }
+
+    setProductState((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], saving: true, error: "" },
+    }));
+
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price: num }),
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setProductState((prev) => ({
+          ...prev,
+          [id]: {
+            ...prev[id],
+            saving: false,
+            error: json.error?.message || "Gagal menyimpan harga",
+          },
+        }));
+        return;
+      }
+
+      setProductState((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], price: num, input: String(num), saving: false, error: "" },
+      }));
+    } catch {
+      setProductState((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], saving: false, error: "Gagal terhubung ke server" },
+      }));
+    }
+  }
+
+  // ── Toggle aktif/nonaktif produk ───────────────────────────────────────────
+
+  async function toggleActive(id, productName) {
+    const ps = productState[id];
+    if (!ps) return;
+    const next = !ps.active;
+
+    if (!next) {
+      const ok = window.confirm(
+        `Nonaktifkan "${productName}"?\n\nProduk tidak akan muncul di katalog kasir hingga diaktifkan kembali. Gunakan ini jika harga naik untuk menghindari penjualan rugi.`
+      );
+      if (!ok) return;
+    }
+
+    setProductState((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], toggling: true },
+    }));
+
+    try {
+      const res = await fetch(`/api/products/${id}/active`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: next }),
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setProductState((prev) => ({
+          ...prev,
+          [id]: { ...prev[id], toggling: false },
+        }));
+        setError(json.error?.message || "Gagal mengubah status produk");
+        return;
+      }
+
+      setProductState((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], active: next, toggling: false },
+      }));
+    } catch {
+      setProductState((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], toggling: false },
+      }));
+      setError("Gagal terhubung ke server");
+    }
   }
 
   // Ringkasan dari data yang dimuat
@@ -252,6 +397,16 @@ export default function StockHistory({ products = [] }) {
         </div>
       )}
 
+      {/* Info pengingat */}
+      {hasLoaded && (
+        <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-800">
+          <span className="font-medium">Tips:</span> Harga Jual bisa diedit langsung di tabel
+          (klik kolom, ubah, lalu tekan Enter/klik luar untuk menyimpan). Jika harga beli naik
+          melebihi harga jual, gunakan tombol <span className="font-medium">Nonaktifkan</span>{" "}
+          agar produk tidak bisa dijual hingga harga jual disesuaikan.
+        </div>
+      )}
+
       {/* Tabel */}
       {hasLoaded && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -265,14 +420,18 @@ export default function StockHistory({ products = [] }) {
                   <th className="px-4 py-3 text-right font-medium text-gray-600">Jml</th>
                   <th className="px-4 py-3 text-right font-medium text-gray-600">Stok Sebelum</th>
                   <th className="px-4 py-3 text-right font-medium text-gray-600">Stok Sesudah</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600">Asal Barang</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-600">Harga Beli Satuan</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-600">Harga Jual</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600">Keterangan</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600">User</th>
+                  <th className="px-4 py-3 text-center font-medium text-gray-600">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {movements.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                    <td colSpan={12} className="px-4 py-12 text-center text-gray-400">
                       Tidak ada data mutasi stok untuk filter yang dipilih
                     </td>
                   </tr>
@@ -283,6 +442,14 @@ export default function StockHistory({ products = [] }) {
                       color: "bg-gray-100 text-gray-700",
                     };
                     const isPositive = m.quantity > 0;
+                    const ps = m.productId ? productState[m.productId] : undefined;
+                    // Indikator rugi: harga jual <= harga beli mutasi (barang masuk/awal)
+                    const isLoss =
+                      m.purchasePrice != null &&
+                      m.purchasePrice > 0 &&
+                      ps &&
+                      ps.price != null &&
+                      ps.price <= m.purchasePrice;
 
                     return (
                       <tr key={m._id} className="hover:bg-gray-50 transition-colors">
@@ -319,6 +486,59 @@ export default function StockHistory({ products = [] }) {
                           {m.newStock}
                         </td>
 
+                        {/* Asal Barang */}
+                        <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                          {m.supplierName || <span className="text-gray-300">—</span>}
+                        </td>
+
+                        {/* Harga Beli Satuan */}
+                        <td className="px-4 py-3 text-right text-gray-600 whitespace-nowrap">
+                          {m.purchasePrice != null
+                            ? formatRupiah(m.purchasePrice)
+                            : <span className="text-gray-300">—</span>}
+                        </td>
+
+                        {/* Harga Jual — editable */}
+                        <td className="px-4 py-3">
+                          {ps ? (
+                            <div className="flex flex-col items-end gap-0.5">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-gray-400">Rp</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  value={ps.input}
+                                  onChange={(e) => updatePriceDraft(m.productId, e.target.value)}
+                                  onBlur={() => savePrice(m.productId)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") e.target.blur();
+                                  }}
+                                  disabled={ps.saving}
+                                  aria-label={`Harga jual ${m.productName}`}
+                                  className="w-24 rounded-lg border border-gray-300 px-2 py-1 text-xs text-right focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                />
+                              </div>
+                              {ps.saving && (
+                                <span className="flex items-center gap-1 text-[10px] text-blue-600">
+                                  <span className="w-2.5 h-2.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                  menyimpan
+                                </span>
+                              )}
+                              {ps.error && (
+                                <span className="text-[10px] text-red-600">{ps.error}</span>
+                              )}
+                              {isLoss && (
+                                <span className="text-[10px] text-red-600 font-medium">
+                                  ⚠ harga jual ≤ harga beli
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+
                         {/* Keterangan */}
                         <td className="px-4 py-3 text-xs text-gray-500">
                           {m.reason || "—"}
@@ -330,6 +550,33 @@ export default function StockHistory({ products = [] }) {
                         {/* User */}
                         <td className="px-4 py-3 text-xs text-gray-500">
                           {m.userName || "—"}
+                        </td>
+
+                        {/* Aksi — toggle aktif/nonaktif */}
+                        <td className="px-4 py-3 text-center">
+                          {ps ? (
+                            <button
+                              onClick={() => toggleActive(m.productId, m.productName)}
+                              disabled={ps.toggling}
+                              className={
+                                ps.active
+                                  ? "rounded-lg bg-red-50 border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400 disabled:opacity-50 whitespace-nowrap"
+                                  : "rounded-lg bg-green-50 border border-green-200 px-2.5 py-1 text-xs font-medium text-green-700 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50 whitespace-nowrap"
+                              }
+                            >
+                              {ps.toggling ? (
+                                <span className="inline-flex items-center gap-1">
+                                  <span className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                </span>
+                              ) : ps.active ? (
+                                "Nonaktifkan"
+                              ) : (
+                                "Aktifkan"
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
                         </td>
                       </tr>
                     );

@@ -60,6 +60,12 @@ export default function ProductTable({ initialProducts = [] }) {
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [bulkResult, setBulkResult] = useState(null); // hasil setelah submit
 
+  // --- Produk baru dari hasil scan (kode tidak ditemukan di DB) ---
+  const [scanNotFoundSku, setScanNotFoundSku] = useState(null);
+  const [newProductQty, setNewProductQty] = useState(1);
+  // Prefill untuk ProductFormModal saat tambah produk dari hasil scan
+  const [prefill, setPrefill] = useState({ sku: "", stock: "" });
+
   // Derived: filter products for manual search inside stock-in modal
   const stockInSearchResults = stockInSearch.trim()
     ? products
@@ -119,12 +125,11 @@ export default function ProductTable({ initialProducts = [] }) {
           setStockInQty(1);
           setStockInError("");
         } else {
-          setStockInError(`Produk dengan kode "${decodedText}" tidak ditemukan.`);
-          setTimeout(() => {
-            isProcessingRef.current = false;
-            setStockInError("");
-            startScanner();
-          }, 2000);
+          // Produk belum terdaftar → tawarkan tambah produk baru dengan kode hasil scan
+          setScanNotFoundSku(decodedText);
+          setNewProductQty(1);
+          setStockInError("");
+          isProcessingRef.current = false;
         }
       } catch (_) {
         setStockInError("Gagal mencari produk. Coba lagi.");
@@ -235,11 +240,12 @@ export default function ProductTable({ initialProducts = [] }) {
       if (res.ok) {
         const updated = json.data.product;
 
-        // Update local product list so stok di tabel langsung berubah
+        // Update local product list — pakai data terbaru dari server (stok,
+        // asal barang, & harga beli terakhir ikut tersinkron)
         setProducts((prev) =>
           prev.map((p) =>
             p._id.toString() === updated._id.toString()
-              ? { ...p, stock: updated.stock }
+              ? { ...p, ...updated }
               : p
           )
         );
@@ -297,6 +303,40 @@ export default function ProductTable({ initialProducts = [] }) {
     setBulkResult(null);
     setBulkCameraError("");
     bulkProcessingRef.current = false;
+    // Reset state produk baru dari scan
+    setScanNotFoundSku(null);
+    setNewProductQty(1);
+  }
+
+  // Buka modal Barang Masuk (reset state scan-not-found & lainnya)
+  function openStockIn() {
+    setScanNotFoundSku(null);
+    setNewProductQty(1);
+    setStockInProduct(null);
+    setStockInQty(1);
+    setStockInError("");
+    setStockInSuccess("");
+    setCameraError("");
+    isProcessingRef.current = false;
+    setStockInOpen(true);
+  }
+
+  // Dari hasil scan yang tidak ditemukan → buka form tambah produk baru
+  function handleCreateFromScan() {
+    const sku = scanNotFoundSku || "";
+    const qty = Number.isInteger(newProductQty) && newProductQty > 0 ? newProductQty : 1;
+    setPrefill({ sku, stock: String(qty) });
+    setEditingProduct(null);
+    setStockInOpen(false); // tutup modal barang masuk, form akan tampil di atas
+    setIsModalOpen(true);
+  }
+
+  // Scan ulang setelah produk tidak ditemukan
+  function handleScanRetry() {
+    setScanNotFoundSku(null);
+    setNewProductQty(1);
+    isProcessingRef.current = false;
+    startScanner();
   }
 
   // ------------------------------------------------------------------
@@ -471,11 +511,13 @@ export default function ProductTable({ initialProducts = [] }) {
 
   function handleAddProduct() {
     setEditingProduct(null);
+    setPrefill({ sku: "", stock: "" });
     setIsModalOpen(true);
   }
 
   function handleEditProduct(product) {
     setEditingProduct(product);
+    setPrefill({ sku: "", stock: "" });
     setIsModalOpen(true);
   }
 
@@ -556,7 +598,7 @@ export default function ProductTable({ initialProducts = [] }) {
         <div className="flex gap-2">
           {/* Scan / Barang Masuk button */}
           <button
-            onClick={() => setStockInOpen(true)}
+            onClick={openStockIn}
             className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
           >
             Scan Barang Masuk
@@ -858,39 +900,101 @@ export default function ProductTable({ initialProducts = [] }) {
               {/* ---- SCAN MODE ---- */}
               {stockInMode === "scan" && !stockInProduct && (
                 <div className="space-y-3">
-                  {/* Camera viewport */}
-                  <div
-                    id="stock-in-barcode-reader"
-                    className="w-full rounded-lg overflow-hidden bg-gray-900 min-h-[180px] flex items-center justify-center"
-                  >
-                    {!isScanning && (
-                      <p className="text-gray-400 text-sm text-center px-4 py-10">
-                        Tekan &ldquo;Mulai Scan&rdquo; lalu arahkan kamera ke barcode produk
+                  {scanNotFoundSku ? (
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 space-y-3">
+                      <p className="text-sm text-amber-800">
+                        Produk dengan kode{" "}
+                        <span className="font-mono font-semibold">{scanNotFoundSku}</span>{" "}
+                        belum terdaftar.
                       </p>
-                    )}
-                  </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Jumlah barang masuk
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setNewProductQty((q) => Math.max(1, q - 1))}
+                            className="w-10 h-10 rounded-lg border border-gray-300 text-lg font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            aria-label="Kurangi"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100000"
+                            value={newProductQty}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value, 10);
+                              setNewProductQty(Number.isNaN(v) ? 1 : Math.max(1, v));
+                            }}
+                            className="w-20 rounded-lg border border-gray-300 text-center py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <button
+                            onClick={() => setNewProductQty((q) => q + 1)}
+                            className="w-10 h-10 rounded-lg border border-gray-300 text-lg font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            aria-label="Tambah"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          onClick={handleCreateFromScan}
+                          className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          + Tambah Produk Baru
+                        </button>
+                        <button
+                          onClick={handleScanRetry}
+                          className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                        >
+                          Scan Ulang
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        SKU hasil scan akan otomatis terisi. Lengkapi nama, harga, dan foto produk
+                        pada form berikutnya.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Camera viewport */}
+                      <div
+                        id="stock-in-barcode-reader"
+                        className="w-full rounded-lg overflow-hidden bg-gray-900 min-h-[180px] flex items-center justify-center"
+                      >
+                        {!isScanning && (
+                          <p className="text-gray-400 text-sm text-center px-4 py-10">
+                            Tekan &ldquo;Mulai Scan&rdquo; lalu arahkan kamera ke barcode produk
+                          </p>
+                        )}
+                      </div>
 
-                  {cameraError && (
-                    <p className="text-sm text-red-600 text-center">{cameraError}</p>
+                      {cameraError && (
+                        <p className="text-sm text-red-600 text-center">{cameraError}</p>
+                      )}
+
+                      <div className="flex justify-center">
+                        {!isScanning ? (
+                          <button
+                            onClick={startScanner}
+                            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            Mulai Scan
+                          </button>
+                        ) : (
+                          <button
+                            onClick={stopScanner}
+                            className="rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                          >
+                            Stop
+                          </button>
+                        )}
+                      </div>
+                    </>
                   )}
-
-                  <div className="flex justify-center">
-                    {!isScanning ? (
-                      <button
-                        onClick={startScanner}
-                        className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        Mulai Scan
-                      </button>
-                    ) : (
-                      <button
-                        onClick={stopScanner}
-                        className="rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                      >
-                        Stop
-                      </button>
-                    )}
-                  </div>
                 </div>
               )}
 
@@ -943,20 +1047,56 @@ export default function ProductTable({ initialProducts = [] }) {
               {/* ---- PRODUCT SELECTED: input quantity ---- */}
               {stockInProduct && (
                 <div className="space-y-4">
-                  {/* Product card */}
-                  <div className="flex items-center gap-3 rounded-lg bg-gray-50 border border-gray-200 p-3">
-                    {stockInProduct.imageUrl ? (
-                      <img src={stockInProduct.imageUrl} alt={stockInProduct.name} className="h-12 w-12 rounded-lg object-cover border border-gray-200 flex-shrink-0" />
-                    ) : (
-                      <div className="h-12 w-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 flex-shrink-0">—</div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{stockInProduct.name}</p>
-                      <p className="text-xs text-gray-500 font-mono">{stockInProduct.sku}</p>
-                      <p className="text-xs text-gray-600 mt-0.5">
-                        Stok saat ini: <span className="font-medium">{stockInProduct.stock}</span>
-                      </p>
+                  {/* Product card — tampilkan info lengkap hasil scan/pencarian */}
+                  <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 space-y-3">
+                    <div className="flex items-start gap-3">
+                      {stockInProduct.imageUrl ? (
+                        <img src={stockInProduct.imageUrl} alt={stockInProduct.name} className="h-16 w-16 rounded-lg object-cover border border-gray-200 flex-shrink-0" />
+                      ) : (
+                        <div className="h-16 w-16 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 flex-shrink-0">—</div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm">{stockInProduct.name}</p>
+                        <p className="text-xs text-gray-500 font-mono mt-0.5">{stockInProduct.sku}</p>
+                        {stockInProduct.aliases?.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-0.5 truncate">
+                            Alias: {stockInProduct.aliases.join(", ")}
+                          </p>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Info grid — responsif 2 kolom di layar lebar, 1 kolom di HP */}
+                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                      <div>
+                        <dt className="text-gray-400">Harga Jual</dt>
+                        <dd className="text-gray-900 font-medium">{formatRupiah(stockInProduct.price)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-gray-400">Stok Saat Ini</dt>
+                        <dd className="text-gray-900 font-medium">{stockInProduct.stock}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-gray-400">Merk</dt>
+                        <dd className="text-gray-900">{stockInProduct.brand || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-gray-400">Kategori</dt>
+                        <dd className="text-gray-900">{stockInProduct.category || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-gray-400">Asal Barang</dt>
+                        <dd className="text-gray-900">{stockInProduct.lastSupplierName || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-gray-400">Harga Beli Satuan</dt>
+                        <dd className="text-gray-900">
+                          {stockInProduct.lastPurchasePrice != null
+                            ? formatRupiah(stockInProduct.lastPurchasePrice)
+                            : "—"}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
 
                   {/* Quantity input */}
@@ -1186,7 +1326,12 @@ export default function ProductTable({ initialProducts = [] }) {
         <ProductFormModal
           product={editingProduct}
           onSuccess={handleModalSuccess}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setPrefill({ sku: "", stock: "" });
+            setIsModalOpen(false);
+          }}
+          prefillSku={prefill.sku}
+          prefillStock={prefill.stock}
         />
       )}
 
@@ -1201,6 +1346,7 @@ export default function ProductTable({ initialProducts = [] }) {
       {/* Import Excel Modal */}
       {importExcelOpen && (
         <ImportExcelModal
+          existingSkus={products.map((p) => p.sku)}
           onSuccess={(count) => {
             // Refresh daftar produk setelah import berhasil
             refreshProducts();

@@ -10,17 +10,24 @@ import { MAX_IMAGE_SIZE_MB } from "@/types/product.types";
  * @param {{
  *   product: Object|null,
  *   onSuccess: (product: Object, isNew: boolean) => void,
- *   onClose: () => void
+ *   onClose: () => void,
+ *   prefillSku?: string,   // SKU hasil scan untuk produk baru (mode tambah)
+ *   prefillStock?: string  // Jumlah barang masuk untuk produk baru (mode tambah)
  * }} props
  */
-export default function ProductFormModal({ product, onSuccess, onClose }) {
+export default function ProductFormModal({ product, onSuccess, onClose, prefillSku = "", prefillStock = "" }) {
   const isNew = !product;
 
   const [form, setForm] = useState({
     name: product?.name || "",
-    sku: product?.sku || "",
+    sku: product?.sku || prefillSku || "",
     price: product?.price !== undefined ? String(product.price) : "",
-    stock: product?.stock !== undefined ? String(product.stock) : "",
+    stock:
+      product?.stock !== undefined
+        ? String(product.stock)
+        : prefillStock !== ""
+        ? String(prefillStock)
+        : "",
     brand: product?.brand || "",
     category: product?.category || "",
     aliasInput: "",

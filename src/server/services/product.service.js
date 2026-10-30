@@ -2,6 +2,7 @@ import connectDB from "@/lib/db";
 import mongoose from "mongoose";
 import Product from "@/models/Product";
 import StockMovement from "@/models/StockMovement";
+import Supplier from "@/models/Supplier";
 import sseManager from "@/lib/sse";
 import {
   ProductErrorCode,
@@ -56,6 +57,8 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
     ? [...new Set(aliases.map((a) => a.trim()).filter(Boolean))]
     : [];
 
+  const { supplierId = null, supplierName = null, purchasePrice = null } = supplierInfo;
+
   const product = await Product.create({
     name: name.trim(),
     sku: normalizedSku,
@@ -65,6 +68,9 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
     price,
     stock,
     imageUrl: imageUrl || null,
+    // Simpan info pengadaan awal (Asal Barang & Harga Beli) di produk
+    lastSupplierName: supplierName?.trim() || null,
+    lastPurchasePrice: purchasePrice ?? null,
     createdBy,
   });
 
@@ -72,7 +78,6 @@ export async function createProduct({ name, sku, price, stock, imageUrl, brand, 
   if (stock > 0) {
     try {
       const user = await mongoose.model("User").findById(createdBy).select("name").lean();
-      const { supplierId = null, supplierName = null, purchasePrice = null } = supplierInfo;
       await StockMovement.create({
         productId: product._id,
         productName: product.name,
@@ -238,6 +243,59 @@ export async function softDeleteProduct(id) {
 }
 
 /**
+ * Aktifkan / nonaktifkan produk (toggle isActive).
+ *
+ * Nonaktif = produk tidak muncul di katalog kasir (mencegah penjualan rugi
+ * saat harga beli naik). Dapat diaktifkan kembali. Berbeda dari updateProduct
+ * (yang sengaja tidak mengizinkan perubahan isActive) — ini operasi eksplisit.
+ *
+ * Setelah berhasil, menyiarkan event product_updated ke CASHIER agar katalog
+ * mereka ter-update real-time (produk hilang/muncul).
+ *
+ * @param {string} id - Product ObjectId string
+ * @param {boolean} active - status aktif baru
+ * @returns {Promise<Object>} Updated product document (lean)
+ * @throws {ProductError} PRODUCT_NOT_FOUND if product does not exist
+ */
+export async function setProductActive(id, active) {
+  await connectDB();
+
+  const product = await Product.findByIdAndUpdate(
+    id,
+    { $set: { isActive: !!active, updatedAt: new Date() } },
+    { new: true }
+  ).lean();
+
+  if (!product) {
+    throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND);
+  }
+
+  // Siarkan ke CASHIER agar katalog ter-update (produk aktif/nonaktif)
+  const productSummary = {
+    _id: product._id.toString(),
+    name: product.name,
+    sku: product.sku,
+    brand: product.brand ?? null,
+    aliases: product.aliases ?? [],
+    price: product.price,
+    stock: product.stock,
+    imageUrl: product.imageUrl,
+    isActive: product.isActive,
+  };
+
+  try {
+    sseManager.broadcastToRole(
+      { type: "product_updated", data: productSummary },
+      ["CASHIER"]
+    );
+  } catch (err) {
+    console.error("setProductActive: failed to broadcast product_updated", err);
+  }
+
+  return product;
+}
+
+/**
  * Get all active products, with optional search and SKU filter.
  * @param {Object} [options]
  * @param {string} [options.search] - Full-text search on name
@@ -324,9 +382,22 @@ export async function addStock(id, quantity, userId = null, supplierInfo = {}) {
   }
   const previousStock = before.stock;
 
+  // Bangun $set — selalu update updatedAt, dan perbarui info pengadaan terakhir
+  // (Asal Barang & Harga Beli) hanya jika disertakan pada stock-in ini.
+  const setUpdate = { updatedAt: new Date() };
+  if (supplierInfo.supplierName) {
+    setUpdate.lastSupplierName = String(supplierInfo.supplierName).trim();
+  }
+  if (supplierInfo.purchasePrice !== undefined && supplierInfo.purchasePrice !== null) {
+    setUpdate.lastPurchasePrice = supplierInfo.purchasePrice;
+  }
+
   const product = await Product.findByIdAndUpdate(
     id,
-    { $inc: { stock: quantity }, $set: { updatedAt: new Date() } },
+    {
+      $inc: { stock: quantity },
+      $set: setUpdate,
+    },
     { new: true, runValidators: true }
   ).lean();
 
@@ -375,6 +446,162 @@ export async function addStock(id, quantity, userId = null, supplierInfo = {}) {
   }
 
   return product;
+}
+
+/**
+ * Import barang masuk massal dari Excel.
+ *
+ * Untuk setiap baris: cari produk berdasarkan SKU (termasuk produk nonaktif
+ * agar tidak terjadi duplikat). Jika ditemukan & aktif → tambahkan stok.
+ * Jika tidak ditemukan → buat produk baru dengan stok awal = qty.
+ *
+ * Mencegah duplikat: pencarian SKU tidak difilter isActive, dan createProduct
+ * juga mengecek duplikat (unik di level index).
+ *
+ * @param {Array<Object>} rows - Hasil parse Excel (sudah dinormalisasi client)
+ * @param {string} userId - ObjectId user yang melakukan import
+ * @returns {Promise<Object>} { success, failed, total, results }
+ */
+export async function importStockInBatch(rows, userId) {
+  await connectDB();
+
+  // Muat semua supplier aktif sekali untuk resolusi nama → id (case-insensitive).
+  const supplierDocs = await Supplier.find({ isActive: true }).lean();
+  const supplierByName = new Map();
+  for (const s of supplierDocs) supplierByName.set(s.name.toLowerCase(), s);
+
+  const results = [];
+  let successCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const excelRow = row._rowNum ?? i + 2;
+
+    const rawSku = String(row.sku ?? "").trim();
+    if (!rawSku) {
+      results.push({ row: excelRow, sku: "-", name: row.name ?? "-", status: "failed", error: "SKU/Barcode wajib diisi" });
+      failedCount++;
+      continue;
+    }
+    const normalizedSku = rawSku.toUpperCase();
+
+    const qty = Number(row.qty);
+    if (!Number.isInteger(qty) || qty <= 0) {
+      results.push({ row: excelRow, sku: normalizedSku, name: row.name ?? "-", status: "failed", error: "Jumlah barang masuk tidak valid" });
+      failedCount++;
+      continue;
+    }
+    if (qty > 100_000) {
+      results.push({ row: excelRow, sku: normalizedSku, name: row.name ?? "-", status: "failed", error: "Jumlah maksimal 100.000 per item" });
+      failedCount++;
+      continue;
+    }
+
+    // Resolusi info supplier (Asal Barang & Harga Beli) dari baris
+    const supplierNameRaw = row.supplier ? String(row.supplier).trim() : "";
+    const matchedSupplier = supplierNameRaw
+      ? supplierByName.get(supplierNameRaw.toLowerCase())
+      : null;
+    const supplierInfo = {
+      supplierId: matchedSupplier?._id ? String(matchedSupplier._id) : null,
+      supplierName: supplierNameRaw || null,
+      purchasePrice:
+        row.purchasePrice !== undefined && row.purchasePrice !== null && row.purchasePrice !== ""
+          ? Number(row.purchasePrice)
+          : null,
+    };
+    if (supplierInfo.purchasePrice !== null) {
+      if (!Number.isInteger(supplierInfo.purchasePrice) || supplierInfo.purchasePrice < 0) {
+        results.push({ row: excelRow, sku: normalizedSku, name: row.name ?? "-", status: "failed", error: "Harga beli tidak valid" });
+        failedCount++;
+        continue;
+      }
+    }
+
+    // Cari produk berdasarkan SKU (tanpa filter isActive → cegah duplikat).
+    const existing = await Product.findOne({ sku: normalizedSku }).lean();
+
+    if (existing) {
+      if (!existing.isActive) {
+        results.push({ row: excelRow, sku: normalizedSku, name: existing.name, status: "failed", error: "SKU sudah ada pada produk nonaktif" });
+        failedCount++;
+        continue;
+      }
+      // Produk ditemukan → tambah stok
+      try {
+        const updated = await addStock(String(existing._id), qty, userId, supplierInfo);
+        results.push({
+          row: excelRow,
+          sku: updated.sku,
+          name: updated.name,
+          status: "success",
+          action: "stock_added",
+          quantity: qty,
+          newStock: updated.stock,
+        });
+        successCount++;
+      } catch (err) {
+        const msg = err instanceof ProductError ? err.message : "Gagal menambah stok";
+        results.push({ row: excelRow, sku: normalizedSku, name: existing.name, status: "failed", error: msg });
+        failedCount++;
+      }
+      continue;
+    }
+
+    // Produk belum terdaftar → buat produk baru. Wajib: name & price.
+    const name = String(row.name ?? "").trim();
+    if (!name) {
+      results.push({ row: excelRow, sku: normalizedSku, name: "-", status: "failed", error: "Nama produk wajib diisi untuk produk baru" });
+      failedCount++;
+      continue;
+    }
+    const price = Number(row.price);
+    if (row.price === undefined || row.price === "" || isNaN(price) || price < 0) {
+      results.push({ row: excelRow, sku: normalizedSku, name, status: "failed", error: "Harga jual wajib diisi untuk produk baru" });
+      failedCount++;
+      continue;
+    }
+
+    // Normalisasi aliases (bisa string "a;b;c" atau array)
+    let aliases = [];
+    if (Array.isArray(row.aliases)) {
+      aliases = row.aliases;
+    } else if (typeof row.aliases === "string" && row.aliases.trim()) {
+      aliases = row.aliases.split(";").map((a) => a.trim()).filter(Boolean);
+    }
+
+    try {
+      const created = await createProduct({
+        name,
+        sku: normalizedSku,
+        price: Math.round(price),
+        stock: qty,
+        brand: row.brand ? String(row.brand).trim() : null,
+        category: row.category ? String(row.category).trim() : null,
+        aliases,
+        imageUrl: null,
+        createdBy: userId,
+        supplierInfo,
+      });
+      results.push({
+        row: excelRow,
+        sku: created.sku,
+        name: created.name,
+        status: "success",
+        action: "created",
+        quantity: qty,
+        newStock: created.stock,
+      });
+      successCount++;
+    } catch (err) {
+      const msg = err instanceof ProductError ? err.message : "Gagal membuat produk";
+      results.push({ row: excelRow, sku: normalizedSku, name, status: "failed", error: msg });
+      failedCount++;
+    }
+  }
+
+  return { success: successCount, failed: failedCount, total: rows.length, results };
 }
 
 /**

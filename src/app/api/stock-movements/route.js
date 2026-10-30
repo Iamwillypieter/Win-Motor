@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import StockMovement from "@/models/StockMovement";
+import Product from "@/models/Product";
 
 /**
  * GET /api/stock-movements
@@ -110,6 +111,35 @@ export async function GET(request) {
       userId: m.userId?.toString() ?? null,
       createdAt: m.createdAt?.toISOString() ?? null,
     }));
+
+    // Lampirkan harga jual & status aktif produk saat ini (batch query, tanpa
+    // filter isActive agar produk yang dinonaktifkan tetap dapat ditampilkan).
+    // Dipakai halaman Riwayat Stok owner untuk edit harga jual & disable produk.
+    const productIds = [
+      ...new Set(
+        serialized
+          .map((m) => m.productId)
+          .filter(Boolean)
+      ),
+    ];
+
+    if (productIds.length > 0) {
+      const productDocs = await Product.find({ _id: { $in: productIds } })
+        .select("price isActive")
+        .lean();
+      const priceMap = new Map();
+      for (const p of productDocs) {
+        priceMap.set(p._id.toString(), {
+          productPrice: p.price,
+          productActive: p.isActive,
+        });
+      }
+      for (const m of serialized) {
+        const info = m.productId ? priceMap.get(m.productId) : undefined;
+        m.productPrice = info ? info.productPrice : null;
+        m.productActive = info ? info.productActive : null;
+      }
+    }
 
     return NextResponse.json({
       data: serialized,
