@@ -36,5 +36,26 @@ module.exports = {
       min_uptime: "5s",
       max_restarts: 10,
     },
+    {
+      name: "pos-https-proxy",
+      // HTTPS reverse proxy: https://0.0.0.0:3443 → http://127.0.0.1:3000
+      // Memungkinkan akses kamera dari HP via https://WILLY-PIETER.local:3443
+      script: "scripts/https-proxy.mjs",
+      cwd: "d:\\Project Kiro",
+
+      env_file: ".env.local",
+
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "128M",
+
+      out_file: "logs/pm2-proxy-out.log",
+      error_file: "logs/pm2-proxy-error.log",
+      merge_logs: true,
+      log_date_format: "YYYY-MM-DD HH:mm:ss",
+
+      min_uptime: "5s",
+      max_restarts: 10,
+    },
   ],
 };

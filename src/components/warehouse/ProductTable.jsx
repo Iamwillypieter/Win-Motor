@@ -6,6 +6,7 @@ import { deleteProductAction } from "@/server/actions/product.actions";
 import ProductFormModal from "./ProductFormModal";
 import BarcodeLabel from "./BarcodeLabel";
 import ImportExcelModal from "./ImportExcelModal";
+import BarcodeScanner from "@/components/ui/BarcodeScanner";
 
 /**
  * ProductTable — displays the product inventory with search, SKU filter,
@@ -41,8 +42,9 @@ export default function ProductTable({ initialProducts = [] }) {
   const [stockInSuccess, setStockInSuccess] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
-  const scannerRef = useRef(null);
   const isProcessingRef = useRef(false);
+  // scannerKey dipakai untuk re-mount BarcodeScanner component saat scan ulang
+  const [scannerKey, setScannerKey] = useState(0);
 
   // --- Supplier state (dipakai oleh semua mode stock-in) ---
   const [suppliers, setSuppliers] = useState([]);
@@ -55,8 +57,9 @@ export default function ProductTable({ initialProducts = [] }) {
   // bulkItems: Array<{ productId, sku, name, imageUrl, currentStock, quantity }>
   const [bulkItems, setBulkItems] = useState([]);
   const [bulkScanning, setBulkScanning] = useState(false);
-  const [bulkScannerRef] = useState({ current: null });
+  const bulkScannerStopRef = useRef(null); // ref ke fungsi stop dari useBarcodeScanner
   const bulkProcessingRef = useRef(false);
+  const [bulkScannerKey, setBulkScannerKey] = useState(0);
   const [bulkCameraError, setBulkCameraError] = useState("");
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [bulkResult, setBulkResult] = useState(null); // hasil setelah submit
@@ -95,25 +98,15 @@ export default function ProductTable({ initialProducts = [] }) {
   }, [stockInOpen]);
 
   // ------------------------------------------------------------------
-  // Scanner helpers
+  // Scanner helpers — menggunakan BarcodeScanner component + useBarcodeScanner hook
+  // Tidak ada html5-qrcode, tidak ada manipulasi DOM langsung
   // ------------------------------------------------------------------
-
-  const stopScanner = useCallback(async () => {
-    const instance = scannerRef.current;
-    if (!instance) return;
-    try {
-      await instance.stop();
-      instance.clear();
-    } catch (_) {}
-    scannerRef.current = null;
-    setIsScanning(false);
-  }, []);
 
   const handleScanResult = useCallback(
     async (decodedText) => {
       if (isProcessingRef.current) return;
       isProcessingRef.current = true;
-      await stopScanner();
+      // Scanner sudah di-stop oleh hook sebelum callback ini dipanggil
 
       try {
         const res = await fetch(
@@ -126,7 +119,7 @@ export default function ProductTable({ initialProducts = [] }) {
           setStockInQty(1);
           setStockInError("");
         } else {
-          // Produk belum terdaftar → tawarkan tambah produk baru dengan kode hasil scan
+          // Produk belum terdaftar → tawarkan tambah produk baru
           setScanNotFoundSku(decodedText);
           setNewProductQty(1);
           setStockInError("");
@@ -134,78 +127,19 @@ export default function ProductTable({ initialProducts = [] }) {
         }
       } catch (_) {
         setStockInError("Gagal mencari produk. Coba lagi.");
-        setTimeout(() => {
-          isProcessingRef.current = false;
-          setStockInError("");
-          startScanner();
-        }, 2000);
+        isProcessingRef.current = false;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stopScanner]
+    []
   );
 
-  const startScanner = useCallback(async () => {
-    if (scannerRef.current) return;
-    setCameraError("");
-    setStockInError("");
-
-    try {
-      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import(
-        "html5-qrcode"
-      );
-
-      const instance = new Html5Qrcode("stock-in-barcode-reader", {
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-        ],
-        verbose: false,
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-      });
-
-      scannerRef.current = instance;
-
-      await instance.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 260, height: 140 } },
-        (text) => handleScanResult(text),
-        () => {}
-      );
-
-      setIsScanning(true);
-    } catch (err) {
-      console.error("Scanner start error:", err);
-      const notSecure = typeof navigator !== "undefined" && !navigator.mediaDevices;
-      setCameraError(
-        notSecure
-          ? "Kamera butuh HTTPS. Buka via https://... lalu beri izin kamera."
-          : "Tidak dapat mengakses kamera. Beri izin kamera di browser, atau gunakan mode Manual."
-      );
-      scannerRef.current = null;
-    }
-  }, [handleScanResult]);
-
-  // Stop scanner when switching to manual mode or closing modal
+  // Reset scanner saat pindah mode atau tutup modal
   useEffect(() => {
     if (stockInMode === "manual" || !stockInOpen) {
-      stopScanner();
       isProcessingRef.current = false;
+      setScannerKey((k) => k + 1); // force re-mount BarcodeScanner
     }
-  }, [stockInMode, stockInOpen, stopScanner]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      const instance = scannerRef.current;
-      if (instance) {
-        instance.stop().then(() => instance.clear()).catch(() => {});
-      }
-    };
-  }, []);
+  }, [stockInMode, stockInOpen]);
 
   // ------------------------------------------------------------------
   // Stock-in submit
@@ -264,7 +198,8 @@ export default function ProductTable({ initialProducts = [] }) {
         isProcessingRef.current = false;
 
         if (stockInMode === "scan") {
-          setTimeout(() => startScanner(), 400);
+          // Re-mount BarcodeScanner untuk scan berikutnya
+          setScannerKey((k) => k + 1);
         }
 
         setTimeout(() => setStockInSuccess(""), 3000);
@@ -284,7 +219,7 @@ export default function ProductTable({ initialProducts = [] }) {
     setStockInError("");
     isProcessingRef.current = false;
     if (stockInMode === "scan") {
-      setTimeout(() => startScanner(), 300);
+      setScannerKey((k) => k + 1); // re-mount scanner
     }
   }
 
@@ -301,8 +236,8 @@ export default function ProductTable({ initialProducts = [] }) {
     setSelectedSupplierId("");
     setManualSupplierName("");
     setPurchasePrice("");
-    // Reset bulk state juga
-    stopBulkScanner();
+    // Reset bulk state
+    if (bulkScannerStopRef.current) bulkScannerStopRef.current();
     setBulkItems([]);
     setBulkResult(null);
     setBulkCameraError("");
@@ -340,20 +275,12 @@ export default function ProductTable({ initialProducts = [] }) {
     setScanNotFoundSku(null);
     setNewProductQty(1);
     isProcessingRef.current = false;
-    startScanner();
+    setScannerKey((k) => k + 1); // re-mount scanner
   }
 
   // ------------------------------------------------------------------
-  // Bulk stock-in helpers
+  // Bulk stock-in helpers — pakai BarcodeScanner component
   // ------------------------------------------------------------------
-
-  const stopBulkScanner = useCallback(async () => {
-    const instance = bulkScannerRef.current;
-    if (!instance) return;
-    try { await instance.stop(); instance.clear(); } catch (_) {}
-    bulkScannerRef.current = null;
-    setBulkScanning(false);
-  }, [bulkScannerRef]);
 
   const handleBulkScanResult = useCallback(async (decodedText) => {
     if (bulkProcessingRef.current) return;
@@ -368,14 +295,12 @@ export default function ProductTable({ initialProducts = [] }) {
         setBulkItems((prev) => {
           const existing = prev.find((i) => i.productId === found._id.toString());
           if (existing) {
-            // Produk sudah ada di antrian → qty +1
             return prev.map((i) =>
               i.productId === found._id.toString()
                 ? { ...i, quantity: i.quantity + 1 }
                 : i
             );
           }
-          // Produk baru → tambah ke antrian
           return [
             ...prev,
             {
@@ -396,52 +321,21 @@ export default function ProductTable({ initialProducts = [] }) {
       setBulkCameraError("Gagal mencari produk. Coba lagi.");
       setTimeout(() => setBulkCameraError(""), 2000);
     } finally {
-      setTimeout(() => { bulkProcessingRef.current = false; }, 800);
+      // Setelah hasil diproses, restart scanner untuk scan berikutnya
+      setTimeout(() => {
+        bulkProcessingRef.current = false;
+        setBulkScannerKey((k) => k + 1);
+      }, 800);
     }
   }, []);
 
-  const startBulkScanner = useCallback(async () => {
-    if (bulkScannerRef.current) return;
-    setBulkCameraError("");
-    try {
-      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
-      const instance = new Html5Qrcode("bulk-stock-in-reader", {
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-        ],
-        verbose: false,
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-      });
-      bulkScannerRef.current = instance;
-      await instance.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 260, height: 100 } },
-        (text) => handleBulkScanResult(text),
-        () => {}
-      );
-      setBulkScanning(true);
-    } catch {
-      const notSecure = typeof navigator !== "undefined" && !navigator.mediaDevices;
-      setBulkCameraError(
-        notSecure
-          ? "Kamera butuh HTTPS. Buka via https://... lalu beri izin kamera."
-          : "Tidak dapat mengakses kamera. Tambah produk manual via tombol +."
-      );
-      bulkScannerRef.current = null;
-    }
-  }, [handleBulkScanResult, bulkScannerRef]);
-
-  // Stop bulk scanner saat pindah mode atau tutup modal
+  // Reset bulk scanner saat pindah mode atau tutup modal
   useEffect(() => {
     if (stockInMode !== "bulk" || !stockInOpen) {
-      stopBulkScanner();
+      if (bulkScannerStopRef.current) bulkScannerStopRef.current();
       bulkProcessingRef.current = false;
     }
-  }, [stockInMode, stockInOpen, stopBulkScanner]);
+  }, [stockInMode, stockInOpen]);
 
   function handleBulkQtyChange(productId, value) {
     const qty = parseInt(value, 10);
@@ -467,7 +361,7 @@ export default function ProductTable({ initialProducts = [] }) {
     const resolvedPurchasePrice = purchasePrice !== "" ? parseInt(purchasePrice, 10) || null : null;
 
     try {
-      await stopBulkScanner();
+      if (bulkScannerStopRef.current) bulkScannerStopRef.current();
       const res = await fetch("/api/products/batch-stock-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -981,39 +875,12 @@ export default function ProductTable({ initialProducts = [] }) {
                     </div>
                   ) : (
                     <>
-                      {/* Camera viewport */}
-                      <div
-                        id="stock-in-barcode-reader"
-                        className="w-full rounded-lg overflow-hidden bg-gray-900 min-h-[180px] flex items-center justify-center"
-                      >
-                        {!isScanning && (
-                          <p className="text-gray-400 text-sm text-center px-4 py-10">
-                            Tekan &ldquo;Mulai Scan&rdquo; lalu arahkan kamera ke barcode produk
-                          </p>
-                        )}
-                      </div>
-
-                      {cameraError && (
-                        <p className="text-sm text-red-600 text-center">{cameraError}</p>
-                      )}
-
-                      <div className="flex justify-center">
-                        {!isScanning ? (
-                          <button
-                            onClick={startScanner}
-                            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            Mulai Scan
-                          </button>
-                        ) : (
-                          <button
-                            onClick={stopScanner}
-                            className="rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                          >
-                            Stop
-                          </button>
-                        )}
-                      </div>
+                      {/* BarcodeScanner menggunakan native BarcodeDetector API */}
+                      <BarcodeScanner
+                        key={scannerKey}
+                        onScan={handleScanResult}
+                        autoStart
+                      />
                     </>
                   )}
                 </div>
@@ -1235,39 +1102,17 @@ export default function ProductTable({ initialProducts = [] }) {
                     </div>
                   ) : (
                     <>
-                      {/* Kamera scan */}
-                      <div
-                        id="bulk-stock-in-reader"
-                        className="w-full rounded-lg overflow-hidden bg-gray-900 min-h-[120px] flex items-center justify-center"
-                      >
-                        {!bulkScanning && (
-                          <p className="text-gray-400 text-xs text-center px-4 py-8">
-                            Tekan &ldquo;Mulai Scan&rdquo; lalu arahkan kamera ke barcode
-                          </p>
-                        )}
-                      </div>
+                      {/* BarcodeScanner bulk — auto-restart setelah tiap scan */}
+                      <BarcodeScanner
+                        key={bulkScannerKey}
+                        onScan={handleBulkScanResult}
+                        onStop={() => setBulkScanning(false)}
+                        autoStart
+                      />
 
                       {bulkCameraError && (
                         <p className="text-xs text-red-600 text-center">{bulkCameraError}</p>
                       )}
-
-                      <div className="flex gap-2">
-                        {!bulkScanning ? (
-                          <button
-                            onClick={startBulkScanner}
-                            className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-                          >
-                            Mulai Scan
-                          </button>
-                        ) : (
-                          <button
-                            onClick={stopBulkScanner}
-                            className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
-                          >
-                            Pause Scan
-                          </button>
-                        )}
-                      </div>
 
                       {/* Antrian item */}
                       {bulkItems.length > 0 ? (
