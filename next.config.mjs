@@ -1,9 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Gambar produk disimpan di public/uploads/ (lokal) — tidak butuh remotePatterns
-  // Jika nanti pakai Cloudinary atau CDN, tambahkan hostname spesifik di sini, bukan wildcard
   images: {
     remotePatterns: [],
+  },
+
+  // Izinkan Server Actions dari origin lokal (IP LAN dan hostname .local via HTTPS proxy)
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "localhost:3000",
+        "localhost:3443",
+        "127.0.0.1:3000",
+        "127.0.0.1:3443",
+        "willy-pieter.local:3443",
+        "willy-pieter:3443",
+        // IP LAN yang umum dipakai router rumah/toko
+        "192.168.1.1:3443",
+        "192.168.3.77:3443",
+      ],
+    },
+    serverComponentsExternalPackages: ["bcryptjs", "mongoose"],
   },
 
   // Security headers untuk semua response
@@ -47,11 +64,6 @@ const nextConfig = {
         ],
       },
     ];
-  },
-
-  // Pastikan bcryptjs dan mongoose berjalan di Node.js runtime (bukan Edge)
-  experimental: {
-    serverComponentsExternalPackages: ["bcryptjs", "mongoose"],
   },
 };
 

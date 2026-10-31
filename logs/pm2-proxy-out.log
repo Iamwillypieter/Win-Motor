@@ -16727,3 +16727,8 @@
 2026-10-31 08:27:08: [proxy] HTTPS proxy aktif: https://localhost:3443
 2026-10-31 08:27:08: [proxy] Akses dari HP   : https://192.168.3.77:3443
 2026-10-31 08:27:08: [proxy] (Buka di browser HP → terima peringatan sertifikat sekali)
+2026-10-31 08:35:29: [proxy] Menunggu dev server di port 3000...
+2026-10-31 08:35:31: [proxy] Dev server siap.
+2026-10-31 08:35:31: [proxy] HTTPS proxy aktif: https://localhost:3443
+2026-10-31 08:35:31: [proxy] Akses dari HP   : https://192.168.3.77:3443
+2026-10-31 08:35:31: [proxy] (Buka di browser HP → terima peringatan sertifikat sekali)

@@ -82,13 +82,23 @@ async function start() {
   };
 
   const server = https.createServer(tlsOptions, (req, res) => {
+    // Ambil host asli dari request HP (misal 192.168.3.77:3443 atau willy-pieter.local:3443)
+    const originalHost = req.headers.host || `127.0.0.1:${HTTPS_PORT}`;
     const proxyReq = http.request(
       {
         hostname: "127.0.0.1",
         port: HTTP_PORT,
         path: req.url,
         method: req.method,
-        headers: { ...req.headers, host: `127.0.0.1:${HTTP_PORT}` },
+        headers: {
+          ...req.headers,
+          // Beritahu Next.js bahwa host aslinya adalah dari HP, bukan proxy internal
+          host: originalHost,
+          // x-forwarded-* headers untuk transparansi proxy
+          "x-forwarded-host": originalHost,
+          "x-forwarded-proto": "https",
+          "x-forwarded-for": req.socket.remoteAddress || "",
+        },
       },
       (proxyRes) => {
         res.writeHead(proxyRes.statusCode, proxyRes.headers);

@@ -36,3 +36,11 @@
 2026-10-31 08:35:29:  ✓ Ready in 536ms
 2026-10-31 08:36:42: [SSEManager] New instance created
 2026-10-31 08:36:43: MongoDB connected successfully
+2026-10-31 09:04:05:   ▲ Next.js 14.2.35
+2026-10-31 09:04:05:   - Local:        http://localhost:3000
+2026-10-31 09:04:05:   - Network:      http://0.0.0.0:3000
+2026-10-31 09:04:05: 
+2026-10-31 09:04:05:  ✓ Starting...
+2026-10-31 09:04:05:  ✓ Ready in 1072ms
+2026-10-31 09:04:48: [SSEManager] New instance created
+2026-10-31 09:04:48: MongoDB connected successfully

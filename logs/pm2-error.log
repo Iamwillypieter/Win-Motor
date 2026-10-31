@@ -49984,3 +49984,35 @@
 2026-10-31 08:28:23:     at [project]/node_modules/next/dist/client/components/error-boundary.js [app-rsc] (ecmascript) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7823:3)
 2026-10-31 08:28:23:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
 2026-10-31 08:28:23:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-10-31 09:08:25: (node:7488) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-10-31 09:08:25: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-10-31 09:08:25: (node:7488) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-10-31 09:09:05: (node:7488) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-10-31 11:01:26: `x-forwarded-host` header with value `127.0.0.1:3000` does not match `origin` header with value `192.168.3.77:3443` from a forwarded Server Actions request. Aborting the action.
+2026-10-31 11:01:26: Error: Invalid Server Actions request.
+2026-10-31 11:01:26:     at handleAction (webpack://next/dist/esm/server/app-render/action-handler.js:283:27)
+2026-10-31 11:01:26:     at renderToHTMLOrFlightImpl (webpack://next/dist/esm/server/app-render/app-render.js:888:39)
+2026-10-31 11:01:26:     at <anonymous> (webpack://next/dist/esm/server/app-render/app-render.js:1011:37)
+2026-10-31 11:01:26:     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+2026-10-31 11:01:26:     at Object.wrap (webpack://next/dist/esm/server/async-storage/static-generation-async-storage-wrapper.js:39:24)
+2026-10-31 11:01:26:     at <anonymous> (webpack://next/dist/esm/server/app-render/app-render.js:1005:60)
+2026-10-31 11:01:26:     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+2026-10-31 11:01:26:     at Object.wrap (webpack://next/dist/esm/server/async-storage/request-async-storage-wrapper.js:95:24)
+2026-10-31 11:01:26:     at renderToHTMLOrFlight (webpack://next/dist/esm/server/app-render/app-render.js:1001:39)
+2026-10-31 11:01:26:     at nT.render (webpack://next/dist/esm/server/future/route-modules/app-page/module.js:13:16) {
+2026-10-31 11:01:26:   digest: '3345977095'
+2026-10-31 11:01:26: }
+2026-10-31 11:03:37: `x-forwarded-host` header with value `127.0.0.1:3000` does not match `origin` header with value `192.168.3.77:3443` from a forwarded Server Actions request. Aborting the action.
+2026-10-31 11:03:37: Error: Invalid Server Actions request.
+2026-10-31 11:03:37:     at handleAction (webpack://next/dist/esm/server/app-render/action-handler.js:283:27)
+2026-10-31 11:03:37:     at renderToHTMLOrFlightImpl (webpack://next/dist/esm/server/app-render/app-render.js:888:39)
+2026-10-31 11:03:37:     at <anonymous> (webpack://next/dist/esm/server/app-render/app-render.js:1011:37)
+2026-10-31 11:03:37:     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+2026-10-31 11:03:37:     at Object.wrap (webpack://next/dist/esm/server/async-storage/static-generation-async-storage-wrapper.js:39:24)
+2026-10-31 11:03:37:     at <anonymous> (webpack://next/dist/esm/server/app-render/app-render.js:1005:60)
+2026-10-31 11:03:37:     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+2026-10-31 11:03:37:     at Object.wrap (webpack://next/dist/esm/server/async-storage/request-async-storage-wrapper.js:95:24)
+2026-10-31 11:03:37:     at renderToHTMLOrFlight (webpack://next/dist/esm/server/app-render/app-render.js:1001:39)
+2026-10-31 11:03:37:     at nT.render (webpack://next/dist/esm/server/future/route-modules/app-page/module.js:13:16) {
+2026-10-31 11:03:37:   digest: '3345977095'
+2026-10-31 11:03:37: }
