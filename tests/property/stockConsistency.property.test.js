@@ -41,6 +41,7 @@ vi.mock("@/lib/sse", () => ({
 vi.mock("@/models/Order", () => {
   const mockOrder = {
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     updateOne: vi.fn(),
     updateMany: vi.fn(),
     create: vi.fn(),
@@ -154,7 +155,8 @@ function setupSuccessfulPaymentMocks(order) {
     order.paymentMethod
   );
 
-  Order.findById.mockReturnValueOnce({
+  // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+  Order.findOneAndUpdate.mockReturnValueOnce({
     lean: vi.fn().mockResolvedValue(order),
   });
 
@@ -179,16 +181,15 @@ function setupSuccessfulPaymentMocks(order) {
  * bulkWrite mengembalikan modifiedCount < items.length.
  */
 function setupInsufficientStockMocks(order, modifiedCount = 0) {
-  Order.findById.mockReturnValueOnce({
+  // Step 0: lock succeeds
+  Order.findOneAndUpdate.mockReturnValueOnce({
     lean: vi.fn().mockResolvedValue(order),
   });
-
-  Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
 
   // bulkWrite gagal — stok tidak mencukupi (modifiedCount < items.length)
   Product.bulkWrite.mockResolvedValue({ modifiedCount });
 
-  // Rollback: Order.updateOne dipanggil lagi untuk rollback
+  // releaseLock: Order.updateOne dipanggil untuk rollback
   Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
 }
 

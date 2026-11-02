@@ -30,9 +30,18 @@ vi.mock("@/lib/sse", () => ({
   },
 }));
 
+vi.mock("@/lib/whatsapp", () => ({
+  notifyOrderConfirmed: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/server/services/product.service", () => ({
+  recordStockOutMovements: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/models/Order", () => {
   const mockOrder = {
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     updateOne: vi.fn(),
     updateMany: vi.fn(),
     create: vi.fn(),
@@ -147,41 +156,63 @@ function makeMockInvoice(orderId, invoiceNumber, items, paymentMethod) {
 
 /**
  * Set up mocks for a SUCCESSFUL first call to completePayment().
- * After this call, the order is "paid".
+ *
+ * The new idempotency-lock pattern uses:
+ *   Step 0: findOneAndUpdate({ _id, paymentStatus: "pending" }) → returns OLD doc (before update)
+ *   Step 1: Product.bulkWrite (stock decrement)
+ *   Step 2: User.findById + Invoice.create
+ *   Step 3: Order.updateOne (finalize to "paid")
  */
 function setupFirstCallMocks(order) {
   const invoice = makeMockInvoice(order._id, order.invoiceNumber, order.items, order.paymentMethod);
 
-  // findById returns the pending order (first call)
-  Order.findById.mockReturnValueOnce({ lean: vi.fn().mockResolvedValue(order) });
+  // Step 0: findOneAndUpdate().lean() returns the OLD document (snapshot before update to "processing")
+  Order.findOneAndUpdate.mockReturnValueOnce({
+    lean: vi.fn().mockResolvedValue(order),
+  });
 
-  // Order update succeeds
-  Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
-
-  // Stock decrement succeeds for all items
+  // Step 1: stock decrement succeeds for all items
   Product.bulkWrite.mockResolvedValue({ modifiedCount: order.items.length });
 
-  // User lookup for cashierName
+  // Step 2: User lookup for cashierName
   User.findById.mockReturnValue({
     select: vi.fn().mockReturnValue({
       lean: vi.fn().mockResolvedValue({ _id: "cashier-001", name: "Kasir" }),
     }),
   });
 
-  // Invoice creation succeeds
+  // Step 2: Invoice creation succeeds
   Invoice.create.mockResolvedValue({ toObject: () => invoice });
+
+  // Step 3: finalize order succeeds
+  Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
 
   return invoice;
 }
 
 /**
  * Set up mocks for a SECOND call to completePayment() with the same orderId.
- * The order is now "paid" — the idempotency guard should reject it.
+ *
+ * The order is now "paid" — findOneAndUpdate finds no document matching
+ * { _id, paymentStatus: "pending" } and returns null.
+ * The service then calls Order.findById to determine the reason.
  */
 function setupSecondCallMocks(order) {
-  const paidOrder = makePaidOrder(order);
-  // findById returns the already-paid order (second call)
-  Order.findById.mockReturnValueOnce({ lean: vi.fn().mockResolvedValue(paidOrder) });
+  // Step 0: idempotency lock finds nothing (order is no longer "pending")
+  // findOneAndUpdate().lean() returns null
+  Order.findOneAndUpdate.mockReturnValueOnce({
+    lean: vi.fn().mockResolvedValue(null),
+  });
+
+  // Fallback lookup: service calls findById to decide the error code
+  Order.findById.mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      lean: vi.fn().mockResolvedValue({
+        _id: order._id,
+        paymentStatus: "paid",
+      }),
+    }),
+  });
 }
 
 // ---------------------------------------------------------------------------

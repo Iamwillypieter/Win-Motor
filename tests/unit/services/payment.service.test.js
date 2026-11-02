@@ -5,15 +5,18 @@
  *
  * Tests:
  *   1. completePayment CASH — semua tiga operasi berhasil, invoice dibuat
- *   2. completePayment — stok tidak cukup di tengah transaksi → rollback, status tidak berubah
+ *   2. completePayment — stok tidak cukup di tengah proses → rollback, status tidak berubah
  *   3. completePayment — order sudah `paid` → ditolak
  *   4. QRIS expiry — pesanan dengan qrisExpiresAt lampau → status `expired`
+ *
+ * NOTE: completePayment menggunakan idempotency-lock via findOneAndUpdate
+ * (bukan MongoDB multi-document transaction). Mock harus mencerminkan pola ini.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---------------------------------------------------------------------------
-// Mocks — must be declared before importing the service
+// Mocks — harus dideklarasikan sebelum import service
 // ---------------------------------------------------------------------------
 
 vi.mock("@/lib/db", () => ({
@@ -27,22 +30,24 @@ vi.mock("@/lib/sse", () => ({
   },
 }));
 
+vi.mock("@/lib/whatsapp", () => ({
+  notifyOrderConfirmed: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/server/services/product.service", () => ({
+  recordStockOutMovements: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/models/Order", () => {
   const mockOrder = {
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     updateOne: vi.fn(),
     updateMany: vi.fn(),
     create: vi.fn(),
   };
   return { default: mockOrder };
 });
-
-// Helper to create a chainable findById mock that supports .lean()
-function mockFindByIdWithLean(resolvedValue) {
-  return vi.fn().mockReturnValue({
-    lean: vi.fn().mockResolvedValue(resolvedValue),
-  });
-}
 
 vi.mock("@/models/Product", () => {
   const mockProduct = {
@@ -65,23 +70,10 @@ vi.mock("@/models/Invoice", () => {
   return { default: mockInvoice };
 });
 
-// Mock mongoose — provide a controllable session/withTransaction
-vi.mock("mongoose", async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
-      ...actual.default,
-      startSession: vi.fn(),
-    },
-  };
-});
-
 // ---------------------------------------------------------------------------
-// Imports after mocks
+// Imports setelah mocks
 // ---------------------------------------------------------------------------
 
-import mongoose from "mongoose";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
@@ -93,33 +85,6 @@ import {
   PaymentError,
   PaymentErrorCode,
 } from "@/server/services/payment.service";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Build a mock mongoose session whose withTransaction executes the callback
- * immediately (simulating a successful transaction commit).
- */
-function buildMockSession({ shouldAbort = false } = {}) {
-  const session = {
-    withTransaction: vi.fn(async (fn) => {
-      if (shouldAbort) {
-        // Simulate transaction abort — run fn but let it throw
-        try {
-          await fn();
-        } catch (err) {
-          throw err; // re-throw so withTransaction propagates the error
-        }
-      } else {
-        await fn();
-      }
-    }),
-    endSession: vi.fn(),
-  };
-  return session;
-}
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -155,6 +120,7 @@ const mockOrder = {
   totalAmount: 65000, // 25000×2 + 15000×1
   orderStatus: "ready",
   paymentStatus: "pending",
+  orderType: "DINE_IN",
   createdAt: new Date("2026-05-07"),
   updatedAt: new Date("2026-05-07"),
 };
@@ -166,9 +132,12 @@ const mockInvoiceDoc = {
   cashierName: "Budi Santoso",
   items: mockOrderItems.map((item) => ({
     ...item,
+    discountPercent: 0,
+    discountAmount: 0,
     subtotal: item.unitPrice * item.quantity,
   })),
   totalAmount: 65000,
+  discountTotal: 0,
   paymentMethod: "CASH",
   cashReceived: 70000,
   changeAmount: 5000,
@@ -176,39 +145,42 @@ const mockInvoiceDoc = {
 };
 
 // ---------------------------------------------------------------------------
+// Helper: setup mock untuk success path
+// Idempotency lock: findOneAndUpdate mengembalikan dokumen LAMA (sebelum diupdate)
+// ---------------------------------------------------------------------------
+
+function setupSuccessMocks() {
+  // Step 0: idempotency lock — findOneAndUpdate().lean() mengembalikan dokumen order lama
+  Order.findOneAndUpdate.mockReturnValue({
+    lean: vi.fn().mockResolvedValue(mockOrder),
+  });
+
+  // Step 1: stock decrement berhasil (modifiedCount === items.length)
+  Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
+
+  // Step 2: cashier lookup untuk invoice
+  User.findById.mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      lean: vi.fn().mockResolvedValue(mockCashier),
+    }),
+  });
+
+  // Step 2: invoice creation
+  Invoice.create.mockResolvedValue({ toObject: () => ({ ...mockInvoiceDoc }) });
+
+  // Step 3: finalize order
+  Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
+}
+
+// ---------------------------------------------------------------------------
 // completePayment — CASH success path
 // Validates: Requirements 6.1, 5.2
 // ---------------------------------------------------------------------------
 
 describe("PaymentService — completePayment CASH (sukses)", () => {
-  let mockSession;
-
   beforeEach(() => {
     vi.clearAllMocks();
-
-    mockSession = buildMockSession();
-    mongoose.startSession.mockResolvedValue(mockSession);
-
-    // Order found with pending status — service calls .lean()
-    Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue(mockOrder),
-    });
-
-    // Order update succeeds
-    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
-
-    // All stock decrements succeed (modifiedCount === items.length)
-    Product.bulkWrite.mockResolvedValue({ modifiedCount: mockOrderItems.length });
-
-    // Cashier lookup succeeds — service calls .select().lean()
-    User.findById.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockCashier),
-      }),
-    });
-
-    // Invoice creation succeeds
-    Invoice.create.mockResolvedValue({ toObject: () => ({ ...mockInvoiceDoc }) });
+    setupSuccessMocks();
   });
 
   it("harus mengembalikan invoice yang dibuat", async () => {
@@ -256,11 +228,11 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
     const bulkOps = Product.bulkWrite.mock.calls[0][0];
     expect(bulkOps).toHaveLength(mockOrderItems.length);
 
-    // Each op must decrement stock by the ordered quantity
+    // Setiap operasi harus mengurangi stok sebesar quantity yang dipesan
     bulkOps.forEach((op, idx) => {
       expect(op.updateOne.filter._id).toBe(mockOrderItems[idx].productId);
       expect(op.updateOne.update.$inc.stock).toBe(-mockOrderItems[idx].quantity);
-      // Filter must guard against negative stock
+      // Filter harus melindungi dari stok negatif
       expect(op.updateOne.filter.stock.$gte).toBe(mockOrderItems[idx].quantity);
     });
   });
@@ -321,29 +293,24 @@ describe("PaymentService — completePayment CASH (sukses)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// completePayment — stok tidak cukup → rollback
+// completePayment — stok tidak cukup → rollback via releaseLock
 // Validates: Requirements 6.1, 6.2
 // ---------------------------------------------------------------------------
 
 describe("PaymentService — completePayment stok tidak cukup (rollback)", () => {
-  let mockSession;
-
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockSession = buildMockSession({ shouldAbort: true });
-    mongoose.startSession.mockResolvedValue(mockSession);
-
-    // Order found with pending status — service calls .lean()
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock berhasil — mendapat snapshot order lama
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockOrder),
     });
 
-    // Order update succeeds (step 1 of transaction)
-    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
-
-    // bulkWrite returns fewer modifiedCount than items — simulates concurrent depletion
+    // Step 1: bulkWrite gagal — hanya 0 dari 2 item berhasil diperbarui
     Product.bulkWrite.mockResolvedValue({ modifiedCount: 0 });
+
+    // releaseLock: Order.updateOne akan dipanggil untuk mengembalikan status ke "pending"
+    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
   });
 
   it("harus melempar PaymentError dengan code INSUFFICIENT_STOCK", async () => {
@@ -391,7 +358,7 @@ describe("PaymentService — completePayment stok tidak cukup (rollback)", () =>
     expect(sseManager.broadcastToRole).not.toHaveBeenCalled();
   });
 
-  it("harus mengakhiri session meskipun transaksi gagal", async () => {
+  it("harus memanggil releaseLock (Order.updateOne) untuk mengembalikan paymentStatus ke pending", async () => {
     try {
       await completePayment("order-id-001", {
         method: "CASH",
@@ -402,31 +369,37 @@ describe("PaymentService — completePayment stok tidak cukup (rollback)", () =>
       // expected
     }
 
-    // Service performs rollback via Order.updateOne when stock fails
-    expect(Order.updateOne).toHaveBeenCalledTimes(2); // step 1 + rollback
+    // releaseLock memanggil Order.updateOne dengan paymentStatus: "pending"
+    expect(Order.updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "order-id-001" }),
+      expect.objectContaining({
+        $set: expect.objectContaining({ paymentStatus: "pending" }),
+      })
+    );
   });
 });
 
 // ---------------------------------------------------------------------------
-// completePayment — order sudah paid → ditolak
+// completePayment — order sudah paid → idempotency guard menolak
 // Validates: Requirement 6.1 (idempotency guard)
 // ---------------------------------------------------------------------------
 
 describe("PaymentService — completePayment order sudah paid", () => {
-  let mockSession;
-
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockSession = buildMockSession({ shouldAbort: true });
-    mongoose.startSession.mockResolvedValue(mockSession);
+    // Step 0: findOneAndUpdate().lean() mengembalikan null (order tidak lagi "pending")
+    Order.findOneAndUpdate.mockReturnValue({
+      lean: vi.fn().mockResolvedValue(null),
+    });
 
-    // Order already paid — service calls .lean()
+    // Fallback lookup: service memanggil findById().select().lean()
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockOrder,
-        paymentStatus: "paid",
-        orderStatus: "completed",
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({
+          _id: "order-id-001",
+          paymentStatus: "paid",
+        }),
       }),
     });
   });
@@ -446,20 +419,6 @@ describe("PaymentService — completePayment order sudah paid", () => {
     expect(thrownError).not.toBeNull();
     expect(thrownError).toBeInstanceOf(PaymentError);
     expect(thrownError.code).toBe(PaymentErrorCode.ALREADY_PAID);
-  });
-
-  it("TIDAK boleh memanggil Order.updateOne ketika order sudah paid", async () => {
-    try {
-      await completePayment("order-id-001", {
-        method: "CASH",
-        cashReceived: 70000,
-        changeAmount: 5000,
-      });
-    } catch {
-      // expected
-    }
-
-    expect(Order.updateOne).not.toHaveBeenCalled();
   });
 
   it("TIDAK boleh memanggil Product.bulkWrite ketika order sudah paid", async () => {
@@ -503,6 +462,20 @@ describe("PaymentService — completePayment order sudah paid", () => {
 
     expect(sseManager.broadcastToRole).not.toHaveBeenCalled();
   });
+
+  it("TIDAK boleh memanggil Order.updateOne (step 3) ketika order sudah paid", async () => {
+    try {
+      await completePayment("order-id-001", {
+        method: "CASH",
+        cashReceived: 70000,
+        changeAmount: 5000,
+      });
+    } catch {
+      // expected
+    }
+
+    expect(Order.updateOne).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -544,7 +517,7 @@ describe("PaymentService — expireQRISOrders", () => {
     expect(query.qrisExpiresAt).toBeDefined();
     expect(query.qrisExpiresAt.$lt).toBeInstanceOf(Date);
 
-    // The cutoff timestamp must be within the test execution window
+    // Cutoff timestamp harus berada dalam jendela eksekusi test
     const cutoff = query.qrisExpiresAt.$lt.getTime();
     expect(cutoff).toBeGreaterThanOrEqual(before);
     expect(cutoff).toBeLessThanOrEqual(after);
@@ -584,7 +557,7 @@ describe("PaymentService — expireQRISOrders", () => {
 
     await expireQRISOrders();
 
-    // Verify the query only targets "pending" — not "paid" or "expired"
+    // Verifikasi query hanya menargetkan "pending" — bukan "paid" atau "expired"
     const [query] = Order.updateMany.mock.calls[0];
     expect(query.paymentStatus).toBe("pending");
     expect(query.paymentStatus).not.toBe("paid");

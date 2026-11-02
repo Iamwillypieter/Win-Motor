@@ -23,7 +23,7 @@ vi.mock("@/lib/whatsapp", () => ({
 }));
 
 vi.mock("@/models/Order", () => {
-  const mockOrder = { findById: vi.fn(), updateOne: vi.fn(), create: vi.fn() };
+  const mockOrder = { findById: vi.fn(), findOneAndUpdate: vi.fn(), updateOne: vi.fn(), create: vi.fn() };
   return { default: mockOrder };
 });
 vi.mock("@/models/Product", () => ({
@@ -69,7 +69,10 @@ function makeOnlineCODOrder(overrides = {}) {
 }
 
 function setupMocksForSuccess(order, cashierName = "Kasir") {
-  Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+  // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+  Order.findOneAndUpdate.mockReturnValue({
+    lean: vi.fn().mockResolvedValue(order),
+  });
   Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
   Product.bulkWrite.mockResolvedValue({ modifiedCount: order.items.length });
   User.findById.mockReturnValue({
@@ -138,7 +141,10 @@ describe("COD Online Order: Warehouse Confirmation Flow", () => {
   it("completePayment gagal jika pesanan belum berstatus ready", async () => {
     const order = makeOnlineCODOrder({ orderStatus: "waiting_preparation" });
 
-    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+    // Lock berhasil (paymentStatus masih "pending"), tapi orderStatus check gagal
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+    // releaseLock akan memanggil Order.updateOne
+    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
 
     let error;
     try {
@@ -149,18 +155,22 @@ describe("COD Online Order: Warehouse Confirmation Flow", () => {
 
     expect(error).toBeInstanceOf(PaymentError);
     expect(error.code).toBe(PaymentErrorCode.ORDER_NOT_READY);
-    expect(Order.updateOne).not.toHaveBeenCalled();
     expect(Invoice.create).not.toHaveBeenCalled();
   });
 
   it("completePayment gagal jika pesanan sudah dibayar (ALREADY_PAID)", async () => {
-    const order = makeOnlineCODOrder({ paymentStatus: "paid" });
-
-    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+    // Lock gagal (paymentStatus tidak "pending"), findOneAndUpdate returns null
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
+    // Fallback lookup: service calls findById to determine error code
+    Order.findById.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ _id: "order-cod-001", paymentStatus: "paid" }),
+      }),
+    });
 
     let error;
     try {
-      await completePayment(order._id, { method: "CASH", cashReceived: order.totalAmount, changeAmount: 0 });
+      await completePayment("order-cod-001", { method: "CASH", cashReceived: 75_000, changeAmount: 0 });
     } catch (e) {
       error = e;
     }
@@ -171,7 +181,14 @@ describe("COD Online Order: Warehouse Confirmation Flow", () => {
   });
 
   it("completePayment gagal jika pesanan tidak ditemukan (ORDER_NOT_FOUND)", async () => {
-    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
+    // Lock gagal, findOneAndUpdate returns null
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
+    // Fallback: order doesn't exist
+    Order.findById.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(null),
+      }),
+    });
 
     let error;
     try {
@@ -203,10 +220,9 @@ describe("COD Online Order: Warehouse Confirmation Flow", () => {
   it("rollback dilakukan jika stok tidak cukup setelah order di-update", async () => {
     const order = makeOnlineCODOrder();
 
-    Order.findById.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
-    Order.updateOne
-      .mockResolvedValueOnce({ modifiedCount: 1 })  // step 1 OK
-      .mockResolvedValueOnce({ modifiedCount: 1 });  // rollback OK
+    // Lock berhasil
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(order) });
+    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });  // rollback call
     Product.bulkWrite.mockResolvedValue({ modifiedCount: 0 }); // insufficient stock
 
     let error;
@@ -219,12 +235,11 @@ describe("COD Online Order: Warehouse Confirmation Flow", () => {
     expect(error).toBeInstanceOf(PaymentError);
     expect(error.code).toBe(PaymentErrorCode.INSUFFICIENT_STOCK);
 
-    // Order.updateOne dipanggil 2x: step 1 + rollback
-    expect(Order.updateOne).toHaveBeenCalledTimes(2);
-
-    // Rollback call harus mengembalikan ke status semula
-    const rollbackCall = Order.updateOne.mock.calls[1];
-    expect(rollbackCall[1].$set.paymentStatus).toBe("pending");
+    // releaseLock memanggil Order.updateOne dengan paymentStatus: "pending"
+    expect(Order.updateOne).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ $set: expect.objectContaining({ paymentStatus: "pending" }) })
+    );
 
     // Invoice tidak boleh dibuat
     expect(Invoice.create).not.toHaveBeenCalled();

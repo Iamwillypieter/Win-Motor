@@ -37,6 +37,7 @@ vi.mock("@/lib/sse", () => ({
 vi.mock("@/models/Order", () => {
   const mockOrder = {
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     updateOne: vi.fn(),
     updateMany: vi.fn(),
     create: vi.fn(),
@@ -163,25 +164,25 @@ function setupFirstCallMocks(order) {
     order.paymentMethod
   );
 
-  // findById mengembalikan pesanan pending (panggilan pertama)
-  Order.findById.mockReturnValueOnce({
+  // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+  Order.findOneAndUpdate.mockReturnValueOnce({
     lean: vi.fn().mockResolvedValue(order),
   });
 
-  // Update Order berhasil
+  // Step 3: finalize order
   Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
 
-  // Pengurangan stok berhasil untuk semua item
+  // Step 1: stock decrement succeeds
   Product.bulkWrite.mockResolvedValue({ modifiedCount: order.items.length });
 
-  // Lookup User untuk cashierName
+  // Step 2: cashier name lookup
   User.findById.mockReturnValue({
     select: vi.fn().mockReturnValue({
       lean: vi.fn().mockResolvedValue({ _id: "cashier-001", name: "Kasir" }),
     }),
   });
 
-  // Pembuatan Invoice berhasil
+  // Step 2: invoice creation
   Invoice.create.mockResolvedValue({ toObject: () => invoice });
 
   return invoice;
@@ -189,12 +190,20 @@ function setupFirstCallMocks(order) {
 
 /**
  * Menyiapkan mock untuk panggilan KEDUA completePayment() dengan orderId yang sama.
- * Pesanan sudah "paid" — guard idempotency harus menolaknya.
+ * Lock gagal — findOneAndUpdate returns null (paymentStatus sudah bukan "pending").
+ * Service fallbacks to findById to determine error code (ALREADY_PAID).
  */
 function setupSecondCallMocks(order) {
-  const paidOrder = makePaidOrder(order);
-  Order.findById.mockReturnValueOnce({
-    lean: vi.fn().mockResolvedValue(paidOrder),
+  // Step 0: lock fails — order is no longer "pending"
+  Order.findOneAndUpdate.mockReturnValueOnce({
+    lean: vi.fn().mockResolvedValue(null),
+  });
+
+  // Fallback: service checks findById to determine reason
+  Order.findById.mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      lean: vi.fn().mockResolvedValue({ _id: order._id, paymentStatus: "paid" }),
+    }),
   });
 }
 

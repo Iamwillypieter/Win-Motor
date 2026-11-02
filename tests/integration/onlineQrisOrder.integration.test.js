@@ -44,6 +44,7 @@ vi.mock("@/lib/invoice", () => ({
 vi.mock("@/models/Order", () => {
   const mockOrder = {
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     find: vi.fn(),
     create: vi.fn(),
     updateOne: vi.fn(),
@@ -351,8 +352,8 @@ describe("Test 2: completePayment() via webhook QRIS — verifikasi status compl
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Order sudah dalam state "ready" (warehouse sudah tandai siap)
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockReadyOnlineOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -430,11 +431,11 @@ describe("Test 2: completePayment() via webhook QRIS — verifikasi status compl
   });
 
   it("webhook QRIS idempoten: order yang sudah 'paid' harus melempar ALREADY_PAID (Req 7.4)", async () => {
+    // Lock gagal — paymentStatus sudah "paid"
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockReadyOnlineOrder,
-        paymentStatus: "paid",
-        orderStatus: "completed",
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ _id: ONLINE_ORDER_ID, paymentStatus: "paid" }),
       }),
     });
 
@@ -453,10 +454,11 @@ describe("Test 2: completePayment() via webhook QRIS — verifikasi status compl
   });
 
   it("webhook QRIS: order dengan paymentStatus 'expired' harus ditolak (Req 7.4)", async () => {
+    // Lock gagal — paymentStatus adalah "expired" bukan "pending"
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockReadyOnlineOrder,
-        paymentStatus: "expired",
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ _id: ONLINE_ORDER_ID, paymentStatus: "expired" }),
       }),
     });
 
@@ -483,7 +485,8 @@ describe("Test 3: completePayment() — verifikasi stok berkurang sesuai kuantit
   beforeEach(() => {
     vi.clearAllMocks();
 
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockReadyOnlineOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -595,7 +598,8 @@ describe("Test 4: completePayment() — verifikasi Invoice terbuat dengan data l
   beforeEach(() => {
     vi.clearAllMocks();
 
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockReadyOnlineOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -778,7 +782,8 @@ describe("Test 5: Alur end-to-end QRIS online — buat pesanan → webhook → c
 
     vi.clearAllMocks(); // Reset call counts untuk verifikasi yang bersih
 
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock — findOneAndUpdate().lean() returns ready order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockReadyOnlineOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -849,12 +854,11 @@ describe("Test 5: Alur end-to-end QRIS online — buat pesanan → webhook → c
   });
 
   it("alur end-to-end: stok tidak dikurangi dua kali jika webhook duplikat (idempoten, Req 7.4)", async () => {
-    // Setup: order sudah dalam state "paid" (sudah diproses sebelumnya)
+    // Lock gagal — order sudah "paid"
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockReadyOnlineOrder,
-        paymentStatus: "paid",
-        orderStatus: "completed",
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ _id: ONLINE_ORDER_ID, paymentStatus: "paid" }),
       }),
     });
 
@@ -877,7 +881,8 @@ describe("Test 5: Alur end-to-end QRIS online — buat pesanan → webhook → c
   });
 
   it("alur end-to-end: rollback jika stok habis saat webhook diterima", async () => {
-    Order.findById.mockReturnValue({
+    // Lock berhasil
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockReadyOnlineOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -898,11 +903,15 @@ describe("Test 5: Alur end-to-end QRIS online — buat pesanan → webhook → c
     // Invoice tidak boleh dibuat jika stok gagal dikurangi
     expect(Invoice.create).not.toHaveBeenCalled();
 
-    // Order harus di-rollback ke state sebelumnya
-    // (Order.updateOne dipanggil dua kali: sekali untuk update, sekali untuk rollback)
-    expect(Order.updateOne).toHaveBeenCalledTimes(2);
-    const rollbackCall = Order.updateOne.mock.calls[1];
-    expect(rollbackCall[1].$set.paymentStatus).toBe("pending");
-    expect(rollbackCall[1].$set.orderStatus).toBe("ready");
+    // releaseLock dipanggil untuk mengembalikan paymentStatus ke "pending"
+    expect(Order.updateOne).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          paymentStatus: "pending",
+          orderStatus: "ready",
+        }),
+      })
+    );
   });
 });

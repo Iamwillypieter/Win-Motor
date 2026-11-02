@@ -641,6 +641,13 @@ describe("Skenario 5: updateProduct() dengan stock mem-broadcast stock_updated k
       isActive: true,
     };
 
+    // updateProduct memanggil findById dahulu untuk mengambil stok sebelumnya
+    Product.findById.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ stock: 50 }),
+      }),
+    });
+
     Product.findByIdAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(updatedDoc),
     });
@@ -671,6 +678,13 @@ describe("Skenario 5: updateProduct() dengan stock mem-broadcast stock_updated k
       imageUrl: null,
       isActive: true,
     };
+
+    // updateProduct memanggil findById dahulu untuk stok lama
+    Product.findById.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ stock: 50 }),
+      }),
+    });
 
     Product.findByIdAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(updatedDoc),
@@ -729,6 +743,13 @@ describe("Skenario 5: updateProduct() dengan stock mem-broadcast stock_updated k
       imageUrl: null,
       isActive: true,
     };
+
+    // Stok lama berbeda dari stok baru agar StockMovement dibuat dan stock_updated dikirim
+    Product.findById.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ stock: 50 }),
+      }),
+    });
 
     Product.findByIdAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(updatedDoc),

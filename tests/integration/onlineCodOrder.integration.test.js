@@ -49,6 +49,7 @@ vi.mock("@/lib/invoice", () => ({
 vi.mock("@/models/Order", () => {
   const mockOrder = {
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     find: vi.fn(),
     create: vi.fn(),
     updateOne: vi.fn(),
@@ -405,13 +406,15 @@ describe("Test 2: WAREHOUSE tandai ready — verifikasi transisi status pesanan 
   });
 
   it("completePayment() harus gagal jika order belum dalam state 'ready' (Req 8.2)", async () => {
-    // Jika WAREHOUSE mencoba konfirmasi COD sebelum tandai ready, harus ditolak
-    Order.findById.mockReturnValue({
+    // Lock berhasil (paymentStatus masih "pending"), tapi orderStatus check gagal untuk COD online
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({
         ...mockCreatedCodOrder,
         orderStatus: "waiting_preparation",
       }),
     });
+    // releaseLock akan memanggil Order.updateOne
+    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
 
     await expect(
       completePayment(COD_ORDER_ID, {
@@ -430,12 +433,13 @@ describe("Test 2: WAREHOUSE tandai ready — verifikasi transisi status pesanan 
   });
 
   it("completePayment() harus gagal jika order dalam state 'preparing' (belum ready) (Req 8.2)", async () => {
-    Order.findById.mockReturnValue({
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({
         ...mockCreatedCodOrder,
         orderStatus: "preparing",
       }),
     });
+    Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
 
     await expect(
       completePayment(COD_ORDER_ID, {
@@ -459,7 +463,8 @@ describe("Test 3: completePayment() konfirmasi COD — verifikasi status complet
     vi.clearAllMocks();
 
     // Order sudah dalam state "ready" (WAREHOUSE sudah tandai siap)
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({ ...mockReadyCodOrder }),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -537,11 +542,15 @@ describe("Test 3: completePayment() konfirmasi COD — verifikasi status complet
   });
 
   it("konfirmasi COD idempoten: order yang sudah 'paid' harus melempar ALREADY_PAID", async () => {
+    // Lock gagal — findOneAndUpdate returns null (paymentStatus sudah bukan "pending")
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
+    // Fallback lookup: service calls findById to determine error code
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockReadyCodOrder,
-        paymentStatus: "paid",
-        orderStatus: "completed",
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({
+          _id: COD_ORDER_ID,
+          paymentStatus: "paid",
+        }),
       }),
     });
 
@@ -584,7 +593,8 @@ describe("Test 4: completePayment() COD — verifikasi stok berkurang sesuai kua
   beforeEach(() => {
     vi.clearAllMocks();
 
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({ ...mockReadyCodOrder }),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -699,11 +709,16 @@ describe("Test 4: completePayment() COD — verifikasi stok berkurang sesuai kua
       code: PaymentErrorCode.INSUFFICIENT_STOCK,
     });
 
-    // Order.updateOne dipanggil dua kali: sekali untuk update, sekali untuk rollback
-    expect(Order.updateOne).toHaveBeenCalledTimes(2);
-    const rollbackCall = Order.updateOne.mock.calls[1];
-    expect(rollbackCall[1].$set.paymentStatus).toBe("pending");
-    expect(rollbackCall[1].$set.orderStatus).toBe("ready");
+    // releaseLock dipanggil dengan paymentStatus: "pending"
+    expect(Order.updateOne).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          paymentStatus: "pending",
+          orderStatus: "ready",
+        }),
+      })
+    );
   });
 });
 
@@ -716,7 +731,8 @@ describe("Test 5: completePayment() COD — verifikasi Invoice terbuat dengan da
   beforeEach(() => {
     vi.clearAllMocks();
 
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({ ...mockReadyCodOrder }),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -900,7 +916,8 @@ describe("Test 6: Alur end-to-end COD — buat pesanan → WAREHOUSE tandai read
 
     vi.clearAllMocks(); // Reset call counts untuk verifikasi yang bersih
 
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock — findOneAndUpdate().lean() returns ready order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({ ...mockReadyCodOrder }),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -972,12 +989,11 @@ describe("Test 6: Alur end-to-end COD — buat pesanan → WAREHOUSE tandai read
   });
 
   it("alur end-to-end: konfirmasi COD idempoten — order yang sudah paid tidak bisa dikonfirmasi lagi", async () => {
-    // Setup: order sudah dalam state "paid" (sudah dikonfirmasi sebelumnya)
+    // Lock gagal — order sudah "paid"
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockReadyCodOrder,
-        paymentStatus: "paid",
-        orderStatus: "completed",
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ _id: COD_ORDER_ID, paymentStatus: "paid" }),
       }),
     });
 
@@ -1000,7 +1016,8 @@ describe("Test 6: Alur end-to-end COD — buat pesanan → WAREHOUSE tandai read
   });
 
   it("alur end-to-end: rollback jika stok habis saat konfirmasi COD (race condition)", async () => {
-    Order.findById.mockReturnValue({
+    // Lock berhasil
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({ ...mockReadyCodOrder }),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -1021,21 +1038,21 @@ describe("Test 6: Alur end-to-end COD — buat pesanan → WAREHOUSE tandai read
     // Invoice tidak boleh dibuat jika stok gagal dikurangi
     expect(Invoice.create).not.toHaveBeenCalled();
 
-    // Order harus di-rollback ke state sebelumnya
-    expect(Order.updateOne).toHaveBeenCalledTimes(2);
-    const rollbackCall = Order.updateOne.mock.calls[1];
-    expect(rollbackCall[1].$set.paymentStatus).toBe("pending");
-    expect(rollbackCall[1].$set.orderStatus).toBe("ready");
+    // releaseLock dipanggil untuk mengembalikan paymentStatus ke "pending"
+    expect(Order.updateOne).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          paymentStatus: "pending",
+          orderStatus: "ready",
+        }),
+      })
+    );
   });
 
   it("alur end-to-end: SSE broadcastToToken dipanggil ke sseToken pelanggan setelah konfirmasi COD", async () => {
-    // Catatan: broadcastToToken ke sseToken pelanggan dilakukan oleh status route handler,
-    // bukan oleh completePayment() langsung. Test ini memverifikasi bahwa sseManager
-    // memiliki method broadcastToToken yang dapat dipanggil dengan event order_completed.
-    // Integrasi penuh (route handler → completePayment → broadcastToToken) diuji di sini
-    // dengan mensimulasikan pemanggilan yang dilakukan oleh status route.
-
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue({ ...mockReadyCodOrder }),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });

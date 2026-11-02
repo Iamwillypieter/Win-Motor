@@ -22,6 +22,23 @@ vi.mock("@/lib/db", () => ({
   default: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Mock SSE — updateProduct memanggil broadcastToRole setelah update berhasil
+vi.mock("@/lib/sse", () => ({
+  default: {
+    broadcastToRole: vi.fn(),
+    broadcastToUser: vi.fn(),
+  },
+}));
+
+// Mock StockMovement model — dipanggil saat stok berubah
+vi.mock("@/models/StockMovement", () => {
+  const mockStockMovement = {
+    create: vi.fn().mockResolvedValue({}),
+    find: vi.fn(),
+  };
+  return { default: mockStockMovement };
+});
+
 // Mock Product model Mongoose
 vi.mock("@/models/Product", () => {
   const mockProduct = {
@@ -333,6 +350,15 @@ describe("ProductService — updateProduct", () => {
     it("harus mengembalikan produk dengan stok yang diperbarui", async () => {
       // Arrange
       const updatedDoc = { ...mockProductDoc, stock: 200 };
+
+      // updateProduct memanggil findById terlebih dahulu untuk mengambil stok lama
+      // sebelum memanggil findByIdAndUpdate (diperlukan untuk mencatat StockMovement)
+      Product.findById.mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue({ stock: 100 }),
+        }),
+      });
+
       Product.findByIdAndUpdate.mockReturnValue({
         lean: vi.fn().mockResolvedValue(updatedDoc),
       });

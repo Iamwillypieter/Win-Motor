@@ -38,6 +38,7 @@ vi.mock("@/lib/invoice", () => ({
 vi.mock("@/models/Order", () => {
   const mockOrder = {
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     find: vi.fn(),
     create: vi.fn(),
     updateOne: vi.fn(),
@@ -210,8 +211,8 @@ describe("Skenario 1: Alur Cash end-to-end — create order → konfirmasi Cash 
       }),
     });
 
-    // Setup mock untuk completePayment
-    Order.findById.mockReturnValue({
+    // Setup mock untuk completePayment — idempotency lock
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -415,10 +416,8 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockSession = buildMockSession();
-    mongoose.startSession.mockResolvedValue(mockSession);
-
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock — findOneAndUpdate().lean() returns old order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockQrisOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });
@@ -512,12 +511,15 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
   });
 
   it("webhook QRIS: order dengan paymentStatus 'paid' harus ditolak (idempotency)", async () => {
-    // Simulasi order yang sudah dibayar (idempotency guard)
+    // Lock gagal — findOneAndUpdate returns null (paymentStatus sudah "paid")
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
+    // Fallback: service checks why it failed
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockQrisOrder,
-        paymentStatus: "paid",
-        orderStatus: "completed",
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({
+          _id: "order-qris-001",
+          paymentStatus: "paid",
+        }),
       }),
     });
 
@@ -534,11 +536,14 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
   });
 
   it("webhook QRIS: order dengan paymentStatus 'expired' harus ditolak", async () => {
+    // Lock gagal — paymentStatus is "expired" not "pending"
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        ...mockQrisOrder,
-        paymentStatus: "expired",
-        qrisCode: null,
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({
+          _id: "order-qris-001",
+          paymentStatus: "expired",
+        }),
       }),
     });
 
@@ -560,8 +565,12 @@ describe("Skenario 2: Webhook QRIS — completePayment() dengan metode QRIS → 
   });
 
   it("webhook QRIS: order yang tidak ditemukan harus melempar ORDER_NOT_FOUND", async () => {
+    // Lock fails — nothing found at all
+    Order.findOneAndUpdate.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
     Order.findById.mockReturnValue({
-      lean: vi.fn().mockResolvedValue(null),
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(null),
+      }),
     });
 
     await expect(
@@ -587,11 +596,8 @@ describe("Skenario 3: Rollback — kegagalan di tengah transaksi → tidak ada p
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Session dengan shouldAbort=true: callback dijalankan tapi error di-re-throw
-    mockSession = buildMockSession({ shouldAbort: true });
-    mongoose.startSession.mockResolvedValue(mockSession);
-
-    Order.findById.mockReturnValue({
+    // Step 0: idempotency lock succeeds — returns old order snapshot
+    Order.findOneAndUpdate.mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockOrder),
     });
     Order.updateOne.mockResolvedValue({ modifiedCount: 1 });

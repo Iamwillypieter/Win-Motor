@@ -120,6 +120,24 @@ export async function completePayment(orderId, paymentData) {
   // lockedOrder = snapshot order sebelum kita set "processing"
   const order = lockedOrder;
 
+  // ── Validasi orderStatus untuk pesanan COD online ────────────────────────────
+  // Pesanan ONLINE dengan metode CASH (COD) harus dalam status "ready"
+  // sebelum bisa dikonfirmasi. Jika belum ready, batalkan lock dan tolak.
+  if (
+    order.orderType === "ONLINE" &&
+    paymentData.method === "CASH" &&
+    order.orderStatus !== "ready"
+  ) {
+    await Order.updateOne(
+      { _id: orderId },
+      { $set: { paymentStatus: "pending", updatedAt: now } }
+    ).catch((e) => console.error("completePayment: releaseLock (not ready) failed", e));
+    throw new PaymentError(
+      PaymentErrorCode.ORDER_NOT_READY,
+      "Pesanan belum siap. Warehouse harus menandai pesanan sebagai 'ready' terlebih dahulu."
+    );
+  }
+
   // ── Kalkulasi diskon dan total akhir ─────────────────────────────────────────
   let discountTotal = 0;
   const itemsWithDiscount = order.items.map((item) => {

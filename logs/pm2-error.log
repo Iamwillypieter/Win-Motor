@@ -327665,3 +327665,781 @@
 2026-11-02 13:22:00:   address: '0.0.0.0',
 2026-11-02 13:22:00:   port: 3000
 2026-11-02 13:22:00: }
+2026-11-02 13:23:32: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 13:23:32: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 13:23:32:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 13:23:32:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 13:23:32:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 13:23:32:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 13:23:32:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 13:23:32:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 13:23:32:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 13:23:32:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 13:23:32:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 13:23:32:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 13:23:44:  ⨯ Error: Expected to use Webpack bindings (react-server-dom-webpack/server.edge) for React but the current process is referencing 'createClientModuleProxy' from the Turbopack bindings (react-server-dom-turbopack/server.edge). This is likely a bug in our integration of the Next.js server runtime.
+2026-11-02 13:23:44:     at Object.get (webpack://next/dist/esm/server/future/route-modules/app-page/vendored/rsc/entrypoints.js:11:23)
+2026-11-02 13:23:44:     at Object.<anonymous> (/turbopack/[project]/node_modules/next/dist/client/components/error-boundary.js/proxy.cjs:1:9)
+2026-11-02 13:23:44:     at [project]/node_modules/next/dist/client/components/error-boundary.js (client proxy) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7813:3)
+2026-11-02 13:23:44:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:23:44:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:23:44:     at esmImport (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:122:20)
+2026-11-02 13:23:44:     at d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7817:160
+2026-11-02 13:23:44:     at [project]/node_modules/next/dist/client/components/error-boundary.js [app-rsc] (ecmascript) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7823:3)
+2026-11-02 13:23:44:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:23:44:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:23:45:  ⨯ Error: Expected to use Webpack bindings (react-server-dom-webpack/server.edge) for React but the current process is referencing 'createClientModuleProxy' from the Turbopack bindings (react-server-dom-turbopack/server.edge). This is likely a bug in our integration of the Next.js server runtime.
+2026-11-02 13:23:45:     at Object.get (webpack://next/dist/esm/server/future/route-modules/app-page/vendored/rsc/entrypoints.js:11:23)
+2026-11-02 13:23:45:     at Object.<anonymous> (/turbopack/[project]/node_modules/next/dist/client/components/error-boundary.js/proxy.cjs:1:9)
+2026-11-02 13:23:45:     at [project]/node_modules/next/dist/client/components/error-boundary.js (client proxy) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7813:3)
+2026-11-02 13:23:45:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:23:45:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:23:45:     at esmImport (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:122:20)
+2026-11-02 13:23:45:     at d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7817:160
+2026-11-02 13:23:45:     at [project]/node_modules/next/dist/client/components/error-boundary.js [app-rsc] (ecmascript) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7823:3)
+2026-11-02 13:23:45:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:23:45:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:23:46:  ⨯ Error: Expected to use Webpack bindings (react-server-dom-webpack/server.edge) for React but the current process is referencing 'createClientModuleProxy' from the Turbopack bindings (react-server-dom-turbopack/server.edge). This is likely a bug in our integration of the Next.js server runtime.
+2026-11-02 13:23:46:     at Object.get (webpack://next/dist/esm/server/future/route-modules/app-page/vendored/rsc/entrypoints.js:11:23)
+2026-11-02 13:23:46:     at Object.<anonymous> (/turbopack/[project]/node_modules/next/dist/client/components/error-boundary.js/proxy.cjs:1:9)
+2026-11-02 13:23:46:     at [project]/node_modules/next/dist/client/components/error-boundary.js (client proxy) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7813:3)
+2026-11-02 13:23:46:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:23:46:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:23:46:     at esmImport (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:122:20)
+2026-11-02 13:23:46:     at d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7817:160
+2026-11-02 13:23:46:     at [project]/node_modules/next/dist/client/components/error-boundary.js [app-rsc] (ecmascript) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7823:3)
+2026-11-02 13:23:46:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:23:46:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:24:04:  ⨯ Error: Expected to use Webpack bindings (react-server-dom-webpack/server.edge) for React but the current process is referencing 'createClientModuleProxy' from the Turbopack bindings (react-server-dom-turbopack/server.edge). This is likely a bug in our integration of the Next.js server runtime.
+2026-11-02 13:24:04:     at Object.get (webpack://next/dist/esm/server/future/route-modules/app-page/vendored/rsc/entrypoints.js:11:23)
+2026-11-02 13:24:04:     at Object.<anonymous> (/turbopack/[project]/node_modules/next/dist/client/components/error-boundary.js/proxy.cjs:1:9)
+2026-11-02 13:24:04:     at [project]/node_modules/next/dist/client/components/error-boundary.js (client proxy) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7813:3)
+2026-11-02 13:24:04:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:24:04:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:24:04:     at esmImport (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:122:20)
+2026-11-02 13:24:04:     at d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7817:160
+2026-11-02 13:24:04:     at [project]/node_modules/next/dist/client/components/error-boundary.js [app-rsc] (ecmascript) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7823:3)
+2026-11-02 13:24:04:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:24:04:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:42:42:  ⨯ Error: Expected to use Webpack bindings (react-server-dom-webpack/server.edge) for React but the current process is referencing 'createClientModuleProxy' from the Turbopack bindings (react-server-dom-turbopack/server.edge). This is likely a bug in our integration of the Next.js server runtime.
+2026-11-02 13:42:42:     at Object.get (webpack://next/dist/esm/server/future/route-modules/app-page/vendored/rsc/entrypoints.js:11:23)
+2026-11-02 13:42:42:     at Object.<anonymous> (/turbopack/[project]/node_modules/next/dist/client/components/error-boundary.js/proxy.cjs:1:9)
+2026-11-02 13:42:42:     at [project]/node_modules/next/dist/client/components/error-boundary.js (client proxy) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7813:3)
+2026-11-02 13:42:42:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:42:42:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 13:42:42:     at esmImport (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:122:20)
+2026-11-02 13:42:42:     at d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7817:160
+2026-11-02 13:42:42:     at [project]/node_modules/next/dist/client/components/error-boundary.js [app-rsc] (ecmascript) (d:\Project Kiro\.next\server\chunks\ssr\node_modules_next_a05f62._.js:7823:3)
+2026-11-02 13:42:42:     at instantiateModule (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:520:23)
+2026-11-02 13:42:42:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\chunks\ssr\[turbopack]_runtime.js:572:12)
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:30:49:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '3696611519'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\src\components\providers\SessionProvider.jsx#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:46:384)
+2026-11-02 15:30:49:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '3920441617'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\layout-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:30:49:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '1321455615'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\render-from-template-context.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:30:49:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '342256735'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:30:49:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '1438178707'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:49: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:49:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:49:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:49:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:49:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:49:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:49:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:49:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:49:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:49:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:49:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:30:49:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '3696611519'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:30:49:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '3696611519'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:30:49:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:30:49:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:30:49:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:30:49:     at stringify (<anonymous>)
+2026-11-02 15:30:49:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:30:49:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:30:49:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:30:49:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:30:49:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:30:49:   digest: '1438178707'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49: [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:30:49:   digest: '3696611519'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:49:  ⨯ [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:30:49:   digest: '3696611519'
+2026-11-02 15:30:49: }
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:30:50: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:30:50: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:30:50:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:30:50:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:30:50:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:30:50:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:30:50:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:30:50:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:30:50:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:30:50:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:31:28:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '3696611519'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\src\components\providers\SessionProvider.jsx#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:46:384)
+2026-11-02 15:31:28:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '3920441617'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\layout-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:31:28:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '1321455615'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\render-from-template-context.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:31:28:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '342256735'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:31:28:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '1438178707'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:31:28:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '3696611519'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:31:28:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '3696611519'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:31:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:31:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:31:28:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:31:28:     at stringify (<anonymous>)
+2026-11-02 15:31:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:31:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:31:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:31:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:31:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:31:28:   digest: '1438178707'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:31:28:   digest: '3696611519'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28:  ⨯ [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:31:28:   digest: '3696611519'
+2026-11-02 15:31:28: }
+2026-11-02 15:31:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:31:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:31:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:31:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:31:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:31:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:31:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:31:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:31:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:31:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:31:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:31:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:31:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:31:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:31:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:31:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:31:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:31:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:31:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:31:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:31:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:31:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:31:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:31:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:31:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:31:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:31:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:31:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:31:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:31:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:31:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:31:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:31:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:31:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:31:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:31:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:31:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:31:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:31:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:31:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:31:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:31:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:31:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:31:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:31:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:31:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:31:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:31:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:31:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:31:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:31:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:31:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:31:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:31:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:31:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:31:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:31:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:31:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:32:08:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '3696611519'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\src\components\providers\SessionProvider.jsx#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:46:384)
+2026-11-02 15:32:08:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '3920441617'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\layout-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:32:08:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '1321455615'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\render-from-template-context.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:32:08:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '342256735'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:32:08:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '1438178707'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:32:08:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '3696611519'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:32:08:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '3696611519'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:32:08:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:32:08:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:32:08:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:32:08:     at stringify (<anonymous>)
+2026-11-02 15:32:08:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:32:08:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:32:08:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:32:08:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:32:08:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:32:08:   digest: '1438178707'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:32:08:   digest: '3696611519'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08:  ⨯ [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:32:08:   digest: '3696611519'
+2026-11-02 15:32:08: }
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:32:08: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:32:08: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:32:08:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:32:08:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:32:08:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:32:08:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:32:08:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:32:08:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:32:08:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:32:08:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:33:27: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:27:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:27:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:33:27:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:27:     at stringify (<anonymous>)
+2026-11-02 15:33:27:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:27:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:27:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:27:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:27:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:27:   digest: '3696611519'
+2026-11-02 15:33:27: }
+2026-11-02 15:33:27: Error: Could not find the module "D:\Project Kiro\src\components\providers\SessionProvider.jsx#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:27:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:27:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:46:384)
+2026-11-02 15:33:27:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:27:     at stringify (<anonymous>)
+2026-11-02 15:33:27:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:27:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:27:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:27:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:27:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:27:   digest: '3920441617'
+2026-11-02 15:33:27: }
+2026-11-02 15:33:27: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\layout-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:27:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:27:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:33:27:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:27:     at stringify (<anonymous>)
+2026-11-02 15:33:27:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:27:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:27:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:27:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:27:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:27:   digest: '1321455615'
+2026-11-02 15:33:27: }
+2026-11-02 15:33:27: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\render-from-template-context.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:27:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:27:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:33:27:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:27:     at stringify (<anonymous>)
+2026-11-02 15:33:27:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:27:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:27:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:27:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:27:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:27:   digest: '342256735'
+2026-11-02 15:33:27: }
+2026-11-02 15:33:27: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:27:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:27:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:33:27:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:27:     at stringify (<anonymous>)
+2026-11-02 15:33:27:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:27:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:27:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:27:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:27:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:27:   digest: '1438178707'
+2026-11-02 15:33:27: }
+2026-11-02 15:33:27: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:27:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:27:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:33:27:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:27:     at stringify (<anonymous>)
+2026-11-02 15:33:27:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:27:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:27:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:27:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:27:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:27:   digest: '3696611519'
+2026-11-02 15:33:27: }
+2026-11-02 15:33:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\app-router.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:33:28:     at Array.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:28:     at stringify (<anonymous>)
+2026-11-02 15:33:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:28:   digest: '3696611519'
+2026-11-02 15:33:28: }
+2026-11-02 15:33:28: Error: Could not find the module "D:\Project Kiro\node_modules\next\dist\client\components\error-boundary.js#" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+2026-11-02 15:33:28:     at ob (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:44:314)
+2026-11-02 15:33:28:     at Q (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:49:439)
+2026-11-02 15:33:28:     at Object.toJSON (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:42:270)
+2026-11-02 15:33:28:     at stringify (<anonymous>)
+2026-11-02 15:33:28:     at pb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:54:147)
+2026-11-02 15:33:28:     at mb (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:55:129)
+2026-11-02 15:33:28:     at Timeout._onTimeout (webpack://next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-server.edge.production.min.js:41:308)
+2026-11-02 15:33:28:     at listOnTimeout (node:internal/timers:605:17)
+2026-11-02 15:33:28:     at process.processTimers (node:internal/timers:541:7) {
+2026-11-02 15:33:28:   digest: '1438178707'
+2026-11-02 15:33:28: }
+2026-11-02 15:33:28: [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:33:28:   digest: '3696611519'
+2026-11-02 15:33:28: }
+2026-11-02 15:33:28:  ⨯ [Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+2026-11-02 15:33:28:   digest: '3696611519'
+2026-11-02 15:33:28: }
+2026-11-02 15:33:28: Error: The edge runtime does not support Node.js 'stream' module.
+2026-11-02 15:33:28: Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+2026-11-02 15:33:28:     at Object.get (d:\Project Kiro\.next\server\edge\chunks\ssr\_b4f80d._.js:38:19)
+2026-11-02 15:33:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7168:45)
+2026-11-02 15:33:28:     at [project]/node_modules/mongodb/lib/cursor/abstract_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7294:3)
+2026-11-02 15:33:28:     at d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:535:27
+2026-11-02 15:33:28:     at runModuleExecutionHooks (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:577:9)
+2026-11-02 15:33:28:     at instantiateModule (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:533:9)
+2026-11-02 15:33:28:     at getOrInstantiateModuleFromParent (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:609:12)
+2026-11-02 15:33:28:     at commonJsRequire (d:\Project Kiro\.next\server\edge\chunks\ssr\edge-wrapper_47bb46.js:146:20)
+2026-11-02 15:33:28:     at Object.<anonymous> (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7343:27)
+2026-11-02 15:33:28:     at [project]/node_modules/mongodb/lib/cursor/aggregation_cursor.js [middleware] (ecmascript) (d:\Project Kiro\.next\server\edge\chunks\ssr\node_modules_mongodb_lib_0f3e99._.js:7506:3)
+2026-11-02 15:40:44: (node:9980) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-02 15:40:44: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-11-02 15:40:44: (node:9980) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
