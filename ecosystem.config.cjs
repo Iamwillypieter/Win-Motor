@@ -7,6 +7,9 @@
  * Setup autostart saat Windows boot (jalankan sekali sebagai admin):
  *   pm2 startup
  *   pm2 save
+ *
+ * Cek URL publik tunnel setelah semua running:
+ *   pm2 logs pos-tunnel --lines 20
  */
 module.exports = {
   apps: [
@@ -51,6 +54,33 @@ module.exports = {
 
       out_file: "logs/pm2-proxy-out.log",
       error_file: "logs/pm2-proxy-error.log",
+      merge_logs: true,
+      log_date_format: "YYYY-MM-DD HH:mm:ss",
+
+      min_uptime: "5s",
+      max_restarts: 10,
+    },
+    {
+      name: "pos-tunnel",
+      // Cloudflare Quick Tunnel — ekspos Next.js ke internet tanpa akun/domain
+      // URL publik (https://xxxx.trycloudflare.com) tercetak di log saat pertama start.
+      // Cek dengan: pm2 logs pos-tunnel --lines 20
+      //
+      // CATATAN: URL berubah setiap kali tunnel di-restart karena ini quick tunnel.
+      // Untuk URL permanen, buat akun Cloudflare gratis dan pakai "named tunnel".
+      script: "C:\\Program Files (x86)\\cloudflared\\cloudflared.exe",
+      args: "tunnel --url http://localhost:3000 --logfile logs/cloudflared.log",
+      cwd: "d:\\Project Kiro",
+
+      // Interpreter "none" karena cloudflared adalah executable native, bukan JS
+      interpreter: "none",
+
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "128M",
+
+      out_file: "logs/pm2-tunnel-out.log",
+      error_file: "logs/pm2-tunnel-error.log",
       merge_logs: true,
       log_date_format: "YYYY-MM-DD HH:mm:ss",
 

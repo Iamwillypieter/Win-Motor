@@ -152,111 +152,74 @@ Start-ScheduledTask -TaskName 'POS-System-AutoStart'
 
 ---
 
-## Deploy ke Vercel
+## Akses dari Internet via Cloudflare Tunnel
 
-### Langkah 1 — Siapkan Database MongoDB Atlas
+Aplikasi berjalan sepenuhnya di PC lokal (Next.js + MongoDB). Cloudflare Tunnel
+membuat "terowongan" dari PC ke internet sehingga pengguna bisa membuka
+aplikasi dari URL publik tanpa memindahkan apapun ke cloud.
 
-1. Daftar di [cloud.mongodb.com](https://cloud.mongodb.com) (gratis)
-2. Buat cluster baru (pilih **M0 Free**)
-3. Buat database user: **Database Access** → Add New Database User
-4. Whitelist semua IP: **Network Access** → Add IP Address → `0.0.0.0/0`
-5. Salin connection string dari **Connect** → **Drivers**
-
-### Langkah 2 — Deploy ke Vercel
-
-**Opsi A — Via Vercel Dashboard (Direkomendasikan)**
-
-1. Push kode ke GitHub/GitLab/Bitbucket
-2. Buka [vercel.com](https://vercel.com) → **New Project**
-3. Import repository
-4. Vercel otomatis deteksi Next.js — klik **Deploy**
-
-**Opsi B — Via Vercel CLI**
-
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Login
-vercel login
-
-# Deploy
-vercel
-
-# Deploy ke production
-vercel --prod
+```
+Pengguna (HP/laptop mana saja)
+        ↓
+https://xxxx.trycloudflare.com  ← URL publik dari Cloudflare
+        ↓ tunnel terenkripsi
+PC kamu: PM2 → Next.js :3000 → MongoDB :27017
 ```
 
-### Langkah 3 — Set Environment Variables di Vercel
+### Setup Pertama
 
-Buka **Project → Settings → Environment Variables** dan tambahkan:
+Cloudflare Tunnel sudah dikonfigurasi di `ecosystem.config.cjs` sebagai app
+`pos-tunnel`. Tidak perlu akun Cloudflare — langsung jalan dengan Quick Tunnel.
 
-| Variable | Value | Environment |
-|---|---|---|
-| `MONGODB_URI` | `mongodb+srv://...` | Production, Preview, Development |
-| `NEXTAUTH_SECRET` | String acak 32+ karakter | Production, Preview, Development |
-| `NEXTAUTH_URL` | `https://nama-project.vercel.app` | Production |
-| `FONNTE_TOKEN` | Token dari fonnte.com (opsional) | Production |
-| `PAYMENT_WEBHOOK_SECRET` | String acak (opsional) | Production |
-| `CRON_SECRET` | String acak — generate otomatis oleh Vercel | Production |
+Jalankan semua sekaligus dengan PM2:
 
-> **Generate NEXTAUTH_SECRET:**
-> ```bash
-> node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-> ```
-
-### Langkah 4 — Seed Database Production
-
-Setelah deploy, jalankan seed dari lokal dengan MONGODB_URI production:
-
-```bash
-# Windows CMD
-set MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/pos-system
-npm run seed
-
-# Windows PowerShell
-$env:MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/pos-system"
-npm run seed
+```powershell
+pm2 start ecosystem.config.cjs
+pm2 save
 ```
 
-### Langkah 5 — Update NEXTAUTH_URL
+### Cek URL Publik
 
-Setelah deploy pertama, salin URL Vercel (contoh: `https://pos-system-abc.vercel.app`) dan update environment variable `NEXTAUTH_URL` di Vercel Dashboard, lalu **Redeploy**.
+Setelah PM2 start, tunggu 10-15 detik lalu jalankan:
+
+```powershell
+npm run tunnel:url
+```
+
+Atau lihat log langsung:
+
+```powershell
+npm run tunnel:logs
+```
+
+URL akan terlihat seperti: `https://abc-xyz-123.trycloudflare.com`
+
+Bagikan URL tersebut ke pengguna. Mereka langsung bisa buka dan login.
+
+### ⚠️ Catatan Penting
+
+- **URL berubah** setiap kali tunnel di-restart (karena Quick Tunnel). Kalau
+  perlu URL permanen, daftar akun Cloudflare gratis dan buat Named Tunnel
+  dengan domain sendiri.
+- **PC harus nyala** agar aplikasi bisa diakses. Kalau PC mati, URL tidak bisa
+  dibuka.
+- **Auto-start** — jika PM2 sudah di-setup autostart (`pm2 startup && pm2 save`),
+  tunnel ikut jalan otomatis saat Windows login.
+
+### PM2 — Semua Perintah
+
+```powershell
+pm2 start ecosystem.config.cjs   # Start semua (Next.js + proxy HTTPS + tunnel)
+pm2 list                          # Lihat status semua app
+pm2 logs pos-system               # Log Next.js
+pm2 logs pos-tunnel               # Log tunnel (termasuk URL publik)
+npm run tunnel:url                # Tampilkan URL tunnel saat ini
+pm2 stop pos-tunnel               # Hentikan tunnel saja
+pm2 restart pos-tunnel            # Restart tunnel (URL akan berubah)
+pm2 stop all                      # Hentikan semua
+```
 
 ---
-
-## Tetap Bisa Development Lokal Setelah Deploy
-
-Tidak ada konflik antara local dan production karena:
-
-- **`.env.local`** — hanya dibaca di local, tidak pernah di-commit ke Git (sudah ada di `.gitignore`)
-- **Vercel** — membaca environment variables dari dashboard, bukan dari file
-- **Database** — gunakan database berbeda: local pakai MongoDB lokal, production pakai MongoDB Atlas
-
-### Workflow yang Direkomendasikan
-
-```
-Local Development (.env.local)          Production (Vercel Dashboard)
-─────────────────────────────           ──────────────────────────────
-MONGODB_URI=localhost:27017/pos-dev     MONGODB_URI=atlas.../pos-prod
-NEXTAUTH_URL=— (tidak di-set, trustHost)  NEXTAUTH_URL=https://app.vercel.app
-NEXTAUTH_SECRET=local-secret            NEXTAUTH_SECRET=strong-random-secret
-```
-
-### Menggunakan Database Atlas untuk Local (Opsional)
-
-Jika ingin test dengan data production di local:
-
-```bash
-# .env.local
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/pos-system-dev
-```
-
-Gunakan database name berbeda (`pos-system-dev`) agar tidak tercampur dengan data production.
-
----
-
-## Struktur Folder
 
 ```
 src/
@@ -285,39 +248,24 @@ tests/
 
 ## Troubleshooting
 
-**Build gagal di Vercel**
-- Pastikan semua environment variables sudah diset
-- Cek build log di Vercel Dashboard
+**Tunnel tidak mau start**
+- Pastikan `cloudflared` sudah terinstall: `cloudflared --version`
+- Cek log: `pm2 logs pos-tunnel --lines 50`
+- Restart tunnel: `pm2 restart pos-tunnel`
 
-**Login tidak bisa di production**
-- Pastikan `NEXTAUTH_URL` sudah diisi dengan URL Vercel yang benar
-- Pastikan `NEXTAUTH_SECRET` sudah diset
+**URL tunnel tidak ketemu**
+- Tunggu 15-20 detik setelah PM2 start, lalu jalankan `npm run tunnel:url`
+- Atau cek langsung: `pm2 logs pos-tunnel --lines 30`
+- URL ada di baris yang mengandung `trycloudflare.com`
+
+**Login tidak bisa via URL publik**
+- NextAuth sudah pakai `trustHost: true` — tidak perlu set `NEXTAUTH_URL`
+- Pastikan Next.js jalan: `pm2 list` (status `pos-system` harus `online`)
+
+**Halaman tidak bisa dibuka via URL publik tapi lokal bisa**
+- Cek status tunnel: `pm2 list` (status `pos-tunnel` harus `online`)
+- Restart: `pm2 restart pos-tunnel` — tunggu 15 detik — cek URL baru
 
 **Database connection error**
-- Pastikan IP `0.0.0.0/0` sudah di-whitelist di MongoDB Atlas Network Access
-- Cek format connection string MongoDB Atlas
-
-**SSE tidak berfungsi di Vercel**
-- Vercel Serverless Functions memiliki timeout 10 detik untuk Hobby plan
-- SSE memerlukan koneksi yang tetap terbuka — gunakan **Vercel Pro** atau deploy ke platform yang mendukung long-running connections (Railway, Render, dll)
-- Alternatif: upgrade ke Vercel Pro atau gunakan Vercel Edge Runtime untuk SSE
-
----
-
-## Catatan Penting: SSE di Vercel
-
-Fitur real-time (notifikasi pesanan, update stok) menggunakan **Server-Sent Events (SSE)** yang memerlukan koneksi HTTP yang tetap terbuka.
-
-### Opsi 1 — Vercel Pro (Direkomendasikan)
-Vercel Pro mendukung streaming response hingga 25 detik (bisa diperpanjang). SSE akan berfungsi normal.
-
-### Opsi 2 — Vercel Hobby (Gratis) dengan Polling Fallback
-Pada Vercel Hobby, SSE akan timeout setelah 10 detik. Fitur real-time akan terdegradasi — halaman perlu di-refresh manual untuk melihat update.
-
-### Opsi 3 — Platform Alternatif
-Deploy ke platform yang mendukung long-running connections:
-- **Railway** — [railway.app](https://railway.app) (gratis tier tersedia)
-- **Render** — [render.com](https://render.com) (gratis tier tersedia)
-- **Fly.io** — [fly.io](https://fly.io)
-
-Untuk Railway/Render, tidak perlu `vercel.json` — cukup set environment variables dan deploy langsung dari GitHub.
+- Pastikan MongoDB service jalan: `Get-Service MongoDB`
+- Cek `MONGODB_URI` di `.env.local` sudah benar

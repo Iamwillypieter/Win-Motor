@@ -45668,3 +45668,68 @@
 [08:27:13]  G£ô Starting...
 [08:27:14]  G£ô Compiled in 470ms
 [08:27:14]  G£ô Ready in 1403ms
+[2026-11-02 07:55:31] ===== POS launcher dimulai =====
+[2026-11-02 07:55:31] Project root : D:\Project Kiro
+[2026-11-02 07:55:31] Log file     : D:\Project Kiro\logs\pos.log
+[2026-11-02 07:55:31] MongoDB siap di 127.0.0.1:27017.
+[2026-11-02 07:55:31] [1] Menjalankan: npm run dev + https-proxy
+[07:55:32] [proxy] [proxy] Menunggu dev server di port 3000...
+[07:55:34] 
+[07:55:34] > pos-system@0.1.0 predev
+[07:55:34] > node scripts/generate-https-cert.mjs
+[07:55:34] 
+[07:55:35] [HTTPS] Sertifikat dibuat untuk:
+[07:55:35] [HTTPS]   Hostname : localhost, willy-pieter, willy-pieter.local
+[07:55:35] [HTTPS]   IP       : 127.0.0.1, 100.127.255.253, 192.168.3.77
+[07:55:35] [HTTPS] Akses dari HP: https://willy-pieter.local:3443
+[07:55:35] 
+[07:55:35] > pos-system@0.1.0 dev
+[07:55:35] > next dev --turbo --hostname 0.0.0.0
+[07:55:35] 
+[07:55:39]   Gû¦ Next.js 14.2.35 (turbo)
+[07:55:39]   - Local:        http://localhost:3000
+[07:55:39]   - Network:      http://0.0.0.0:3000
+[07:55:39]   - Environments: .env.local
+[07:55:39] 
+[07:55:39]  G£ô Starting...
+[07:56:01]  G£ô Compiled in 15s
+[07:56:03]  G£ô Ready in 23.7s
+[07:56:03]  Gùï Compiling / ...
+[07:56:26]  G£ô Compiled / in 23.3s
+[07:56:27]  HEAD / 200 in 1881ms
+[07:56:28]  HEAD / 307 in 554ms
+[07:56:28]  HEAD / 307 in 168ms
+[07:56:28] [proxy] [proxy] Dev server siap.
+[07:56:28] [proxy] [proxy] Port 3443 sudah dipakai GÇö proxy tidak dijalankan.
+[2026-11-02 10:52:11] ===== POS launcher dimulai =====
+[2026-11-02 10:52:11] Project root : D:\Project Kiro
+[2026-11-02 10:52:11] Log file     : D:\Project Kiro\logs\pos.log
+[2026-11-02 10:52:11] MongoDB siap di 127.0.0.1:27017.
+[2026-11-02 10:52:11] [1] Menjalankan: npm run dev + https-proxy
+[10:52:13] [cert] [HTTPS] Sertifikat dibuat untuk:
+[10:52:13] [cert] [HTTPS]   Hostname : localhost, willy-pieter, willy-pieter.local
+[10:52:13] [cert] [HTTPS]   IP       : 127.0.0.1, 192.168.3.77
+[10:52:13] [cert] [HTTPS] Akses dari HP: https://willy-pieter.local:3443
+[10:52:14] [proxy] [proxy] Menunggu dev server di port 3000...
+[10:52:15] 
+[10:52:15] > pos-system@0.1.0 predev
+[10:52:15] > node scripts/generate-https-cert.mjs
+[10:52:15] 
+[10:52:15] 
+[10:52:15] > pos-system@0.1.0 dev
+[10:52:15] > next dev --turbo --hostname 0.0.0.0
+[10:52:15] 
+[10:52:20]   Gû¦ Next.js 14.2.35 (turbo)
+[10:52:20]   - Local:        http://localhost:3000
+[10:52:20]   - Network:      http://0.0.0.0:3000
+[10:52:20]   - Environments: .env.local
+[10:52:20] 
+[10:52:20]  G£ô Starting...
+[10:52:42]  G£ô Compiled in 14.8s
+[10:52:43]  G£ô Ready in 23.6s
+[10:52:44]  Gùï Compiling / ...
+[10:53:10]  G£ô Compiled / in 26.6s
+[10:53:12]  HEAD / 307 in 599ms
+[10:53:12]  HEAD / 307 in 689ms
+[10:53:12] [proxy] [proxy] Dev server siap.
+[10:53:12] [proxy] [proxy] Port 3443 sudah dipakai GÇö proxy tidak dijalankan.

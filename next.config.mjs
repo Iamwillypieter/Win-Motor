@@ -5,7 +5,7 @@ const nextConfig = {
     remotePatterns: [],
   },
 
-  // Izinkan Server Actions dari origin lokal (IP LAN dan hostname .local via HTTPS proxy)
+  // Izinkan Server Actions dari semua origin (lokal + Cloudflare tunnel)
   experimental: {
     serverActions: {
       allowedOrigins: [
@@ -18,6 +18,9 @@ const nextConfig = {
         // IP LAN yang umum dipakai router rumah/toko
         "192.168.1.1:3443",
         "192.168.3.77:3443",
+        // Cloudflare Tunnel — semua subdomain trycloudflare.com
+        // (URL berubah setiap restart, jadi wildcard diperlukan)
+        "*.trycloudflare.com",
       ],
     },
     serverComponentsExternalPackages: ["bcryptjs", "mongoose"],

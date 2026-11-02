@@ -21,7 +21,9 @@
     "pm2:stop": "pm2 stop pos-system",
     "pm2:restart": "pm2 restart pos-system",
     "pm2:logs": "pm2 logs pos-system",
-    "pm2:status": "pm2 list"
+    "pm2:status": "pm2 list",
+    "tunnel:url": "node scripts/get-tunnel-url.mjs",
+    "tunnel:logs": "pm2 logs pos-tunnel --lines 30"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

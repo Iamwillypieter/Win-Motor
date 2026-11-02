@@ -5,7 +5,7 @@ import { getDefaultRedirect } from "@/lib/auth";
 /**
  * Root page — redirect berdasarkan status sesi:
  * - Sudah login → halaman sesuai role
- * - Belum login → halaman toko online publik (/store)
+ * - Belum login → halaman login
  */
 export default async function RootPage() {
   const session = await auth();
@@ -14,6 +14,6 @@ export default async function RootPage() {
     redirect(getDefaultRedirect(session.user.role));
   }
 
-  // Pelanggan yang belum login diarahkan ke toko online
-  redirect("/store");
+  // Belum login → arahkan ke halaman login
+  redirect("/login");
 }

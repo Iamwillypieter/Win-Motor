@@ -1,0 +1,319 @@
+{"level":"info","time":"2026-10-31T04:28:26Z","message":"Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps"}
+{"level":"info","time":"2026-10-31T04:28:26Z","message":"Requesting new quick Tunnel on trycloudflare.com..."}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"+--------------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"|  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"|  https://generator-arm-eligible-sudden.trycloudflare.com                                   |"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"+--------------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"Version 2026.10.7 (Checksum 2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343)"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"GOOS: windows, GOVersion: go1.27.3, GoArch: amd64"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"Settings: map[ha-connections:1 logfile:logs/cloudflared.log protocol:quic url:http://localhost:3000]"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"cloudflared will not automatically update on Windows systems."}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"Generated Connector ID: 1b5c8627-b54a-4d17-85ed-c0135a36adb0"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"Initial protocol quic"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"ICMP proxy will use 192.168.3.77 as source for IPv4"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"ICMP proxy will use fe80::52ac:ccae:6b88:f27d in zone Ethernet as source for IPv6"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"ICMP proxy will use 192.168.3.77 as source for IPv4"}
+{"level":"info","event":0,"ip":"198.41.192.67","connIndex":0,"time":"2026-10-31T04:28:32Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"ICMP proxy will use fe80::52ac:ccae:6b88:f27d in zone Ethernet as source for IPv6"}
+{"level":"info","time":"2026-10-31T04:28:32Z","message":"Starting metrics server on 127.0.0.1:20241/metrics"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|                               CONNECTIVITY PRE-CHECKS                               |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  COMPONENT         TARGET                     STATUS  DETAILS                       |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  DNS Resolution    region1.v2.argotunnel.com  PASS    DNS Resolved successfully     |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  DNS Resolution    region2.v2.argotunnel.com  PASS    DNS Resolved successfully     |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  UDP Connectivity  region1.v2.argotunnel.com  PASS    QUIC connection successful    |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  UDP Connectivity  region2.v2.argotunnel.com  PASS    QUIC connection successful    |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  TCP Connectivity  region1.v2.argotunnel.com  PASS    HTTP/2 connection successful  |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  TCP Connectivity  region2.v2.argotunnel.com  PASS    HTTP/2 connection successful  |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  Cloudflare API    api.cloudflare.com:443     PASS    API is reachable              |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|                                                                                     |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"|  SUMMARY: Environment is healthy. cloudflared will use 'quic' as primary protocol.  |"}
+{"level":"info","time":"2026-10-31T04:28:33Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","component":"DNS Resolution","target":"region1.v2.argotunnel.com","status":"pass","details":"DNS Resolved successfully","time":"2026-10-31T04:28:33Z","message":"precheck"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","component":"DNS Resolution","target":"region2.v2.argotunnel.com","status":"pass","details":"DNS Resolved successfully","time":"2026-10-31T04:28:33Z","message":"precheck"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","component":"UDP Connectivity","target":"region1.v2.argotunnel.com","status":"pass","details":"QUIC connection successful","time":"2026-10-31T04:28:33Z","message":"precheck"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","component":"UDP Connectivity","target":"region2.v2.argotunnel.com","status":"pass","details":"QUIC connection successful","time":"2026-10-31T04:28:33Z","message":"precheck"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","component":"TCP Connectivity","target":"region1.v2.argotunnel.com","status":"pass","details":"HTTP/2 connection successful","time":"2026-10-31T04:28:33Z","message":"precheck"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","component":"TCP Connectivity","target":"region2.v2.argotunnel.com","status":"pass","details":"HTTP/2 connection successful","time":"2026-10-31T04:28:33Z","message":"precheck"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","component":"Cloudflare API","target":"api.cloudflare.com:443","status":"pass","details":"API is reachable","time":"2026-10-31T04:28:33Z","message":"precheck"}
+{"level":"info","run_id":"cbd4d46a-bc4c-49bc-8c22-b9c1792b60c8","hard_fail":false,"suggested_protocol":"quic","time":"2026-10-31T04:28:33Z","message":"precheck complete"}
+{"level":"info","event":0,"connection":"4762b92e-3488-45ab-9f19-e0af376d4d88","connIndex":0,"location":"sin17","ip":"198.41.192.67","protocol":"quic","time":"2026-10-31T04:28:33Z","message":"Registered tunnel connection"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 269 canceled by remote with error code 0","time":"2026-10-31T04:34:27Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 269 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:34:27Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 785 canceled by remote with error code 0","time":"2026-10-31T04:42:21Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 785 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:42:21Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 789 canceled by remote with error code 0","time":"2026-10-31T04:42:21Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 789 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:42:21Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 793 canceled by remote with error code 0","time":"2026-10-31T04:42:21Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 793 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:42:21Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"Incoming request ended abruptly: context canceled","time":"2026-10-31T04:47:10Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"Incoming request ended abruptly: context canceled","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/auth/session","time":"2026-10-31T04:47:10Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 825 canceled by remote with error code 0","time":"2026-10-31T04:47:17Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 825 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:17Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 821 canceled by remote with error code 0","time":"2026-10-31T04:47:17Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 817 canceled by remote with error code 0","time":"2026-10-31T04:47:17Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 821 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:17Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 817 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:17Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 881 canceled by remote with error code 0","time":"2026-10-31T04:47:27Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 861 canceled by remote with error code 0","time":"2026-10-31T04:47:27Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 861 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:27Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 881 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:27Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 877 canceled by remote with error code 0","time":"2026-10-31T04:47:27Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 877 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:27Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 901 canceled by remote with error code 0","time":"2026-10-31T04:47:29Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 913 canceled by remote with error code 0","time":"2026-10-31T04:47:29Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 901 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:29Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 909 canceled by remote with error code 0","time":"2026-10-31T04:47:29Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 913 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:29Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 909 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:29Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 941 canceled by remote with error code 0","time":"2026-10-31T04:47:33Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 941 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:33Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 937 canceled by remote with error code 0","time":"2026-10-31T04:47:33Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 937 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:33Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 929 canceled by remote with error code 0","time":"2026-10-31T04:47:33Z"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"stream 929 canceled by remote with error code 0","type":"http","dest":"https://generator-arm-eligible-sudden.trycloudflare.com/api/sse","time":"2026-10-31T04:47:33Z","message":"Request failed"}
+{"level":"error","error":"lookup region1.v2.argotunnel.com: i/o timeout","time":"2026-10-31T07:08:35Z","message":"Failed to refresh DNS local resolver"}
+{"level":"info","time":"2026-10-31T07:38:44Z","message":"Initiating graceful shutdown due to signal terminated ..."}
+{"level":"info","event":0,"ip":"198.41.192.67","connIndex":0,"time":"2026-10-31T07:38:44Z","message":"Retrying connection in up to 2s"}
+{"level":"error","connIndex":0,"time":"2026-10-31T07:38:44Z","message":"Connection terminated"}
+{"level":"error","time":"2026-10-31T07:38:44Z","message":"no more connections active and exiting"}
+{"level":"info","time":"2026-10-31T07:38:44Z","message":"Tunnel server stopped"}
+{"level":"info","time":"2026-10-31T07:38:44Z","message":"Metrics server stopped"}
+{"level":"info","time":"2026-11-01T07:39:56Z","message":"Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps"}
+{"level":"info","time":"2026-11-01T07:39:56Z","message":"Requesting new quick Tunnel on trycloudflare.com..."}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"+--------------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  https://motels-interview-controlling-addressing.trycloudflare.com                         |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"+--------------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"Version 2026.10.7 (Checksum 2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343)"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"GOOS: windows, GOVersion: go1.27.3, GoArch: amd64"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"Settings: map[ha-connections:1 logfile:logs/cloudflared.log protocol:quic url:http://localhost:3000]"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"cloudflared will not automatically update on Windows systems."}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"Generated Connector ID: b03f6e0c-527b-4b14-8b9c-7cded064d93f"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"Initial protocol quic"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"ICMP proxy will use 192.168.3.77 as source for IPv4"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"ICMP proxy will use fe80::52ac:ccae:6b88:f27d in zone Ethernet as source for IPv6"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"ICMP proxy will use 192.168.3.77 as source for IPv4"}
+{"level":"info","event":0,"ip":"198.41.192.77","connIndex":0,"time":"2026-11-01T07:40:01Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"ICMP proxy will use fe80::52ac:ccae:6b88:f27d in zone Ethernet as source for IPv6"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"Starting metrics server on 127.0.0.1:20241/metrics"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|                               CONNECTIVITY PRE-CHECKS                               |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  COMPONENT         TARGET                     STATUS  DETAILS                       |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  DNS Resolution    region1.v2.argotunnel.com  PASS    DNS Resolved successfully     |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  DNS Resolution    region2.v2.argotunnel.com  PASS    DNS Resolved successfully     |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  UDP Connectivity  region1.v2.argotunnel.com  PASS    QUIC connection successful    |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  UDP Connectivity  region2.v2.argotunnel.com  PASS    QUIC connection successful    |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  TCP Connectivity  region1.v2.argotunnel.com  PASS    HTTP/2 connection successful  |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  TCP Connectivity  region2.v2.argotunnel.com  PASS    HTTP/2 connection successful  |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  Cloudflare API    api.cloudflare.com:443     PASS    API is reachable              |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|                                                                                     |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"|  SUMMARY: Environment is healthy. cloudflared will use 'quic' as primary protocol.  |"}
+{"level":"info","time":"2026-11-01T07:40:01Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","component":"DNS Resolution","target":"region1.v2.argotunnel.com","status":"pass","details":"DNS Resolved successfully","time":"2026-11-01T07:40:01Z","message":"precheck"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","component":"DNS Resolution","target":"region2.v2.argotunnel.com","status":"pass","details":"DNS Resolved successfully","time":"2026-11-01T07:40:01Z","message":"precheck"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","component":"UDP Connectivity","target":"region1.v2.argotunnel.com","status":"pass","details":"QUIC connection successful","time":"2026-11-01T07:40:01Z","message":"precheck"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","component":"UDP Connectivity","target":"region2.v2.argotunnel.com","status":"pass","details":"QUIC connection successful","time":"2026-11-01T07:40:01Z","message":"precheck"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","component":"TCP Connectivity","target":"region1.v2.argotunnel.com","status":"pass","details":"HTTP/2 connection successful","time":"2026-11-01T07:40:01Z","message":"precheck"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","component":"TCP Connectivity","target":"region2.v2.argotunnel.com","status":"pass","details":"HTTP/2 connection successful","time":"2026-11-01T07:40:01Z","message":"precheck"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","component":"Cloudflare API","target":"api.cloudflare.com:443","status":"pass","details":"API is reachable","time":"2026-11-01T07:40:01Z","message":"precheck"}
+{"level":"info","run_id":"035beaca-795d-4e2d-a887-978b9d406b25","hard_fail":false,"suggested_protocol":"quic","time":"2026-11-01T07:40:01Z","message":"precheck complete"}
+{"level":"info","event":0,"connection":"a80828ce-ee79-473b-9f94-5d05fa1d7e64","connIndex":0,"location":"sin09","ip":"198.41.192.77","protocol":"quic","time":"2026-11-01T07:40:02Z","message":"Registered tunnel connection"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"Incoming request ended abruptly: context canceled","time":"2026-11-01T08:21:44Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"Incoming request ended abruptly: context canceled","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/auth/session","time":"2026-11-01T08:21:44Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 521 canceled by remote with error code 0","time":"2026-11-01T08:23:17Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 521 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:23:17Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 709 canceled by remote with error code 0","time":"2026-11-01T08:32:37Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 709 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:32:37Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 721 canceled by remote with error code 0","time":"2026-11-01T08:32:37Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 717 canceled by remote with error code 0","time":"2026-11-01T08:32:37Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 721 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:32:37Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 717 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:32:37Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 913 canceled by remote with error code 0","time":"2026-11-01T08:36:03Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 913 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:36:03Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 857 canceled by remote with error code 0","time":"2026-11-01T08:37:45Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 857 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:37:45Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 861 canceled by remote with error code 0","time":"2026-11-01T08:37:45Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 865 canceled by remote with error code 0","time":"2026-11-01T08:37:45Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 865 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:37:45Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 861 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:37:45Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 993 canceled by remote with error code 0","time":"2026-11-01T08:39:03Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 993 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:39:03Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 997 canceled by remote with error code 0","time":"2026-11-01T08:39:03Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 997 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:39:03Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 989 canceled by remote with error code 0","time":"2026-11-01T08:39:03Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 989 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:39:03Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1129 canceled by remote with error code 0","time":"2026-11-01T08:41:43Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1129 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:41:43Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1177 canceled by remote with error code 0","time":"2026-11-01T08:41:44Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1177 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:41:44Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1157 canceled by remote with error code 0","time":"2026-11-01T08:42:04Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1153 canceled by remote with error code 0","time":"2026-11-01T08:42:04Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1157 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:42:04Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1149 canceled by remote with error code 0","time":"2026-11-01T08:42:04Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1153 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:42:04Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1149 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:42:04Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1189 canceled by remote with error code 0","time":"2026-11-01T08:42:07Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1189 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:42:07Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1201 canceled by remote with error code 0","time":"2026-11-01T08:43:02Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1201 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:43:02Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1241 canceled by remote with error code 0","time":"2026-11-01T08:43:11Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1241 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:43:11Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1233 canceled by remote with error code 0","time":"2026-11-01T08:44:58Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1233 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:44:58Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1229 canceled by remote with error code 0","time":"2026-11-01T08:44:58Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1229 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:44:58Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1269 canceled by remote with error code 0","time":"2026-11-01T08:45:07Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1269 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:45:07Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1289 canceled by remote with error code 0","time":"2026-11-01T08:45:11Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1289 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:45:11Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1317 canceled by remote with error code 0","time":"2026-11-01T08:45:29Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1317 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:45:29Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1341 canceled by remote with error code 0","time":"2026-11-01T08:46:47Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1341 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:46:47Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1389 canceled by remote with error code 0","time":"2026-11-01T08:47:18Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1389 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:47:18Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1361 canceled by remote with error code 0","time":"2026-11-01T08:47:27Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1361 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:47:27Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1445 canceled by remote with error code 0","time":"2026-11-01T08:47:57Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1445 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:47:57Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1449 canceled by remote with error code 0","time":"2026-11-01T08:47:57Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1449 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:47:57Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1461 canceled by remote with error code 0","time":"2026-11-01T08:48:08Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1461 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:48:08Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 509 canceled by remote with error code 0","time":"2026-11-01T08:48:12Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 985 canceled by remote with error code 0","time":"2026-11-01T08:48:12Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 985 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:48:12Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 509 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:48:12Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1473 canceled by remote with error code 0","time":"2026-11-01T08:48:48Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1473 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:48:48Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1433 canceled by remote with error code 0","time":"2026-11-01T08:48:50Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1433 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:48:50Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1573 canceled by remote with error code 0","time":"2026-11-01T08:49:20Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1573 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:49:20Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1509 canceled by remote with error code 0","time":"2026-11-01T08:49:50Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1509 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:49:50Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1225 canceled by remote with error code 0","time":"2026-11-01T08:50:56Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1225 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:50:56Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1549 canceled by remote with error code 0","time":"2026-11-01T08:50:56Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1549 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:50:56Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1553 canceled by remote with error code 0","time":"2026-11-01T08:50:56Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1553 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:50:56Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1757 canceled by remote with error code 0","time":"2026-11-01T08:51:45Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1757 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:51:45Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1729 canceled by remote with error code 0","time":"2026-11-01T08:52:23Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1729 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T08:52:23Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1501 canceled by remote with error code 0","time":"2026-11-01T09:03:03Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1501 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:03:03Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1889 canceled by remote with error code 0","time":"2026-11-01T09:06:02Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1889 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:06:02Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1905 canceled by remote with error code 0","time":"2026-11-01T09:17:21Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1905 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:17:21Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2101 canceled by remote with error code 0","time":"2026-11-01T09:22:38Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2101 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:22:38Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2097 canceled by remote with error code 0","time":"2026-11-01T09:22:38Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2097 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:22:38Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2105 canceled by remote with error code 0","time":"2026-11-01T09:22:38Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2105 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:22:38Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1997 canceled by remote with error code 0","time":"2026-11-01T09:23:09Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1997 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:23:09Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 1965 canceled by remote with error code 0","time":"2026-11-01T09:23:09Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 1965 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:23:09Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2129 canceled by remote with error code 0","time":"2026-11-01T09:23:11Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2129 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:23:11Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2133 canceled by remote with error code 0","time":"2026-11-01T09:23:11Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2121 canceled by remote with error code 0","time":"2026-11-01T09:23:11Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2133 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:23:11Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2121 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:23:11Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2161 canceled by remote with error code 0","time":"2026-11-01T09:27:40Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2161 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:27:40Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2145 canceled by remote with error code 0","time":"2026-11-01T09:27:40Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2153 canceled by remote with error code 0","time":"2026-11-01T09:27:40Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2145 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:27:40Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2153 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:27:40Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2169 canceled by remote with error code 0","time":"2026-11-01T09:30:10Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2181 canceled by remote with error code 0","time":"2026-11-01T09:30:10Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2169 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:30:10Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2181 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:30:10Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2189 canceled by remote with error code 0","time":"2026-11-01T09:31:59Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2201 canceled by remote with error code 0","time":"2026-11-01T09:31:59Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2189 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:31:59Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2201 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:31:59Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2217 canceled by remote with error code 0","time":"2026-11-01T09:32:53Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2217 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:32:53Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2221 canceled by remote with error code 0","time":"2026-11-01T09:32:53Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2221 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:32:53Z","message":"Request failed"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2249 canceled by remote with error code 0","time":"2026-11-01T09:49:48Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2237 canceled by remote with error code 0","time":"2026-11-01T09:49:48Z"}
+{"level":"error","event":1,"connIndex":0,"originService":"http://localhost:3000","ingressRule":0,"error":"stream 2241 canceled by remote with error code 0","time":"2026-11-01T09:49:48Z"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2241 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:49:48Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2249 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:49:48Z","message":"Request failed"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"stream 2237 canceled by remote with error code 0","type":"http","dest":"https://motels-interview-controlling-addressing.trycloudflare.com/api/sse","time":"2026-11-01T09:49:48Z","message":"Request failed"}
+{"level":"error","error":"lookup region1.v2.argotunnel.com: i/o timeout","time":"2026-11-01T10:35:08Z","message":"Failed to refresh DNS local resolver"}
+{"level":"error","error":"lookup region1.v2.argotunnel.com: i/o timeout","time":"2026-11-01T13:05:13Z","message":"Failed to refresh DNS local resolver"}
+{"level":"error","error":"lookup region1.v2.argotunnel.com: i/o timeout","time":"2026-11-01T14:05:19Z","message":"Failed to refresh DNS local resolver"}
+{"level":"info","time":"2026-11-01T15:31:14Z","message":"Initiating graceful shutdown due to signal terminated ..."}
+{"level":"info","event":0,"ip":"198.41.192.77","connIndex":0,"time":"2026-11-01T15:31:14Z","message":"Retrying connection in up to 2s"}
+{"level":"error","connIndex":0,"time":"2026-11-01T15:31:14Z","message":"Connection terminated"}
+{"level":"error","time":"2026-11-01T15:31:14Z","message":"no more connections active and exiting"}
+{"level":"info","time":"2026-11-01T15:31:14Z","message":"Tunnel server stopped"}
+{"level":"info","time":"2026-11-01T15:31:14Z","message":"Metrics server stopped"}
+{"level":"info","time":"2026-11-02T00:55:54Z","message":"Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps"}
+{"level":"info","time":"2026-11-02T00:55:54Z","message":"Requesting new quick Tunnel on trycloudflare.com..."}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"+--------------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"|  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"|  https://companion-ships-amended-experimental.trycloudflare.com                            |"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"+--------------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"Version 2026.10.7 (Checksum 2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343)"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"GOOS: windows, GOVersion: go1.27.3, GoArch: amd64"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"Settings: map[ha-connections:1 logfile:logs/cloudflared.log protocol:quic url:http://localhost:3000]"}
+{"level":"info","time":"2026-11-02T00:55:58Z","message":"cloudflared will not automatically update on Windows systems."}
+{"level":"info","time":"2026-11-02T00:55:59Z","message":"Generated Connector ID: c79f189d-9c97-4aa2-951e-10c781aa0ef5"}
+{"level":"info","time":"2026-11-02T00:55:59Z","message":"Initial protocol quic"}
+{"level":"info","time":"2026-11-02T00:55:59Z","message":"ICMP proxy will use 100.127.255.253 as source for IPv4"}
+{"level":"info","time":"2026-11-02T00:55:59Z","message":"ICMP proxy will use fe80::556c:cdec:696e:86f2 in zone HotspotShield WinTun as source for IPv6"}
+{"level":"info","time":"2026-11-02T00:56:00Z","message":"cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool"}
+{"level":"info","time":"2026-11-02T00:56:00Z","message":"ICMP proxy will use 100.127.255.253 as source for IPv4"}
+{"level":"info","time":"2026-11-02T00:56:00Z","message":"ICMP proxy will use fe80::556c:cdec:696e:86f2 in zone HotspotShield WinTun as source for IPv6"}
+{"level":"info","time":"2026-11-02T00:56:00Z","message":"Starting metrics server on 127.0.0.1:20241/metrics"}
+{"level":"info","event":0,"ip":"198.41.192.77","connIndex":0,"time":"2026-11-02T00:56:00Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|                               CONNECTIVITY PRE-CHECKS                               |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  COMPONENT         TARGET                     STATUS  DETAILS                       |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  DNS Resolution    region1.v2.argotunnel.com  PASS    DNS Resolved successfully     |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  DNS Resolution    region2.v2.argotunnel.com  PASS    DNS Resolved successfully     |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  UDP Connectivity  region1.v2.argotunnel.com  PASS    QUIC connection successful    |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  UDP Connectivity  region2.v2.argotunnel.com  PASS    QUIC connection successful    |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  TCP Connectivity  region1.v2.argotunnel.com  PASS    HTTP/2 connection successful  |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  TCP Connectivity  region2.v2.argotunnel.com  PASS    HTTP/2 connection successful  |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  Cloudflare API    api.cloudflare.com:443     PASS    API is reachable              |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|                                                                                     |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"|  SUMMARY: Environment is healthy. cloudflared will use 'quic' as primary protocol.  |"}
+{"level":"info","time":"2026-11-02T00:56:02Z","message":"+-------------------------------------------------------------------------------------+"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","component":"DNS Resolution","target":"region1.v2.argotunnel.com","status":"pass","details":"DNS Resolved successfully","time":"2026-11-02T00:56:02Z","message":"precheck"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","component":"DNS Resolution","target":"region2.v2.argotunnel.com","status":"pass","details":"DNS Resolved successfully","time":"2026-11-02T00:56:02Z","message":"precheck"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","component":"UDP Connectivity","target":"region1.v2.argotunnel.com","status":"pass","details":"QUIC connection successful","time":"2026-11-02T00:56:02Z","message":"precheck"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","component":"UDP Connectivity","target":"region2.v2.argotunnel.com","status":"pass","details":"QUIC connection successful","time":"2026-11-02T00:56:02Z","message":"precheck"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","component":"TCP Connectivity","target":"region1.v2.argotunnel.com","status":"pass","details":"HTTP/2 connection successful","time":"2026-11-02T00:56:02Z","message":"precheck"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","component":"TCP Connectivity","target":"region2.v2.argotunnel.com","status":"pass","details":"HTTP/2 connection successful","time":"2026-11-02T00:56:02Z","message":"precheck"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","component":"Cloudflare API","target":"api.cloudflare.com:443","status":"pass","details":"API is reachable","time":"2026-11-02T00:56:02Z","message":"precheck"}
+{"level":"info","run_id":"54064f05-594c-432c-9787-06663de18c57","hard_fail":false,"suggested_protocol":"quic","time":"2026-11-02T00:56:02Z","message":"precheck complete"}
+{"level":"info","event":0,"connection":"831401d4-d6b2-463c-b087-b3a39d7c5929","connIndex":0,"location":"fra08","ip":"198.41.192.77","protocol":"quic","time":"2026-11-02T00:56:02Z","message":"Registered tunnel connection"}
+{"level":"error","event":0,"ip":"198.41.192.77","connIndex":0,"error":"datagram manager error: timeout: no recent network activity","time":"2026-11-02T01:05:50Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.77","connIndex":0,"time":"2026-11-02T01:05:50Z","message":"Retrying connection in up to 2s"}
+{"level":"info","event":0,"ip":"198.41.200.63","connIndex":0,"time":"2026-11-02T01:05:50Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"699d447a-7520-49f6-8516-c92ecf57908f","connIndex":0,"location":"sin12","ip":"198.41.200.63","protocol":"quic","time":"2026-11-02T01:05:50Z","message":"Registered tunnel connection"}
+{"level":"info","time":"2026-11-02T03:02:12Z","message":"Initiating graceful shutdown due to signal terminated ..."}
+{"level":"info","event":0,"ip":"198.41.200.63","connIndex":0,"time":"2026-11-02T03:02:12Z","message":"Retrying connection in up to 2s"}
+{"level":"error","connIndex":0,"time":"2026-11-02T03:02:12Z","message":"Connection terminated"}
+{"level":"error","time":"2026-11-02T03:02:12Z","message":"no more connections active and exiting"}
+{"level":"info","time":"2026-11-02T03:02:12Z","message":"Tunnel server stopped"}
+{"level":"info","time":"2026-11-02T03:02:12Z","message":"Metrics server stopped"}

@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultRedirect } from "@/lib/auth";
 import LoginForm from "@/components/auth/LoginForm";
-import Link from "next/link";
 
 export const metadata = {
   title: "Masuk — POS System",
@@ -26,16 +25,6 @@ export default async function LoginPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
           <LoginForm />
         </div>
-        {/* Link ke toko online untuk pelanggan */}
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Ingin berbelanja?{" "}
-          <Link
-            href="/store"
-            className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
-          >
-            Kunjungi Toko Online →
-          </Link>
-        </p>
       </div>
     </main>
   );
