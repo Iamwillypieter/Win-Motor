@@ -16749,3 +16749,24 @@
 2026-11-02 10:53:12: [proxy] Akses dari HP   : https://100.127.255.253:3443
 2026-11-02 10:53:12: [proxy] Akses dari HP   : https://192.168.3.77:3443
 2026-11-02 10:53:12: [proxy] (Buka di browser HP → terima peringatan sertifikat sekali)
+2026-11-03 07:55:54: [proxy] Menunggu dev server di port 3000...
+2026-11-03 07:56:32: [proxy] Dev server siap.
+2026-11-03 07:56:32: [proxy] HTTPS proxy aktif: https://localhost:3443
+2026-11-03 07:56:32: [proxy] Akses dari HP   : https://100.127.255.253:3443
+2026-11-03 07:56:32: [proxy] Akses dari HP   : https://192.168.3.77:3443
+2026-11-03 07:56:32: [proxy] (Buka di browser HP → terima peringatan sertifikat sekali)
+2026-11-03 08:10:32: [proxy] Menunggu dev server di port 3000...
+2026-11-03 08:11:07: [proxy] Dev server siap.
+2026-11-03 08:11:07: [proxy] HTTPS proxy aktif: https://localhost:3443
+2026-11-03 08:11:07: [proxy] Akses dari HP   : https://192.168.3.77:3443
+2026-11-03 08:11:07: [proxy] (Buka di browser HP → terima peringatan sertifikat sekali)
+2026-11-03 08:58:24: [proxy] Menunggu dev server di port 3000...
+2026-11-03 08:58:26: [proxy] Dev server siap.
+2026-11-03 08:58:26: [proxy] HTTPS proxy aktif: https://localhost:3443
+2026-11-03 08:58:26: [proxy] Akses dari HP   : https://192.168.3.77:3443
+2026-11-03 08:58:26: [proxy] (Buka di browser HP → terima peringatan sertifikat sekali)
+2026-11-03 09:41:50: [proxy] Menunggu dev server di port 3000...
+2026-11-03 09:42:01: [proxy] Dev server siap.
+2026-11-03 09:42:01: [proxy] HTTPS proxy aktif: https://localhost:3443
+2026-11-03 09:42:01: [proxy] Akses dari HP   : https://192.168.3.77:3443
+2026-11-03 09:42:01: [proxy] (Buka di browser HP → terima peringatan sertifikat sekali)

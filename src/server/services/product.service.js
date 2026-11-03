@@ -307,7 +307,23 @@ export async function getProducts({ search, sku } = {}) {
 
   const query = { isActive: true };
 
-  if (search && search.trim()) {
+  if (sku && sku.trim()) {
+    // --- Lookup via barcode/SKU scan ---
+    // Barcode scanner bisa membaca nilai yang sedikit berbeda dari SKU tersimpan
+    // (spasi ekstra, case berbeda, dll). Strategi lookup berlapis:
+    // 1. Exact match SKU (uppercase) — pakai index unique
+    // 2. Regex case-insensitive di SKU — toleransi case
+    // 3. Cari di aliases — barcode label bisa mengandung alias/nama alternatif
+    const rawSku = sku.trim();
+    const normalizedSku = rawSku.toUpperCase();
+    // Escape karakter regex special agar SKU dengan tanda baca (koma, titik, dll) aman
+    const escaped = rawSku.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    query.$or = [
+      { sku: normalizedSku },
+      { sku: new RegExp(`^${escaped}$`, "i") },
+      { aliases: { $elemMatch: { $regex: `^${escaped}$`, $options: "i" } } },
+    ];
+  } else if (search && search.trim()) {
     const term = search.trim();
     // Coba full-text search dulu. Kalau kata kunci terlalu pendek (< 3 karakter)
     // atau tidak cocok di index, gunakan regex fallback yang cek name, brand, dan aliases.
@@ -322,11 +338,6 @@ export async function getProducts({ search, sku } = {}) {
         { sku: re },
       ];
     }
-  }
-
-  if (sku && sku.trim()) {
-    // Exact match SKU atau regex untuk prefix search (scanner barcode)
-    query.sku = sku.toUpperCase().trim();
   }
 
   const products = await Product.find(query)

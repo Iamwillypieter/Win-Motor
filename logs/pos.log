@@ -45733,3 +45733,214 @@
 [10:53:12]  HEAD / 307 in 689ms
 [10:53:12] [proxy] [proxy] Dev server siap.
 [10:53:12] [proxy] [proxy] Port 3443 sudah dipakai GÇö proxy tidak dijalankan.
+[2026-11-03 07:55:30] ===== POS launcher dimulai =====
+[2026-11-03 07:55:30] Project root : D:\Project Kiro
+[2026-11-03 07:55:30] Log file     : D:\Project Kiro\logs\pos.log
+[2026-11-03 07:55:30] MongoDB siap di 127.0.0.1:27017.
+[2026-11-03 07:55:30] [1] Menjalankan: npm run dev + https-proxy
+[07:55:32] [proxy] [proxy] Menunggu dev server di port 3000...
+[07:55:33] 
+[07:55:33] > pos-system@0.1.0 predev
+[07:55:33] > node scripts/generate-https-cert.mjs
+[07:55:33] 
+[07:55:33] 
+[07:55:33] > pos-system@0.1.0 dev
+[07:55:33] > next dev --turbo --hostname 0.0.0.0
+[07:55:33] 
+[07:55:39]   Gû¦ Next.js 14.2.35 (turbo)
+[07:55:39]   - Local:        http://localhost:3000
+[07:55:39]   - Network:      http://0.0.0.0:3000
+[07:55:39]   - Environments: .env.local
+[07:55:39] 
+[07:55:39]  G£ô Starting...
+[07:56:03]  G£ô Compiled in 16.2s
+[07:56:06]  G£ô Ready in 27.6s
+[07:56:07]  Gùï Compiling / ...
+[07:56:29]  G£ô Compiled / in 23.1s
+[07:56:31]  HEAD / 200 in 1577ms
+[07:56:31]  HEAD / 200 in 1957ms
+[07:56:32]  HEAD / 307 in 198ms
+[07:56:32]  HEAD / 307 in 150ms
+[07:56:32] [proxy] [proxy] Dev server siap.
+[07:56:32] [proxy] [proxy] Port 3443 sudah dipakai GÇö proxy tidak dijalankan.
+[2026-11-03 08:10:08] ===== POS launcher dimulai =====
+[2026-11-03 08:10:08] Project root : D:\Project Kiro
+[2026-11-03 08:10:08] Log file     : D:\Project Kiro\logs\pos.log
+[2026-11-03 08:10:08] MongoDB siap di 127.0.0.1:27017.
+[2026-11-03 08:10:08] [1] Menjalankan: npm run dev + https-proxy
+[08:10:11] [proxy] [proxy] Menunggu dev server di port 3000...
+[08:10:12] 
+[08:10:12] > pos-system@0.1.0 predev
+[08:10:12] > node scripts/generate-https-cert.mjs
+[08:10:12] 
+[08:10:12] 
+[08:10:12] > pos-system@0.1.0 dev
+[08:10:12] > next dev --turbo --hostname 0.0.0.0
+[08:10:12] 
+[08:10:19]   Gû¦ Next.js 14.2.35 (turbo)
+[08:10:19]   - Local:        http://localhost:3000
+[08:10:19]   - Network:      http://0.0.0.0:3000
+[08:10:19]   - Environments: .env.local
+[08:10:19] 
+[08:10:19]  G£ô Starting...
+[08:10:45]  G£ô Compiled in 16.4s
+[08:10:46]  G£ô Ready in 27.3s
+[08:10:47]  Gùï Compiling / ...
+[08:11:05]  G£ô Compiled / in 18.8s
+[08:11:07]  HEAD / 200 in 1959ms
+[08:11:07]  HEAD / 200 in 1516ms
+[08:11:07]  GET / 307 in 20557ms
+[08:11:07]  HEAD / 307 in 136ms
+[08:11:07]  Gùï Compiling /login ...
+[08:11:08]  HEAD / 307 in 168ms
+[08:11:08] [proxy] [proxy] Dev server siap.
+[08:11:08] [proxy] [proxy] Port 3443 sudah dipakai GÇö proxy tidak dijalankan.
+[08:11:08]  G£ô Compiled /login in 1364ms
+[08:11:08]  GET /login 200 in 1476ms
+[08:11:09]  GÜá Cross origin request detected from 192.168.3.77 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[08:11:09] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[08:11:09]  GET /favicon.ico?favicon.45db1c09.ico 200 in 501ms
+[08:11:09]  Gùï Compiling /favicon.ico ...
+[08:11:09]  G£ô Compiled /favicon.ico in 507ms
+[08:11:10]  GET /api/auth/session 200 in 1227ms
+[08:11:10]  GET /api/auth/session 200 in 111ms
+[08:11:10]  GET /api/auth/session 200 in 42ms
+[08:11:10]  GET /api/auth/session 200 in 40ms
+[08:11:18]  GET / 307 in 159ms
+[08:11:18]  GET /login 200 in 97ms
+[08:11:18]  GET /favicon.ico?favicon.45db1c09.ico 200 in 61ms
+[08:11:18]  GET /api/auth/session 200 in 72ms
+[08:11:18]  GET /api/auth/session 200 in 42ms
+[08:11:18]  GET /api/auth/session 200 in 45ms
+[08:11:18]  GET /api/auth/session 200 in 50ms
+[08:51:36]  GET /api/auth/providers 200 in 1181ms
+[08:51:37]  GET /api/auth/csrf 200 in 610ms
+[08:51:37] MongoDB connected successfully
+[08:51:37]  POST /api/auth/callback/credentials? 200 in 321ms
+[08:51:37]  GET /api/auth/session 200 in 159ms
+[08:51:38]  GET /api/auth/session 200 in 82ms
+[08:51:38]  GET /api/auth/session 200 in 114ms
+[08:51:38]  Gùï Compiling /owner/dashboard ...
+[08:51:59]  G£ô Compiled /owner/dashboard in 21.3s
+[08:51:59]  GET /owner/dashboard 200 in 21648ms
+[08:52:01]  GET /favicon.ico?favicon.45db1c09.ico 200 in 87ms
+[08:52:01]  GET /api/auth/session 200 in 128ms
+[08:52:02]  Gùï Compiling /api/sse ...
+[08:52:03]  GET /api/products/low-stock?threshold=5 200 in 1345ms
+[08:52:03]  G£ô Compiled /api/sse in 1595ms
+[08:52:03] (node:17244) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+[08:52:03] (Use `node --trace-warnings ...` to show where the warning was created)
+[08:52:03] (node:17244) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+[08:52:03] [SSEManager] New instance created
+[08:52:03]  GET /api/analytics/top-products 200 in 2034ms
+[08:52:03]  GET /api/analytics/summary 200 in 2052ms
+[08:52:03]  GET /api/analytics/ranking 200 in 2095ms
+[08:52:03]  GET /api/analytics?range=monthly 200 in 2048ms
+[08:52:04]  GET /api/analytics/top-products 200 in 262ms
+[08:52:04]  GET /api/auth/session 200 in 298ms
+[08:52:04]  GET /api/products/low-stock?threshold=5 200 in 311ms
+[08:52:04]  GET /api/analytics/summary 200 in 367ms
+[08:52:04]  GET /api/analytics/ranking 200 in 246ms
+[08:52:04]  GET /api/analytics?range=monthly 200 in 260ms
+[08:52:04]  GET /api/auth/session 200 in 249ms
+[08:52:04]  GET /api/analytics/summary 200 in 219ms
+[08:52:04]  GET /api/analytics/ranking 200 in 150ms
+[08:52:04]  GET /api/products/low-stock?threshold=5 200 in 147ms
+[08:52:04]  GET /api/analytics/top-products 200 in 157ms
+[08:52:04]  GET /api/auth/session 200 in 72ms
+[08:52:04]  GET /api/analytics/summary 200 in 142ms
+[08:52:04]  GET /api/analytics/top-products 200 in 166ms
+[08:52:04]  GET /api/products/low-stock?threshold=5 200 in 165ms
+[08:52:04]  GET /api/analytics/ranking 200 in 185ms
+[08:53:02]  GET /api/products/low-stock?threshold=5 200 in 69ms
+[08:54:02]  GET /api/products/low-stock?threshold=5 200 in 201ms
+[08:54:28]  GET /api/auth/session 200 in 105ms
+[08:54:28]  GET /api/auth/session 200 in 83ms
+[08:54:51]  GET /api/auth/session 200 in 91ms
+[08:54:51]  GET /api/auth/session 200 in 75ms
+[08:54:57]  Gùï Compiling /owner/backup ...
+[08:55:00]  G£ô Compiled /owner/backup in 3.3s
+[08:55:03]  G£ô Compiled /api/cron/backup-db in 124ms
+[08:55:04] [cron/backup-db] Backup selesai: backup-2026-11-03.json GÇö orders=24 invoices=21 products=57 users=5 stockMovements=84
+[08:55:04]  GET /api/cron/backup-db 200 in 298ms
+[08:55:28]  GET /api/auth/session 200 in 144ms
+[08:55:28]  GET /api/auth/session 200 in 82ms
+[08:55:59]  Gùï Compiling /owner/stock-history ...
+[08:55:59]  G£ô Compiled /owner/stock-history in 680ms
+[08:55:59]  GET /owner/stock-history?_rsc=15qe3 200 in 171ms
+[08:56:01]  G£ô Compiled /api/stock-movements in 232ms
+[08:56:01]  GET /api/stock-movements?from=2026-10-04&to=2026-11-03&limit=50&page=1 200 in 331ms
+[08:56:26]  G£ô Compiled /api/products/[id]/active in 395ms
+[08:56:27] [SSEManager] New instance created
+[08:56:27] (node:17244) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+[08:56:27]  PATCH /api/products/6ad83abaf9435f29ad8a1256/active 200 in 1358ms
+[08:56:58]  G£ô Compiled /owner/order-history in 499ms
+[08:56:59]  GET /owner/order-history?_rsc=ledsk 200 in 168ms
+[08:56:59]  G£ô Compiled /api/orders/history in 278ms
+[08:56:59]  GET /api/orders/history?from=2026-10-04&to=2026-11-03&limit=20&page=1 200 in 383ms
+[08:56:59]  GET /api/orders/history?from=2026-10-04&to=2026-11-03&limit=20&page=1 200 in 92ms
+[08:57:00]  GET /api/orders/history?from=2026-10-04&to=2026-11-03&limit=20&page=1 200 in 84ms
+[08:57:24]  G£ô Compiled /owner/debts in 478ms
+[08:57:24]  GET /owner/debts?_rsc=1gcej 200 in 157ms
+[08:57:26]  G£ô Compiled /api/orders/[id]/debt in 152ms
+[08:57:27] [SSEManager] New instance created
+[08:57:27] (node:17244) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+[08:57:27]  PATCH /api/orders/6ae6fb90c1150dbf829e2890/debt 200 in 976ms
+[08:57:37]  G£ô Compiled /owner/users in 385ms
+[08:57:37]  GET /owner/users?_rsc=11wok 200 in 246ms
+[08:57:38]  G£ô Compiled /api/users/online in 262ms
+[08:57:38] [/api/users/online] SSE client count: 2
+[08:57:38] [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+[08:57:38]  GET /api/users/online 200 in 349ms
+[08:57:38]  GET /api/users 200 in 406ms
+[08:57:38] [/api/users/online] SSE client count: 2
+[08:57:38] [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+[08:57:38]  GET /api/users/online 200 in 157ms
+[08:57:38]  GET /api/users 200 in 118ms
+[08:57:43]  G£ô Compiled /api/users/[id] in 135ms
+[08:57:44]  PATCH /api/users/6ae6f865c1150dbf829e288f 200 in 994ms
+[08:57:47]  PATCH /api/users/6ae6f865c1150dbf829e288f 200 in 97ms
+[08:57:47] [/api/users/online] SSE client count: 2
+[08:57:47] [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+[08:57:47]  GET /api/users/online 200 in 96ms
+[08:57:53]  Gùï Compiling /owner/products ...
+[08:57:57]  G£ô Compiled /owner/products in 4s
+[08:57:57]  GET /favicon.ico?favicon.45db1c09.ico 200 in 232ms
+[08:57:57]  GET /owner/products?_rsc=ai5ro 200 in 275ms
+[08:58:10]  GET /api/analytics/summary 200 in 275ms
+[08:58:10]  GET /api/products/low-stock?threshold=5 200 in 269ms
+[08:58:11]  GET /api/analytics/ranking 200 in 324ms
+[08:58:11]  GET /api/analytics/top-products 200 in 339ms
+[08:58:11]  GET /api/analytics?range=monthly 200 in 407ms
+[08:58:11]  GET /api/analytics/summary 200 in 290ms
+[08:58:11]  GET /api/products/low-stock?threshold=5 200 in 296ms
+[08:58:11]  GET /api/analytics/ranking 200 in 305ms
+[08:58:11]  GET /api/analytics/top-products 200 in 300ms
+[08:58:11]  GET /api/analytics?range=monthly 200 in 253ms
+[08:58:11]  GET /api/products/low-stock?threshold=5 200 in 248ms
+[08:58:11]  GET /api/analytics/ranking 200 in 221ms
+[08:58:11]  GET /api/analytics/summary 200 in 326ms
+[08:58:11]  GET /api/analytics/top-products 200 in 214ms
+[08:58:11]  GET /api/products/low-stock?threshold=5 200 in 250ms
+[08:58:11]  GET /api/analytics/ranking 200 in 261ms
+[08:58:11]  GET /api/analytics/summary 200 in 246ms
+[08:58:11]  GET /api/analytics/top-products 200 in 197ms
+[08:58:18]  GET /api/analytics/summary 200 in 252ms
+[08:58:18]  GET /api/analytics/top-products 200 in 261ms
+[08:58:18]  GET /api/analytics?range=monthly 200 in 270ms
+[08:58:18]  GET /api/analytics/ranking 200 in 281ms
+[08:58:18]  GET /api/products/low-stock?threshold=5 200 in 292ms
+[08:58:18]  GET /api/analytics/summary 200 in 277ms
+[08:58:19]  GET /api/analytics?range=monthly 200 in 379ms
+[08:58:19]  GET /api/analytics/ranking 200 in 378ms
+[08:58:19]  GET /api/analytics/top-products 200 in 395ms
+[08:58:19]  GET /api/products/low-stock?threshold=5 200 in 276ms
+[08:58:19]  GET /api/analytics/summary 200 in 240ms
+[08:58:19]  GET /api/analytics/ranking 200 in 256ms
+[08:58:19]  GET /api/analytics/top-products 200 in 267ms
+[08:58:19]  GET /api/products/low-stock?threshold=5 200 in 282ms
+[08:58:19]  GET /api/analytics/top-products 200 in 249ms
+[08:58:19]  GET /api/analytics/ranking 200 in 284ms
+[08:58:19]  GET /api/analytics/summary 200 in 339ms
+[08:58:19]  GET /api/products/low-stock?threshold=5 200 in 144ms
+[08:58:24] ^C

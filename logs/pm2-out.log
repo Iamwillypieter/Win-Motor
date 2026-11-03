@@ -126,3 +126,33 @@
 2026-11-02 15:47:52: 
 2026-11-02 15:47:52:  ✓ Starting...
 2026-11-02 15:47:52:  ✓ Ready in 524ms
+2026-11-02 15:48:38: MongoDB connected successfully
+2026-11-02 15:48:39: [SSEManager] New instance created
+2026-11-02 15:52:07: [/api/users/online] SSE client count: 1
+2026-11-02 15:52:07: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 08:07:32:   ▲ Next.js 14.2.35
+2026-11-03 08:07:32:   - Local:        http://localhost:3000
+2026-11-03 08:07:32:   - Network:      http://0.0.0.0:3000
+2026-11-03 08:07:32: 
+2026-11-03 08:07:32:  ✓ Starting...
+2026-11-03 08:07:33:  ✓ Ready in 1570ms
+2026-11-03 08:58:24:   ▲ Next.js 14.2.35
+2026-11-03 08:58:24:   - Local:        http://localhost:3000
+2026-11-03 08:58:24:   - Network:      http://0.0.0.0:3000
+2026-11-03 08:58:24: 
+2026-11-03 08:58:24:  ✓ Starting...
+2026-11-03 08:58:25:  ✓ Ready in 1379ms
+2026-11-03 09:41:58:   ▲ Next.js 14.2.35
+2026-11-03 09:41:58:   - Local:        http://localhost:3000
+2026-11-03 09:41:58:   - Network:      http://0.0.0.0:3000
+2026-11-03 09:41:58: 
+2026-11-03 09:41:58:  ✓ Starting...
+2026-11-03 09:42:00:  ✓ Ready in 9.3s
+2026-11-03 09:55:22:   ▲ Next.js 14.2.35
+2026-11-03 09:55:22:   - Local:        http://localhost:3000
+2026-11-03 09:55:22:   - Network:      http://0.0.0.0:3000
+2026-11-03 09:55:22: 
+2026-11-03 09:55:22:  ✓ Starting...
+2026-11-03 09:55:23:  ✓ Ready in 859ms
+2026-11-03 09:57:40: [SSEManager] New instance created
+2026-11-03 09:57:40: MongoDB connected successfully

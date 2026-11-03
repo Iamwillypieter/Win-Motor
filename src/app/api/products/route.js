@@ -21,7 +21,7 @@ export async function GET(request) {
     );
   }
 
-  if (!["CASHIER", "WAREHOUSE"].includes(session.user.role)) {
+  if (!["CASHIER", "WAREHOUSE", "OWNER"].includes(session.user.role)) {
     return NextResponse.json(
       { error: { code: "FORBIDDEN", message: "Akses ditolak" } },
       { status: 403 }
@@ -34,6 +34,11 @@ export async function GET(request) {
     const sku = searchParams.get("sku") || undefined;
 
     const products = await getProducts({ search, sku });
+
+    // Log jika SKU lookup tidak menemukan hasil — memudahkan debug masalah scan
+    if (sku && products.length === 0) {
+      console.warn(`[products] SKU lookup tidak menemukan hasil: "${sku}" (user: ${session.user.email}, role: ${session.user.role})`);
+    }
 
     return NextResponse.json({ data: products, total: products.length });
   } catch (err) {

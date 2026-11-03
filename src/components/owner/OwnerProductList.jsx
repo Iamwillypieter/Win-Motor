@@ -63,6 +63,9 @@ export default function OwnerProductList({ initialProducts = [] }) {
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
 
+  // State untuk kode barcode yang tidak ditemukan di DB
+  const [scanNotFoundCode, setScanNotFoundCode] = useState(null);
+
   // Derived: search results for manual stock-in
   const stockInSearchResults = stockInSearch.trim()
     ? products
@@ -91,27 +94,22 @@ export default function OwnerProductList({ initialProducts = [] }) {
         setStockInProduct(json.data[0]);
         setStockInQty(1);
         setStockInError("");
+        setScanNotFoundCode(null);
       } else {
-        setStockInError(`Produk dengan kode "${decodedText}" tidak ditemukan.`);
-        setTimeout(() => {
-          isProcessingRef.current = false;
-          setStockInError("");
-          setScannerKey((k) => k + 1);
-        }, 2000);
+        // Tampilkan kode yang tidak ditemukan — beri opsi scan ulang
+        setScanNotFoundCode(decodedText);
+        isProcessingRef.current = false;
       }
     } catch (_) {
       setStockInError("Gagal mencari produk. Coba lagi.");
-      setTimeout(() => {
-        isProcessingRef.current = false;
-        setStockInError("");
-        setScannerKey((k) => k + 1);
-      }, 2000);
+      isProcessingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
     if (stockInMode === "manual" || !stockInOpen) {
       isProcessingRef.current = false;
+      setScanNotFoundCode(null);
       setScannerKey((k) => k + 1);
     }
   }, [stockInMode, stockInOpen]);
@@ -153,6 +151,7 @@ export default function OwnerProductList({ initialProducts = [] }) {
 
   function handleStockInCancel() {
     setStockInProduct(null); setStockInQty(1); setStockInError("");
+    setScanNotFoundCode(null);
     isProcessingRef.current = false;
     if (stockInMode === "scan") setScannerKey((k) => k + 1);
   }
@@ -160,6 +159,7 @@ export default function OwnerProductList({ initialProducts = [] }) {
   function handleStockInClose() {
     setStockInOpen(false); setStockInProduct(null); setStockInQty(1);
     setStockInSearch(""); setStockInError(""); setStockInSuccess(""); setCameraError("");
+    setScanNotFoundCode(null);
     isProcessingRef.current = false;
     if (bulkScannerStopRef.current) bulkScannerStopRef.current();
     setBulkItems([]); setBulkResult(null); setBulkCameraError("");
@@ -677,11 +677,42 @@ export default function OwnerProductList({ initialProducts = [] }) {
 
               {/* Scan mode — BarcodeScanner component */}
               <div style={{ display: stockInMode === "scan" && !stockInProduct ? "block" : "none" }} className="space-y-3">
-                <BarcodeScanner
-                  key={scannerKey}
-                  onScan={handleScanResult}
-                  autoStart={stockInMode === "scan" && !stockInProduct}
-                />
+                {scanNotFoundCode ? (
+                  <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 space-y-3">
+                    <p className="text-sm text-amber-800">
+                      Produk dengan kode{" "}
+                      <span className="font-mono font-semibold break-all">{scanNotFoundCode}</span>{" "}
+                      tidak ditemukan di database.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => {
+                          setScanNotFoundCode(null);
+                          isProcessingRef.current = false;
+                          setScannerKey((k) => k + 1);
+                        }}
+                        className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        Scan Ulang
+                      </button>
+                      <button
+                        onClick={() => {
+                          setScanNotFoundCode(null);
+                          setStockInMode("manual");
+                        }}
+                        className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                      >
+                        Cari Manual
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <BarcodeScanner
+                    key={scannerKey}
+                    onScan={handleScanResult}
+                    autoStart={stockInMode === "scan" && !stockInProduct}
+                  />
+                )}
               </div>
 
               {/* Manual mode */}

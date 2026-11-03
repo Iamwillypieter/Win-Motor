@@ -20,3 +20,11 @@
 2026-10-31 11:07:40: [proxy] Error forward: read ECONNRESET
 2026-10-31 11:07:40: [proxy] Error forward: read ECONNRESET
 2026-10-31 11:07:40: [proxy] Error forward: read ECONNRESET
+2026-11-03 08:58:24: [proxy] Error forward: read ECONNRESET
+2026-11-03 08:58:24: [proxy] Error forward: read ECONNRESET
+2026-11-03 08:58:24: Error: read ECONNRESET
+2026-11-03 08:58:24:     at TCP.onStreamRead (node:internal/stream_base_commons:216:20) {
+2026-11-03 08:58:24:   errno: -4077,
+2026-11-03 08:58:24:   code: 'ECONNRESET',
+2026-11-03 08:58:24:   syscall: 'read'
+2026-11-03 08:58:24: }
