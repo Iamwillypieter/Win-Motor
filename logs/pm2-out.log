@@ -156,3 +156,189 @@
 2026-11-03 09:55:23:  ✓ Ready in 859ms
 2026-11-03 09:57:40: [SSEManager] New instance created
 2026-11-03 09:57:40: MongoDB connected successfully
+2026-11-03 13:23:58:   ▲ Next.js 14.2.35
+2026-11-03 13:23:58:   - Local:        http://localhost:3000
+2026-11-03 13:23:58:   - Network:      http://0.0.0.0:3000
+2026-11-03 13:23:58: 
+2026-11-03 13:23:58:  ✓ Starting...
+2026-11-03 13:24:00:  ✓ Ready in 4.8s
+2026-11-03 13:26:03: MongoDB connected successfully
+2026-11-03 13:26:04: [SSEManager] New instance created
+2026-11-03 13:29:02: [/api/users/online] SSE client count: 2
+2026-11-03 13:29:02: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:29:13: [/api/users/online] SSE client count: 2
+2026-11-03 13:29:13: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:29:23: [/api/users/online] SSE client count: 2
+2026-11-03 13:29:23: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:29:32: [/api/users/online] SSE client count: 2
+2026-11-03 13:29:32: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:29:43: [/api/users/online] SSE client count: 2
+2026-11-03 13:29:43: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:29:53: [/api/users/online] SSE client count: 2
+2026-11-03 13:29:53: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:30:03: [/api/users/online] SSE client count: 2
+2026-11-03 13:30:03: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:30:13: [/api/users/online] SSE client count: 2
+2026-11-03 13:30:13: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:30:23: [/api/users/online] SSE client count: 2
+2026-11-03 13:30:23: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:30:33: [/api/users/online] SSE client count: 2
+2026-11-03 13:30:33: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:31:34: [/api/users/online] SSE client count: 2
+2026-11-03 13:31:34: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:32:34: [/api/users/online] SSE client count: 2
+2026-11-03 13:32:34: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:33:34: [/api/users/online] SSE client count: 2
+2026-11-03 13:33:34: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:33:43: [/api/users/online] SSE client count: 2
+2026-11-03 13:33:43: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:33:53: [/api/users/online] SSE client count: 2
+2026-11-03 13:33:53: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:34:03: [/api/users/online] SSE client count: 2
+2026-11-03 13:34:03: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:34:13: [/api/users/online] SSE client count: 2
+2026-11-03 13:34:13: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:34:23: [/api/users/online] SSE client count: 2
+2026-11-03 13:34:23: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:34:32: [/api/users/online] SSE client count: 2
+2026-11-03 13:34:32: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:34:43: [/api/users/online] SSE client count: 2
+2026-11-03 13:34:43: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:34:53: [/api/users/online] SSE client count: 2
+2026-11-03 13:34:53: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:35:03: [/api/users/online] SSE client count: 2
+2026-11-03 13:35:03: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:35:13: [/api/users/online] SSE client count: 2
+2026-11-03 13:35:13: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:35:23: [/api/users/online] SSE client count: 2
+2026-11-03 13:35:23: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:35:33: [/api/users/online] SSE client count: 2
+2026-11-03 13:35:33: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:35:49: [/api/users/online] SSE client count: 2
+2026-11-03 13:35:49: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:35:53: [/api/users/online] SSE client count: 2
+2026-11-03 13:35:53: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:36:03: [/api/users/online] SSE client count: 2
+2026-11-03 13:36:03: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:36:13: [/api/users/online] SSE client count: 2
+2026-11-03 13:36:13: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:36:23: [/api/users/online] SSE client count: 2
+2026-11-03 13:36:23: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:36:33: [/api/users/online] SSE client count: 2
+2026-11-03 13:36:33: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:36:43: [/api/users/online] SSE client count: 2
+2026-11-03 13:36:43: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:37:16: [/api/users/online] SSE client count: 2
+2026-11-03 13:37:16: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-03 13:41:30: [createOrderAction] customerName received: Armando
+2026-11-03 13:41:31: [createOrderAction] order.customerName saved: Armando
+2026-11-03 14:17:44: [createOrderAction] customerName received: null
+2026-11-03 14:17:44: [createOrderAction] order.customerName saved: null
+2026-11-03 14:30:41: [createOrderAction] customerName received: Straight Motor
+2026-11-03 14:30:41: [createOrderAction] order.customerName saved: Straight Motor
+2026-11-04 07:55:42:   ▲ Next.js 14.2.35
+2026-11-04 07:55:42:   - Local:        http://localhost:3000
+2026-11-04 07:55:42:   - Network:      http://0.0.0.0:3000
+2026-11-04 07:55:42: 
+2026-11-04 07:55:42:  ✓ Starting...
+2026-11-04 07:55:44:  ✓ Ready in 5.6s
+2026-11-04 09:51:13: [SSEManager] New instance created
+2026-11-04 09:51:13: MongoDB connected successfully
+2026-11-05 07:55:44:   ▲ Next.js 14.2.35
+2026-11-05 07:55:44:   - Local:        http://localhost:3000
+2026-11-05 07:55:44:   - Network:      http://0.0.0.0:3000
+2026-11-05 07:55:44: 
+2026-11-05 07:55:44:  ✓ Starting...
+2026-11-05 07:55:45:  ✓ Ready in 4.9s
+2026-11-05 10:45:52: [SSEManager] New instance created
+2026-11-05 10:45:52: MongoDB connected successfully
+2026-11-05 11:00:58: [/api/users/online] SSE client count: 10
+2026-11-05 11:00:58: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"}]
+2026-11-05 11:01:08: [/api/users/online] SSE client count: 10
+2026-11-05 11:01:08: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"}]
+2026-11-05 11:01:18: [/api/users/online] SSE client count: 10
+2026-11-05 11:01:18: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"}]
+2026-11-05 11:01:28: [/api/users/online] SSE client count: 10
+2026-11-05 11:01:28: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"}]
+2026-11-05 11:01:38: [/api/users/online] SSE client count: 10
+2026-11-05 11:01:38: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"}]
+2026-11-05 11:01:48: [/api/users/online] SSE client count: 10
+2026-11-05 11:01:48: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"}]
+2026-11-05 11:01:58: [/api/users/online] SSE client count: 10
+2026-11-05 11:01:58: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"}]
+2026-11-05 11:17:48: [createOrderAction] customerName received: Win Motor
+2026-11-05 11:17:48: [createOrderAction] order.customerName saved: Win Motor
+2026-11-05 11:23:02: [createOrderAction] customerName received: Win Motor
+2026-11-05 11:23:02: [createOrderAction] order.customerName saved: Win Motor
+2026-11-06 07:55:40:   ▲ Next.js 14.2.35
+2026-11-06 07:55:40:   - Local:        http://localhost:3000
+2026-11-06 07:55:40:   - Network:      http://0.0.0.0:3000
+2026-11-06 07:55:40: 
+2026-11-06 07:55:40:  ✓ Starting...
+2026-11-06 07:55:41:  ✓ Ready in 4.8s
+2026-11-06 09:05:16: MongoDB connected successfully
+2026-11-06 09:05:17: [SSEManager] New instance created
+2026-11-06 09:19:12: [createOrderAction] customerName received: Win Motor
+2026-11-06 09:19:12: [createOrderAction] order.customerName saved: Win Motor
+2026-11-06 09:24:18: [createOrderAction] customerName received: Win Motor
+2026-11-06 09:24:18: [createOrderAction] order.customerName saved: Win Motor
+2026-11-06 10:17:20:   ▲ Next.js 14.2.35
+2026-11-06 10:17:20:   - Local:        http://localhost:3000
+2026-11-06 10:17:20:   - Network:      http://0.0.0.0:3000
+2026-11-06 10:17:20: 
+2026-11-06 10:17:20:  ✓ Starting...
+2026-11-06 10:17:22:  ✓ Ready in 4.9s
+2026-11-07 07:55:44:   ▲ Next.js 14.2.35
+2026-11-07 07:55:44:   - Local:        http://localhost:3000
+2026-11-07 07:55:44:   - Network:      http://0.0.0.0:3000
+2026-11-07 07:55:44: 
+2026-11-07 07:55:44:  ✓ Starting...
+2026-11-07 07:55:46:  ✓ Ready in 5.3s
+2026-11-09 08:07:24:   ▲ Next.js 14.2.35
+2026-11-09 08:07:24:   - Local:        http://localhost:3000
+2026-11-09 08:07:24:   - Network:      http://0.0.0.0:3000
+2026-11-09 08:07:24: 
+2026-11-09 08:07:24:  ✓ Starting...
+2026-11-09 08:07:26:  ✓ Ready in 4.9s
+2026-11-10 08:02:55:   ▲ Next.js 14.2.35
+2026-11-10 08:02:55:   - Local:        http://localhost:3000
+2026-11-10 08:02:55:   - Network:      http://0.0.0.0:3000
+2026-11-10 08:02:55: 
+2026-11-10 08:02:55:  ✓ Starting...
+2026-11-10 08:02:57:  ✓ Ready in 7.3s
+2026-11-11 07:55:41:   ▲ Next.js 14.2.35
+2026-11-11 07:55:41:   - Local:        http://localhost:3000
+2026-11-11 07:55:41:   - Network:      http://0.0.0.0:3000
+2026-11-11 07:55:41: 
+2026-11-11 07:55:41:  ✓ Starting...
+2026-11-11 07:55:43:  ✓ Ready in 5.8s
+2026-11-11 14:22:13:   ▲ Next.js 14.2.35
+2026-11-11 14:22:13:   - Local:        http://localhost:3000
+2026-11-11 14:22:13:   - Network:      http://0.0.0.0:3000
+2026-11-11 14:22:13: 
+2026-11-11 14:22:13:  ✓ Starting...
+2026-11-11 14:22:13:  ✓ Ready in 1830ms
+2026-11-11 14:24:29:   ▲ Next.js 14.2.35
+2026-11-11 14:24:29:   - Local:        http://localhost:3000
+2026-11-11 14:24:29:   - Network:      http://0.0.0.0:3000
+2026-11-11 14:24:29: 
+2026-11-11 14:24:29:  ✓ Starting...
+2026-11-11 14:24:30:  ✓ Ready in 1006ms
+2026-11-11 14:26:56: MongoDB connected successfully
+2026-11-11 14:26:56: [SSEManager] New instance created
+2026-11-12 08:02:57:   ▲ Next.js 14.2.35
+2026-11-12 08:02:57:   - Local:        http://localhost:3000
+2026-11-12 08:02:57:   - Network:      http://0.0.0.0:3000
+2026-11-12 08:02:57: 
+2026-11-12 08:02:57:  ✓ Starting...
+2026-11-12 08:03:00:  ✓ Ready in 6.2s
+2026-11-12 09:32:42: MongoDB connected successfully
+2026-11-12 09:32:45: [SSEManager] New instance created
+2026-11-12 09:32:56: [createOrderAction] customerName received: Win Motor
+2026-11-12 09:32:56: [createOrderAction] order.customerName saved: Win Motor
+2026-11-12 09:57:52:   ▲ Next.js 14.2.35
+2026-11-12 09:57:52:   - Local:        http://localhost:3000
+2026-11-12 09:57:52:   - Network:      http://0.0.0.0:3000
+2026-11-12 09:57:52: 
+2026-11-12 09:57:52:  ✓ Starting...
+2026-11-12 09:57:52:  ✓ Ready in 1492ms

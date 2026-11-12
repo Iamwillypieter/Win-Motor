@@ -17,6 +17,7 @@ export default async function CashierLayout({ children }) {
   const navLinks = [
     { href: "/cashier", label: "POS" },
     { href: "/cashier/orders", label: "Pesanan Aktif" },
+    { href: "/cashier/return", label: "Retur" },
   ];
 
   return (

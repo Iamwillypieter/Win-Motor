@@ -5,6 +5,7 @@ import { formatRupiah } from "@/lib/utils";
 
 /**
  * SummaryMetrics — menampilkan metrik harian (reset tiap hari) dan bulanan (tanggal 1 s/d akhir bulan).
+ * Angka pendapatan sudah dikurangi nilai retur.
  * @param {{ refreshKey?: number }} props
  */
 export default function SummaryMetrics({ refreshKey }) {
@@ -67,7 +68,12 @@ export default function SummaryMetrics({ refreshKey }) {
             <p className="text-lg font-bold text-blue-900">{formatRupiah(daily.averageOrderValue)}</p>
           </div>
         </div>
-        <p className="text-xs text-blue-400 mt-3">Dihitung Setiap Hari</p>
+        {daily.totalReturns > 0 && (
+          <p className="text-xs text-red-500 mt-2">
+            Retur: {formatRupiah(daily.totalReturns)}
+          </p>
+        )}
+        <p className="text-xs text-blue-400 mt-1">Dihitung Setiap Hari</p>
       </div>
 
       {/* Bulan ini */}
@@ -93,7 +99,12 @@ export default function SummaryMetrics({ refreshKey }) {
             <p className="text-lg font-bold text-purple-900">{formatRupiah(monthly.averageOrderValue)}</p>
           </div>
         </div>
-        <p className="text-xs text-purple-400 mt-3">Dihitung dari tanggal 1 s/d akhir bulan</p>
+        {monthly.totalReturns > 0 && (
+          <p className="text-xs text-red-500 mt-2">
+            Retur: {formatRupiah(monthly.totalReturns)}
+          </p>
+        )}
+        <p className="text-xs text-purple-400 mt-1">Dihitung dari tanggal 1 s/d akhir bulan</p>
       </div>
     </div>
   );

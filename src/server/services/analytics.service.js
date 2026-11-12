@@ -1,6 +1,7 @@
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
 import Invoice from "@/models/Invoice";
+import Return from "@/models/Return";
 
 /**
  * Custom error class for analytics operations.
@@ -79,6 +80,63 @@ function buildDateRange(range, from = null, to = null, month = null) {
 }
 
 /**
+ * Hitung total nilai retur (Return.totalAmount) dalam rentang tanggal tertentu.
+ * Juga mengembalikan breakdown per kasir dan per SKU untuk keperluan ranking/top-products.
+ *
+ * @param {Date} startDate
+ * @param {Date} endDate
+ * @returns {Promise<{
+ *   totalReturnAmount: number,
+ *   byCashier: Object.<string, number>,   // cashierName → totalReturnAmount
+ *   bySku: Object.<string, { qty: number, amount: number }> // sku → { qty, amount }
+ * }>}
+ */
+async function getReturnTotals(startDate, endDate) {
+  const result = await Return.aggregate([
+    { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+    {
+      $facet: {
+        // Total keseluruhan
+        overall: [
+          { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+        ],
+        // Breakdown per kasir (untuk offset ranking)
+        byCashier: [
+          { $group: { _id: "$cashierName", total: { $sum: "$totalAmount" } } },
+        ],
+        // Breakdown per SKU (untuk offset top-products)
+        bySku: [
+          { $unwind: "$items" },
+          {
+            $group: {
+              _id: "$items.sku",
+              qty: { $sum: "$items.quantity" },
+              amount: { $sum: "$items.subtotal" },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const facets = result[0] ?? {};
+
+  const totalReturnAmount = facets.overall?.[0]?.total ?? 0;
+
+  const byCashier = {};
+  for (const row of (facets.byCashier ?? [])) {
+    if (row._id) byCashier[row._id] = row.total;
+  }
+
+  const bySku = {};
+  for (const row of (facets.bySku ?? [])) {
+    if (row._id) bySku[row._id] = { qty: row.qty, amount: row.amount };
+  }
+
+  return { totalReturnAmount, byCashier, bySku };
+}
+
+/**
  * Get today's metrics (resets every day at midnight).
  * @returns {Promise<{ totalRevenue: number, totalOrders: number, averageOrderValue: number }>}
  */
@@ -88,14 +146,23 @@ export async function getDailyMetrics() {
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-  const result = await Order.aggregate([
-    { $match: { orderStatus: "completed", createdAt: { $gte: startOfDay, $lte: endOfDay } } },
-    { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" }, totalOrders: { $sum: 1 } } },
+  const [orderResult, { totalReturnAmount }] = await Promise.all([
+    Order.aggregate([
+      { $match: { orderStatus: "completed", createdAt: { $gte: startOfDay, $lte: endOfDay } } },
+      { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" }, totalOrders: { $sum: 1 } } },
+    ]),
+    getReturnTotals(startOfDay, endOfDay),
   ]);
 
-  if (!result.length) return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
-  const { totalRevenue, totalOrders } = result[0];
-  return { totalRevenue, totalOrders, averageOrderValue: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0 };
+  if (!orderResult.length) return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, totalReturns: totalReturnAmount };
+  const { totalRevenue: grossRevenue, totalOrders } = orderResult[0];
+  const totalRevenue = Math.max(0, grossRevenue - totalReturnAmount);
+  return {
+    totalRevenue,
+    totalOrders,
+    averageOrderValue: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0,
+    totalReturns: totalReturnAmount,
+  };
 }
 
 /**
@@ -108,16 +175,26 @@ export async function getMonthlyMetrics() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const result = await Order.aggregate([
-    { $match: { orderStatus: "completed", createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
-    { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" }, totalOrders: { $sum: 1 } } },
+  const [orderResult, { totalReturnAmount }] = await Promise.all([
+    Order.aggregate([
+      { $match: { orderStatus: "completed", createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
+      { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" }, totalOrders: { $sum: 1 } } },
+    ]),
+    getReturnTotals(startOfMonth, endOfMonth),
   ]);
 
   const monthLabel = now.toLocaleString("id-ID", { month: "long", year: "numeric" });
 
-  if (!result.length) return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, monthLabel };
-  const { totalRevenue, totalOrders } = result[0];
-  return { totalRevenue, totalOrders, averageOrderValue: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0, monthLabel };
+  if (!orderResult.length) return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, monthLabel, totalReturns: totalReturnAmount };
+  const { totalRevenue: grossRevenue, totalOrders } = orderResult[0];
+  const totalRevenue = Math.max(0, grossRevenue - totalReturnAmount);
+  return {
+    totalRevenue,
+    totalOrders,
+    averageOrderValue: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0,
+    monthLabel,
+    totalReturns: totalReturnAmount,
+  };
 }
 
 /**
@@ -143,21 +220,24 @@ export async function getMetrics(range, from = null, to = null, month = null) {
 
   const { startDate, endDate } = buildDateRange(range, from, to, month);
 
-  // Aggregate per orderType so we get offline/online breakdown in one query
-  const result = await Order.aggregate([
-    {
-      $match: {
-        orderStatus: "completed",
-        createdAt: { $gte: startDate, $lte: endDate },
+  // Jalankan paralel: aggregasi order dan total retur dalam rentang yang sama
+  const [orderResult, { totalReturnAmount }] = await Promise.all([
+    Order.aggregate([
+      {
+        $match: {
+          orderStatus: "completed",
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
       },
-    },
-    {
-      $group: {
-        _id: "$orderType", // "OFFLINE" | "ONLINE" | null (legacy orders without orderType)
-        revenue: { $sum: "$totalAmount" },
-        orders: { $sum: 1 },
+      {
+        $group: {
+          _id: "$orderType", // "OFFLINE" | "ONLINE" | null (legacy orders without orderType)
+          revenue: { $sum: "$totalAmount" },
+          orders: { $sum: 1 },
+        },
       },
-    },
+    ]),
+    getReturnTotals(startDate, endDate),
   ]);
 
   // Initialise counters
@@ -166,7 +246,7 @@ export async function getMetrics(range, from = null, to = null, month = null) {
   let offlineOrders = 0;
   let onlineOrders = 0;
 
-  for (const row of result) {
+  for (const row of orderResult) {
     if (row._id === "ONLINE") {
       onlineRevenue = row.revenue;
       onlineOrders = row.orders;
@@ -176,6 +256,19 @@ export async function getMetrics(range, from = null, to = null, month = null) {
       offlineOrders += row.orders;
     }
   }
+
+  // Kurangi total retur dari pendapatan bruto.
+  // Retur tidak di-track per orderType sehingga dikurangi proporsional dari
+  // offline terlebih dahulu, sisanya dari online (hampir semua retur adalah kasir = offline).
+  const grossTotal = offlineRevenue + onlineRevenue;
+  const deduction = Math.min(totalReturnAmount, grossTotal);
+
+  // Distribusikan pengurangan: offline dulu, lalu sisanya ke online
+  const offlineDeduction = Math.min(deduction, offlineRevenue);
+  const onlineDeduction = deduction - offlineDeduction;
+
+  offlineRevenue = Math.max(0, offlineRevenue - offlineDeduction);
+  onlineRevenue = Math.max(0, onlineRevenue - onlineDeduction);
 
   const totalRevenue = offlineRevenue + onlineRevenue;
   const totalOrders = offlineOrders + onlineOrders;
@@ -189,6 +282,7 @@ export async function getMetrics(range, from = null, to = null, month = null) {
     offlineOrders,
     onlineOrders,
     averageOrderValue,
+    totalReturns: totalReturnAmount,
   };
 }
 
@@ -207,42 +301,67 @@ export async function getChartData(range, from = null, to = null, month = null) 
 
   const { startDate, endDate } = buildDateRange(range, from, to, month);
 
-  const result = await Order.aggregate([
-    {
-      $match: {
-        orderStatus: "completed",
-        createdAt: { $gte: startDate, $lte: endDate },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+  // Jalankan paralel: revenue per hari dari Order + return per hari dari Return
+  const [orderResult, returnResult] = await Promise.all([
+    Order.aggregate([
+      {
+        $match: {
+          orderStatus: "completed",
+          createdAt: { $gte: startDate, $lte: endDate },
         },
-        revenue: { $sum: "$totalAmount" },
       },
-    },
-    {
-      $sort: { _id: 1 },
-    },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          revenue: { $sum: "$totalAmount" },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]),
+    Return.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          returnAmount: { $sum: "$totalAmount" },
+        },
+      },
+    ]),
   ]);
 
-  // Build a map of date → revenue from aggregation results
+  // Build maps dari hasil agregasi
   const revenueMap = {};
-  for (const entry of result) {
+  for (const entry of orderResult) {
     revenueMap[entry._id] = entry.revenue;
   }
 
-  // Fill in all days in the range (including days with 0 revenue)
+  const returnMap = {};
+  for (const entry of returnResult) {
+    returnMap[entry._id] = entry.returnAmount;
+  }
+
+  // Fill in all days in the range, kurangi return per hari
   const chartData = [];
   const cursor = new Date(startDate);
   cursor.setHours(0, 0, 0, 0);
 
   while (cursor <= endDate) {
     const dateStr = cursor.toISOString().slice(0, 10);
+    const grossRevenue = revenueMap[dateStr] || 0;
+    const returnAmt = returnMap[dateStr] || 0;
     chartData.push({
       date: dateStr,
-      revenue: revenueMap[dateStr] || 0,
+      revenue: Math.max(0, grossRevenue - returnAmt),
     });
     cursor.setDate(cursor.getDate() + 1);
   }
@@ -265,36 +384,47 @@ export async function getCashierRanking(limit = 10) {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const result = await Invoice.aggregate([
-    {
-      $match: {
-        transactionAt: { $gte: startOfMonth, $lte: endOfMonth },
+  const [invoiceResult, { byCashier: returnByCashier }] = await Promise.all([
+    Invoice.aggregate([
+      {
+        $match: {
+          transactionAt: { $gte: startOfMonth, $lte: endOfMonth },
+        },
       },
-    },
-    {
-      $group: {
-        _id: "$cashierName",
-        totalOrders: { $sum: 1 },
-        totalRevenue: { $sum: "$totalAmount" },
+      {
+        $group: {
+          _id: "$cashierName",
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: "$totalAmount" },
+        },
       },
-    },
-    {
-      $sort: { totalRevenue: -1 },
-    },
-    {
-      $limit: limit,
-    },
-    {
-      $project: {
-        _id: 0,
-        cashierName: "$_id",
-        totalOrders: 1,
-        totalRevenue: 1,
+      {
+        $sort: { totalRevenue: -1 },
       },
-    },
+      {
+        $limit: limit,
+      },
+      {
+        $project: {
+          _id: 0,
+          cashierName: "$_id",
+          totalOrders: 1,
+          totalRevenue: 1,
+        },
+      },
+    ]),
+    getReturnTotals(startOfMonth, endOfMonth),
   ]);
 
-  return result;
+  // Kurangi retur per kasir dari totalRevenue masing-masing
+  return invoiceResult.map((row) => {
+    const returnAmt = returnByCashier[row.cashierName] ?? 0;
+    return {
+      ...row,
+      totalRevenue: Math.max(0, row.totalRevenue - returnAmt),
+      totalReturns: returnAmt,
+    };
+  });
 }
 
 /**
@@ -309,34 +439,47 @@ export async function getTopProducts(limit = 10) {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const result = await Invoice.aggregate([
-    {
-      $match: {
-        transactionAt: { $gte: startOfMonth, $lte: endOfMonth },
+  const [invoiceResult, { bySku: returnBySku }] = await Promise.all([
+    Invoice.aggregate([
+      {
+        $match: {
+          transactionAt: { $gte: startOfMonth, $lte: endOfMonth },
+        },
       },
-    },
-    { $unwind: "$items" },
-    {
-      $group: {
-        _id: { productName: "$items.productName", sku: "$items.sku" },
-        totalQty: { $sum: "$items.quantity" },
-        totalRevenue: { $sum: "$items.subtotal" },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: { productName: "$items.productName", sku: "$items.sku" },
+          totalQty: { $sum: "$items.quantity" },
+          totalRevenue: { $sum: "$items.subtotal" },
+        },
       },
-    },
-    { $sort: { totalQty: -1 } },
-    { $limit: limit },
-    {
-      $project: {
-        _id: 0,
-        productName: "$_id.productName",
-        sku: "$_id.sku",
-        totalQty: 1,
-        totalRevenue: 1,
+      { $sort: { totalQty: -1 } },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 0,
+          productName: "$_id.productName",
+          sku: "$_id.sku",
+          totalQty: 1,
+          totalRevenue: 1,
+        },
       },
-    },
+    ]),
+    getReturnTotals(startOfMonth, endOfMonth),
   ]);
 
-  return result;
+  // Kurangi retur per SKU dari qty dan revenue masing-masing produk
+  return invoiceResult.map((row) => {
+    const ret = returnBySku[row.sku];
+    if (!ret) return row;
+    return {
+      ...row,
+      totalQty: Math.max(0, row.totalQty - ret.qty),
+      totalRevenue: Math.max(0, row.totalRevenue - ret.amount),
+      totalReturns: ret.qty,
+    };
+  });
 }
 
 /**

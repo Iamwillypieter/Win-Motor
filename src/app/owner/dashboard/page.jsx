@@ -205,6 +205,7 @@ export default function OwnerDashboardPage() {
           offlineRevenue={summary?.offlineRevenue ?? 0}
           totalOrders={summary?.totalOrders ?? 0}
           averageOrderValue={summary?.averageOrderValue ?? 0}
+          totalReturns={summary?.totalReturns ?? 0}
           loading={loading}
         />
 
