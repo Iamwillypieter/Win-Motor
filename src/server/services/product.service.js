@@ -634,39 +634,55 @@ export function validateImageFile(mimeType, sizeBytes) {
  * Catat stock movement "out" untuk setiap item yang terjual.
  * Dipanggil dari payment.service setelah stok berhasil dikurangi.
  *
+ * Juga menyimpan snapshot lastSupplierName & lastPurchasePrice dari produk
+ * sehingga kolom "Asal Barang" dan "Harga Beli Satuan" terisi di riwayat stok.
+ *
  * @param {Array<{productId, productName, sku, quantity}>} items
  * @param {Object} [meta] - { orderId, invoiceNumber, userId, userName }
  */
 export async function recordStockOutMovements(items, meta = {}) {
   await connectDB();
 
-  const movements = await Promise.all(
-    items.map(async (item) => {
-      try {
-        // Ambil stok terkini setelah decrement
-        const product = await Product.findById(item.productId).select("stock").lean();
-        const newStock = product?.stock ?? 0;
-        const previousStock = newStock + item.quantity;
+  // Ambil lastSupplierName & lastPurchasePrice dari produk dalam satu batch query
+  const productIds = items.map((i) => i.productId).filter(Boolean);
+  const productDocs = await Product.find({ _id: { $in: productIds } })
+    .select("stock lastSupplierName lastPurchasePrice")
+    .lean()
+    .catch(() => []);
 
-        return {
-          productId: item.productId,
-          productName: item.productName,
-          sku: item.sku,
-          type: "out",
-          quantity: -item.quantity,
-          previousStock,
-          newStock,
-          reason: "Terjual",
-          orderId: meta.orderId ?? null,
-          invoiceNumber: meta.invoiceNumber ?? null,
-          userId: meta.userId ?? null,
-          userName: meta.userName ?? null,
-        };
-      } catch {
-        return null;
-      }
-    })
-  );
+  const productMap = new Map();
+  for (const p of productDocs) {
+    productMap.set(p._id.toString(), p);
+  }
+
+  const movements = items.map((item) => {
+    try {
+      const productIdStr = item.productId?.toString();
+      const productDoc = productIdStr ? productMap.get(productIdStr) : null;
+      const newStock = productDoc?.stock ?? 0;
+      const previousStock = newStock + item.quantity;
+
+      return {
+        productId: item.productId,
+        productName: item.productName,
+        sku: item.sku,
+        type: "out",
+        quantity: -item.quantity,
+        previousStock,
+        newStock,
+        reason: "Terjual",
+        orderId: meta.orderId ?? null,
+        invoiceNumber: meta.invoiceNumber ?? null,
+        // Snapshot info pengadaan terakhir — ditampilkan di riwayat stok owner
+        supplierName: productDoc?.lastSupplierName ?? null,
+        purchasePrice: productDoc?.lastPurchasePrice ?? null,
+        userId: meta.userId ?? null,
+        userName: meta.userName ?? null,
+      };
+    } catch {
+      return null;
+    }
+  });
 
   const valid = movements.filter(Boolean);
   if (valid.length > 0) {

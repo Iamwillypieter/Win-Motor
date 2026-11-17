@@ -342,3 +342,81 @@
 2026-11-12 09:57:52: 
 2026-11-12 09:57:52:  ✓ Starting...
 2026-11-12 09:57:52:  ✓ Ready in 1492ms
+2026-11-12 09:58:23: [SSEManager] New instance created
+2026-11-12 09:58:23: MongoDB connected successfully
+2026-11-12 13:38:30: [createOrderAction] customerName received: Paten Bengkel
+2026-11-12 13:38:30: [createOrderAction] order.customerName saved: Paten Bengkel
+2026-11-13 07:55:39:   ▲ Next.js 14.2.35
+2026-11-13 07:55:39:   - Local:        http://localhost:3000
+2026-11-13 07:55:39:   - Network:      http://0.0.0.0:3000
+2026-11-13 07:55:39: 
+2026-11-13 07:55:39:  ✓ Starting...
+2026-11-13 07:55:41:  ✓ Ready in 5.5s
+2026-11-14 07:55:42:   ▲ Next.js 14.2.35
+2026-11-14 07:55:42:   - Local:        http://localhost:3000
+2026-11-14 07:55:42:   - Network:      http://0.0.0.0:3000
+2026-11-14 07:55:42: 
+2026-11-14 07:55:42:  ✓ Starting...
+2026-11-14 07:55:44:  ✓ Ready in 6.1s
+2026-11-14 08:43:57: [SSEManager] New instance created
+2026-11-14 08:43:57: MongoDB connected successfully
+2026-11-14 08:52:27: [/api/users/online] SSE client count: 13
+2026-11-14 08:52:27: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"},{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"}]
+2026-11-14 09:15:38: [createOrderAction] customerName received: Willy
+2026-11-14 09:15:38: [createOrderAction] order.customerName saved: Willy
+2026-11-14 09:31:33:   ▲ Next.js 14.2.35
+2026-11-14 09:31:33:   - Local:        http://localhost:3000
+2026-11-14 09:31:33:   - Network:      http://0.0.0.0:3000
+2026-11-14 09:31:33: 
+2026-11-14 09:31:33:  ✓ Starting...
+2026-11-14 09:31:33:  ✓ Ready in 758ms
+2026-11-14 09:32:24:   ▲ Next.js 14.2.35
+2026-11-14 09:32:24:   - Local:        http://localhost:3000
+2026-11-14 09:32:24:   - Network:      http://0.0.0.0:3000
+2026-11-14 09:32:24: 
+2026-11-14 09:32:24:  ✓ Starting...
+2026-11-14 09:32:25:  ✓ Ready in 580ms
+2026-11-14 09:42:42:   ▲ Next.js 14.2.35
+2026-11-14 09:42:42:   - Local:        http://localhost:3000
+2026-11-14 09:42:42:   - Network:      http://0.0.0.0:3000
+2026-11-14 09:42:42: 
+2026-11-14 09:42:42:  ✓ Starting...
+2026-11-14 09:42:42:  ✓ Ready in 491ms
+2026-11-14 09:42:52: [SSEManager] New instance created
+2026-11-14 09:42:52: MongoDB connected successfully
+2026-11-15 07:55:41:   ▲ Next.js 14.2.35
+2026-11-15 07:55:41:   - Local:        http://localhost:3000
+2026-11-15 07:55:41:   - Network:      http://0.0.0.0:3000
+2026-11-15 07:55:41: 
+2026-11-15 07:55:41:  ✓ Starting...
+2026-11-15 07:55:43:  ✓ Ready in 6.6s
+2026-11-16 07:55:39:   ▲ Next.js 14.2.35
+2026-11-16 07:55:39:   - Local:        http://localhost:3000
+2026-11-16 07:55:39:   - Network:      http://0.0.0.0:3000
+2026-11-16 07:55:39: 
+2026-11-16 07:55:39:  ✓ Starting...
+2026-11-16 07:55:40:  ✓ Ready in 5.2s
+2026-11-16 08:31:02: [SSEManager] New instance created
+2026-11-16 08:31:02: MongoDB connected successfully
+2026-11-17 07:55:44:   ▲ Next.js 14.2.35
+2026-11-17 07:55:44:   - Local:        http://localhost:3000
+2026-11-17 07:55:44:   - Network:      http://0.0.0.0:3000
+2026-11-17 07:55:44: 
+2026-11-17 07:55:44:  ✓ Starting...
+2026-11-17 07:55:46:  ✓ Ready in 6.8s
+2026-11-17 08:45:06: MongoDB connected successfully
+2026-11-17 08:45:07: [SSEManager] New instance created
+2026-11-17 08:47:49: [createOrderAction] customerName received: Belawan Bengkel
+2026-11-17 08:47:49: [createOrderAction] order.customerName saved: Belawan Bengkel
+2026-11-17 08:48:15: [createOrderAction] customerName received: Budiman
+2026-11-17 08:48:15: [createOrderAction] order.customerName saved: Budiman
+2026-11-17 09:05:54:   ▲ Next.js 14.2.35
+2026-11-17 09:05:54:   - Local:        http://localhost:3000
+2026-11-17 09:05:54:   - Network:      http://0.0.0.0:3000
+2026-11-17 09:05:54: 
+2026-11-17 09:05:54:  ✓ Starting...
+2026-11-17 09:05:54:  ✓ Ready in 1393ms
+2026-11-17 09:05:57: [SSEManager] New instance created
+2026-11-17 09:05:58: MongoDB connected successfully
+2026-11-17 09:40:53: [/api/users/online] SSE client count: 14
+2026-11-17 09:40:53: [/api/users/online] Online users: [{"userId":"6a17a8880d984909b3bc311d","role":"CASHIER"},{"userId":"6a17a8880d984909b3bc311f","role":"OWNER"},{"userId":"6a17a8880d984909b3bc311e","role":"WAREHOUSE"}]

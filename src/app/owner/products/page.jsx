@@ -33,6 +33,8 @@ export default async function OwnerProductsPage() {
       price: p.price,
       stock: p.stock,
       imageUrl: p.imageUrl ?? null,
+      lastPurchasePrice: p.lastPurchasePrice ?? null,
+      lastSupplierName: p.lastSupplierName ?? null,
       createdAt: p.createdAt?.toISOString() ?? null,
       updatedAt: p.updatedAt?.toISOString() ?? null,
     }));

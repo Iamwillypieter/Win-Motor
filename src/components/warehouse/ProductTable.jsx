@@ -115,7 +115,8 @@ export default function ProductTable({ initialProducts = [] }) {
         const json = await res.json();
 
         if (json.data && json.data.length > 0) {
-          setStockInProduct(json.data[0]);
+          const found = json.data[0];
+          setStockInProduct(found);
           setStockInQty(1);
           setStockInError("");
         } else {
@@ -132,6 +133,27 @@ export default function ProductTable({ initialProducts = [] }) {
     },
     []
   );
+
+  // Auto-prefill info pembelian (supplier & harga beli) saat produk ditemukan.
+  // Berlaku untuk mode scan dan manual — dipicu saat stockInProduct berubah.
+  // Hanya mengisi jika field belum diisi user agar tidak menimpa input yang sudah ada.
+  useEffect(() => {
+    if (!stockInProduct) return;
+    if (!purchasePrice && stockInProduct.lastPurchasePrice != null) {
+      setPurchasePrice(String(stockInProduct.lastPurchasePrice));
+    }
+    if (!selectedSupplierId && !manualSupplierName && stockInProduct.lastSupplierName) {
+      const matched = suppliers.find(
+        (s) => s.name.toLowerCase() === stockInProduct.lastSupplierName.toLowerCase()
+      );
+      if (matched) {
+        setSelectedSupplierId(matched._id);
+      } else {
+        setManualSupplierName(stockInProduct.lastSupplierName);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stockInProduct]);
 
   // Reset scanner saat pindah mode atau tutup modal
   useEffect(() => {
@@ -310,9 +332,27 @@ export default function ProductTable({ initialProducts = [] }) {
               imageUrl: found.imageUrl ?? null,
               currentStock: found.stock,
               quantity: 1,
+              // Simpan info pengadaan terakhir per item untuk fallback prefill
+              lastSupplierName: found.lastSupplierName ?? null,
+              lastPurchasePrice: found.lastPurchasePrice ?? null,
             },
           ];
         });
+        // Auto-prefill supplier & harga beli dari produk pertama yang di-scan
+        // (hanya jika field belum diisi user)
+        if (!selectedSupplierId && !manualSupplierName && found.lastSupplierName) {
+          const matched = suppliers.find(
+            (s) => s.name.toLowerCase() === found.lastSupplierName.toLowerCase()
+          );
+          if (matched) {
+            setSelectedSupplierId(matched._id);
+          } else {
+            setManualSupplierName(found.lastSupplierName);
+          }
+        }
+        if (!purchasePrice && found.lastPurchasePrice != null) {
+          setPurchasePrice(String(found.lastPurchasePrice));
+        }
       } else {
         setBulkCameraError(`SKU "${decodedText}" tidak ditemukan. Scan ulang.`);
         setTimeout(() => setBulkCameraError(""), 2000);
@@ -327,7 +367,7 @@ export default function ProductTable({ initialProducts = [] }) {
         setBulkScannerKey((k) => k + 1);
       }, 800);
     }
-  }, []);
+  }, [suppliers, selectedSupplierId, manualSupplierName, purchasePrice]);
 
   // Reset bulk scanner saat pindah mode atau tutup modal
   useEffect(() => {
@@ -910,7 +950,10 @@ export default function ProductTable({ initialProducts = [] }) {
                       stockInSearchResults.map((p) => (
                         <button
                           key={p._id}
-                          onClick={() => { setStockInProduct(p); setStockInQty(1); }}
+                          onClick={() => {
+                            setStockInProduct(p);
+                            setStockInQty(1);
+                          }}
                           className="w-full flex items-center gap-3 rounded-lg border border-gray-200 p-3 text-left hover:border-blue-400 hover:bg-blue-50 transition-colors"
                         >
                           {p.imageUrl ? (

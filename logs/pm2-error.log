@@ -435349,3 +435349,49 @@
 2026-11-12 09:33:02: (node:17008) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
 2026-11-12 09:33:02: (node:17008) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'before'` instead.
 2026-11-12 09:34:18: (node:17008) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"returnNumber":1} for model "Return". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-12 09:58:23: (node:23900) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-12 09:58:23: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-11-12 09:58:23: (node:23900) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-12 09:58:23: (node:23900) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"returnNumber":1} for model "Return". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-14 08:44:37: (node:18304) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-14 08:44:37: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-11-14 08:44:37: (node:18304) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-14 08:50:08: (node:18304) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"returnNumber":1} for model "Return". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-14 09:16:01: (node:18304) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'before'` instead.
+2026-11-14 09:16:52: (node:18304) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'before'` instead.
+2026-11-14 09:17:09: (node:18304) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'before'` instead.
+2026-11-14 09:27:58: (node:18304) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-11-14 09:43:42: (node:2716) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-11-14 09:43:42: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-11-14 09:43:47: (node:2716) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-14 09:43:47: (node:2716) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-14 09:44:03: (node:2716) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"returnNumber":1} for model "Return". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-16 08:31:08: (node:15364) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"returnNumber":1} for model "Return". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-16 08:31:08: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-11-16 08:31:08: (node:15364) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-16 08:31:08: (node:15364) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-17 08:45:07: (node:10552) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-17 08:45:07: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-11-17 08:45:07: (node:10552) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-17 08:45:07: (node:10552) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"returnNumber":1} for model "Return". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-17 08:49:10: (node:10552) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'before'` instead.
+2026-11-17 08:50:22: (node:10552) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-11-17 08:50:31: (node:10552) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-11-17 08:57:13: (node:10552) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-11-17 08:58:58: (node:10552) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-11-17 08:59:55: (node:10552) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-11-17 09:05:59: (node:11644) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"invoiceNumber":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-17 09:05:59: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-11-17 09:05:59: (node:11644) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderId":1} for model "Invoice". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-11-17 09:24:41: [31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+2026-11-17 09:24:41:     at aQ (d:\Project Kiro\.next\server\chunks\8671.js:404:43703)
+2026-11-17 09:24:41:     at async a9 (d:\Project Kiro\.next\server\chunks\8671.js:404:53262)
+2026-11-17 09:24:41:     at async oe (d:\Project Kiro\.next\server\chunks\8671.js:404:57526)
+2026-11-17 09:24:41:     at async <anonymous> (webpack://next/dist/esm/server/future/route-modules/app-route/module.js:195:37)
+2026-11-17 09:24:41:     at async e_.execute (webpack://next/dist/esm/server/future/route-modules/app-route/module.js:124:26)
+2026-11-17 09:24:41:     at async e_.handle (webpack://next/dist/esm/server/future/route-modules/app-route/module.js:270:30)
+2026-11-17 09:24:41:     at async doRender (d:\Project Kiro\node_modules\next\src\server\base-server.ts:2251:30)
+2026-11-17 09:24:41:     at async cacheEntry.responseCache.get.routeKind (d:\Project Kiro\node_modules\next\src\server\base-server.ts:2569:24)
+2026-11-17 09:24:41:     at async NextNodeServer.renderToResponseWithComponentsImpl (d:\Project Kiro\node_modules\next\src\server\base-server.ts:2432:24)
+2026-11-17 09:24:41:     at async NextNodeServer.renderPageComponent (d:\Project Kiro\node_modules\next\src\server\base-server.ts:3016:16)
+2026-11-17 09:25:13: (node:11644) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"returnNumber":1} for model "Return". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.

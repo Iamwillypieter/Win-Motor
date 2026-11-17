@@ -177,6 +177,9 @@ export async function createReturn({ cashierId, items, refundMethod, orderId = n
       quantity: item.quantity,
       subtotal,
       reason: item.reason?.trim() || null,
+      // Snapshot info pengadaan terakhir untuk ditampilkan di riwayat stok
+      lastSupplierName: product.lastSupplierName ?? null,
+      lastPurchasePrice: product.lastPurchasePrice ?? null,
     });
   }
 
@@ -240,6 +243,8 @@ export async function createReturn({ cashierId, items, refundMethod, orderId = n
           reason: `Retur ${returnNumber}${item.reason ? ` — ${item.reason}` : ""}`,
           orderId: orderId ? new mongoose.Types.ObjectId(orderId) : null,
           invoiceNumber: linkedOrder?.invoiceNumber ?? null,
+          supplierName: item.lastSupplierName ?? null,
+          purchasePrice: item.lastPurchasePrice ?? null,
           userId: new mongoose.Types.ObjectId(cashierId),
           userName: cashierName,
           createdAt: now,
